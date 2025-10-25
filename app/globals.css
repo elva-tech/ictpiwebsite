@@ -24,3 +24,59 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Mobile-friendly / responsive improvements (minimal, safe changes)
+   - Fluid images and media
+   - Responsive container and typography scaling
+   - Touch-friendly controls
+   - Small utility helpers for stacking/hiding on mobile
+*/
+
+html {
+  /* Base font sizing that scales between mobile and desktop */
+  font-size: clamp(14px, 1.2vw + 12px, 18px);
+}
+
+html, body {
+  height: 100%;
+  -webkit-text-size-adjust: 100%; /* prevent font inflation on some mobile browsers */
+}
+
+/* Responsive container used by pages/components without changing markup */
+.container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Make media scale to their containers */
+img, picture, video, svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Headings scale nicely on small screens */
+h1 { font-size: clamp(1.5rem, 4vw, 2.5rem); margin: .5rem 0; }
+h2 { font-size: clamp(1.25rem, 3vw, 1.75rem); margin: .5rem 0; }
+p { line-height: 1.6; margin: .5rem 0; }
+
+/* Make interactive elements easier to tap */
+button, a.button {
+  min-height: 40px;
+  padding: .5rem 1rem;
+  touch-action: manipulation;
+}
+
+/* Small utility helpers */
+.stack-mobile { display:flex; gap:1rem; }
+@media (max-width: 640px) {
+  .stack-mobile { flex-direction: column; }
+  .hide-mobile { display: none !important; }
+  .small-center { text-align: center; }
+}
+
+/* Accessibility: increase tappable areas and ensure focus visible */
+a:focus, button:focus { outline: 3px solid Highlight; outline-offset: 2px; }
