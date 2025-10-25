@@ -17,7 +17,9 @@ export default function DTLCPage() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
 
-  const handleCloseModal = useCallback(() => setShowModal(false), []);
+const handleCloseModal = useCallback(() => {
+  router.push("/dashboard");
+}, [router]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
