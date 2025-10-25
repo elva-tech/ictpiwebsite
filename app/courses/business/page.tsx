@@ -1,7 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
 import Image from "next/image";
 import complaince from "../../../assets/complaiance.webp";
@@ -16,17 +16,24 @@ export default function BusinessRegulatoryPage() {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-const handleCloseModal = useCallback(() => {
-  router.push("/dashboard");
-}, [router]);
   useEffect(() => {
+    setMounted(true); // ensures client-side only
+  }, []);
+
+  const handleCloseModal = () => {
+    router.push("/dashboard");
+  };
+
+  useEffect(() => {
+    if (!mounted) return; // only run on client
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") handleCloseModal();
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleCloseModal]);
+  }, [mounted]);
 
   useEffect(() => {
     if (!auth) return;
@@ -34,7 +41,7 @@ const handleCloseModal = useCallback(() => {
     if (!auth.loading && auth.user) setShowModal(true);
   }, [auth, router]);
 
-  if (!auth || auth.loading)
+  if (!auth || auth.loading || !mounted)
     return <p className="text-center mt-10 text-gray-600">Loading...</p>;
 
   if (!auth.user) return null;
