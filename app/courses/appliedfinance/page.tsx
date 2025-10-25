@@ -7,8 +7,13 @@ import Image from "next/image";
 import appliedfinance from "../../../assets/fourthimage.webp";
 import "../../globals.css";
 
+interface AuthContextType {
+  user: { uid: string; email: string } | null;
+  loading: boolean;
+}
+
 export default function AppliedFinancePage() {
-  const auth = useAuth();
+  const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
 
@@ -23,7 +28,7 @@ export default function AppliedFinancePage() {
   }, [handleCloseModal]);
 
   useEffect(() => {
-    if (!auth) return; // auth context not ready
+    if (!auth) return;
     if (!auth.loading && !auth.user) router.push("/");
     if (!auth.loading && auth.user) setShowModal(true);
   }, [auth, router]);

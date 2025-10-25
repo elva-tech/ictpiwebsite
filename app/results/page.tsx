@@ -9,32 +9,43 @@ import { supabase } from "@/lib/Supabase";
 import logo from "../../assets/ICTPL_image.png";
 import Confetti from "react-confetti";
 
+interface UserType {
+  uid: string;
+  email: string;
+}
+
+interface AuthContextType {
+  user: UserType | null;
+  loading: boolean;
+  signOut?: () => Promise<void>;
+}
+
 const ResultPage = () => {
-  const { user, loading, signOut } = useAuth();
+  const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [showGlitter, setShowGlitter] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
+  // Redirect if no user
   useEffect(() => {
-    if (!loading && !user) router.push("/");
-  }, [user, loading, router]);
+    if (!auth) return;
+    if (!auth.loading && !auth.user) router.push("/");
+  }, [auth, router]);
 
-  // Window resize handler for Confetti
+  // Window resize for Confetti
   useEffect(() => {
     setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
+    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleSignOut = async () => {
     try {
-      if (typeof signOut === "function") {
-        await signOut();
+      if (auth?.signOut) {
+        await auth.signOut();
         router.push("/");
       } else {
         console.error("signOut is not a function");
@@ -45,19 +56,19 @@ const ResultPage = () => {
   };
 
   const fetchResult = async () => {
-    if (!user?.email) {
+    if (!auth?.user?.email) {
       setError("User email not found");
       return;
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error: supabaseError } = await supabase
         .from("results")
         .select("status")
-        .eq("email", user.email)
+        .eq("email", auth.user.email)
         .single();
 
-      if (error) throw error;
+      if (supabaseError) throw supabaseError;
 
       if (data) {
         setResult(data.status);
@@ -68,14 +79,14 @@ const ResultPage = () => {
       } else {
         setError("No result found for this user");
       }
-    } catch (error) {
-      console.error("Error fetching result:", error);
+    } catch (err) {
+      console.error("Error fetching result:", err);
       setError("Failed to fetch result. Please try again.");
     }
   };
 
-  if (loading) return <p className="text-center mt-10 text-gray-600">Loading...</p>;
-  if (!user) return null;
+  if (!auth || auth.loading) return <p className="text-center mt-10 text-gray-600">Loading...</p>;
+  if (!auth.user) return null;
 
   return (
     <div className="flex h-screen bg-gray-100 relative overflow-hidden flex-col md:flex-row">
@@ -110,15 +121,14 @@ const ResultPage = () => {
         <header className="flex justify-between items-center bg-white shadow px-4 md:px-6 py-3 sticky top-0 z-40">
           <Image src={logo} alt="Logo" className="h-[60px] w-[60px] md:h-[100px] md:w-[100px]" />
           <div className="flex items-center gap-3 md:gap-5">
-            {/* ✅ Show user info on all screens */}
             <div className="flex items-center gap-2">
               <User2 className="w-5 h-5 text-gray-700" />
               <div className="text-sm text-gray-800 text-right">
                 <div className="font-semibold truncate max-w-[100px] md:max-w-none">
-                  {user?.email?.split("@")[0]}
+                  {auth.user.email.split("@")[0]}
                 </div>
                 <div className="text-xs text-gray-500 truncate max-w-[150px]">
-                  {user?.email}
+                  {auth.user.email}
                 </div>
               </div>
             </div>
