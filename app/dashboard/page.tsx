@@ -11,7 +11,6 @@ import complaince from "../../assets/complaiance.webp";
 import directax from "../../assets/directtax.webp";
 import appliedfinance from "../../assets/fourthimage.webp";
 import logo from "../../assets/ICTPL_image.png";
-
 export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
