@@ -25,7 +25,7 @@ const ResultPage = () => {
   const router = useRouter();
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showGlitter, setShowGlitter] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
 
   // Redirect if no user
@@ -73,8 +73,8 @@ const ResultPage = () => {
       if (data) {
         setResult(data.status);
         if (data.status === "passed") {
-          setShowGlitter(true);
-          setTimeout(() => setShowGlitter(false), 10000);
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 10000); // Confetti for 10 seconds
         }
       } else {
         setError("No result found for this user");
@@ -83,6 +83,10 @@ const ResultPage = () => {
       console.error("Error fetching result:", err);
       setError("Failed to fetch result. Please try again.");
     }
+  };
+
+  const handleGoBack = () => {
+    router.push("/dashboard");
   };
 
   if (!auth || auth.loading) return <p className="text-center mt-10 text-gray-600">Loading...</p>;
@@ -154,28 +158,60 @@ const ResultPage = () => {
           {error && <p className="text-red-500 mb-4">{error}</p>}
 
           {result && (
-            <div className="relative w-full flex justify-center items-center flex-1">
-              {result === "passed" ? (
-                <>
-                  <p className="text-2xl font-bold text-green-500 mb-4 z-10 relative">Passed</p>
-                  {showGlitter && (
-                    <Confetti
-                      width={windowSize.width}
-                      height={windowSize.height}
-                      recycle={false}
-                      numberOfPieces={800}
-                      gravity={0.15}
-                      initialVelocityX={20}
-                      initialVelocityY={0}
-                      colors={["#FFD700", "#FF4500", "#00FF00", "#1E90FF", "#FF69B4"]}
-                      run={showGlitter}
-                    />
-                  )}
-                </>
-              ) : (
-                <p className="text-2xl font-bold text-red-500">Failed</p>
+            <>
+              {result === "passed" && showConfetti && (
+                <Confetti
+                  width={windowSize.width}
+                  height={windowSize.height}
+                  recycle={false}
+                  numberOfPieces={800}
+                  gravity={0.15}
+                  initialVelocityX={20}
+                  initialVelocityY={0}
+                  colors={["#FFD700", "#FF4500", "#00FF00", "#1E90FF", "#FF69B4"]}
+                  run={showConfetti}
+                />
               )}
-            </div>
+              <div
+                style={{
+                  position: "relative",
+                  textAlign: "center",
+                  padding: "20px",
+                  background: "white",
+                  borderRadius: "10px",
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                  zIndex: 20, // Card raised above confetti
+                }}
+              >
+                <h2 style={{ color: "#2d3748" }}>Exam Results</h2>
+                {result === "passed" ? (
+                  <>
+                    <p style={{ color: "#48bb78", fontSize: "1.5em" }}>🎉 Congratulations!</p>
+                    <p className="text-black">You have successfully passed the assessment.</p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ color: "#e50909ff", fontSize: "1.5em" }}>Result: Failed</p>
+                    <p className="text-black">Unfortunately, you did not pass this time.</p>
+                    <p className="text-black">Better luck next time!</p>
+                  </>
+                )}
+                <button
+                  onClick={handleGoBack}
+                  style={{
+                    marginTop: "20px",
+                    padding: "10px 20px",
+                    background: "#4299e1",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  Go Back
+                </button>
+              </div>
+            </>
           )}
         </main>
       </div>
