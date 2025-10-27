@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Download, X, Eye } from "lucide-react";
+import { Download, X, Eye, ArrowLeft } from "lucide-react"; // Added ArrowLeft import
 import Image from "next/image";
 import complaince from "../../../assets/complaiance.webp";
 import "../../globals.css";
@@ -157,7 +157,7 @@ export default function BusinessRegulatoryPage() {
         src: "/pdf/bussiness/appendix/EMPLOYEE STATE INSURANCE ACT, 1948.pdf",
         download: "EMPLOYEE STATE INSURANCE ACT, 1948.pdf",
       },
-       {
+      {
         title: "EPF AND MISC. PROVISIONS ACT, 1952",
         src: "/pdf/bussiness/appendix/EPF AND MISC. PROVISIONS ACT, 1952.pdf",
         download: "EPF AND MISC. PROVISIONS ACT, 1952.pdf",
@@ -172,7 +172,7 @@ export default function BusinessRegulatoryPage() {
         src: "/pdf/bussiness/appendix/INDIAN STAMP ACT, 1899.pdf",
         download: "INDIAN STAMP ACT, 1899.pdf",
       },
-       {
+      {
         title: "INDIAN TRUST ACT, 1882",
         src: "/pdf/bussiness/appendix/INDIAN TRUST ACT, 1882.pdf",
         download: "INDIAN TRUST ACT, 1882.pdf",
@@ -187,7 +187,7 @@ export default function BusinessRegulatoryPage() {
         src: "/pdf/bussiness/appendix/MINIMUM WAGES ACT, 1948.pdf",
         download: "MINIMUM WAGES ACT, 1948.pdf",
       },
-       {
+      {
         title: "MULTI-STATE CO-OPERATIVE SOCIETIES ACT, 2002",
         src: "/pdf/bussiness/appendix/MULTI-STATE CO-OPERATIVE SOCIETIES ACT, 2002.pdf",
         download: "MULTI-STATE CO-OPERATIVE SOCIETIES ACT, 2002.pdf",
@@ -207,7 +207,7 @@ export default function BusinessRegulatoryPage() {
         src: "/pdf/bussiness/appendix/PAYMENT OF BONUS ACT, 1965.pdf",
         download: "PAYMENT OF BONUS ACT, 1965.pdf",
       },
-       {
+      {
         title: "PAYMENT OF GRATUITY ACT, 1972",
         src: "/pdf/bussiness/appendix/PAYMENT OF GRATUITY ACT, 1972.pdf",
         download: "PAYMENT OF GRATUITY ACT, 1972.pdf",
@@ -222,23 +222,21 @@ export default function BusinessRegulatoryPage() {
         src: "/pdf/bussiness/appendix/PROFESSION TAX.pdf",
         download: "PROFESSION TAX.pdf",
       },
-       {
+      {
         title: "PUBLIC SECTOR ENTITIES",
         src: "/pdf/bussiness/appendix/PUBLIC SECTOR ENTITIES.pdf",
         download: "PUBLIC SECTOR ENTITIES.pdf",
       },
-      
       {
         title: "SPECIFIC RELIEF ACT, 1963",
         src: "/pdf/bussiness/appendix/SPECIFIC RELIEF ACT, 1963.pdf",
         download: "SPECIFIC RELIEF ACT, 1963.pdf",
       },
-       {
+      {
         title: "TYPES OF BUSINESS ENTITIES",
         src: "/pdf/bussiness/appendix/TYPES OF BUSINESS ENTITIES.pdf",
         download: "TYPES OF BUSINESS ENTITIES.pdf",
       },
-      
     ],
     "Procedure to Close a Business": [
       {
@@ -284,9 +282,24 @@ export default function BusinessRegulatoryPage() {
     setSelectedPDF(null);
   };
 
+  const handleGoBack = () => {
+    router.push("/dashboard");
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4 text-black">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-4xl text-center">
+        {/* Go Back Button */}
+        <div className="flex justify-start mb-6">
+          <button
+            onClick={handleGoBack}
+            className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            Go Back
+          </button>
+        </div>
+
         <div className="relative w-full h-56 mb-6">
           <Image
             src={complaince}
