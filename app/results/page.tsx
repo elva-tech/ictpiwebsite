@@ -56,6 +56,7 @@ const ResultPage = () => {
   };
 
   const fetchResult = async () => {
+    console.log(auth?.user?.email);
     if (!auth?.user?.email) {
       setError("User email not found");
       return;
