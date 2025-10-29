@@ -2,16 +2,9 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Download,
-  X,
-  Eye,
-  ArrowLeft,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
+import { X, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
-import indirecttax from "../../../assets/directtax.webp"; // Using your image
+import indirecttax from "../../../assets/directtax.webp";
 import "../../globals.css";
 
 interface AuthContextType {
@@ -70,7 +63,7 @@ export default function IndirectTaxPage() {
   if (!auth.user) return null;
 
   /* --------------------------------------------------------------- */
-  /*  PDF data – all chapters included */
+  /*  PDF Data – All Chapters */
   /* --------------------------------------------------------------- */
   const conceptPDFs: ConceptPDFs = {
     "GST Fundamentals": [
@@ -104,7 +97,6 @@ export default function IndirectTaxPage() {
         src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-6 Important Definitions.pdf",
         download: "Chapter-6 Important Definitions.pdf",
       },
-  
       {
         title: "Chapter 7 - Supply",
         src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-7 Supply.pdf",
@@ -130,7 +122,6 @@ export default function IndirectTaxPage() {
         src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-11 Exemptions.pdf",
         download: "Chapter-11 Exemptions.pdf",
       },
-    
       {
         title: "Chapter 12 - Reverse Charge Mechanism",
         src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-12 Reverse Charge Mechanism (RCM).pdf",
@@ -233,7 +224,7 @@ export default function IndirectTaxPage() {
         src: "/pdf/indirecttax/customsact/Chapter-5 Import and Export Procedure.pdf",
         download: "Chapter-5 Import and Export Procedure.pdf",
       },
-    {
+      {
         title: "Chapter-6 Baggage",
         src: "/pdf/indirecttax/customsact/Chapter-6 Baggage.pdf",
         download: "Chapter-6 Baggage.pdf",
@@ -251,8 +242,7 @@ export default function IndirectTaxPage() {
       {
         title: "Chapter 9 - Appeals to CESTAT",
         src: "/pdf/indirecttax/customsact/Chapter-9 Appeals to the Customs, Excise and Service Tax Appellate Tribunal (CESTAT).pdf",
-        download:
-          "Chapter-9 Appeals to the Customs, Excise and Service Tax Appellate Tribunal (CESTAT).pdf",
+        download: "Chapter-9 Appeals to the Customs, Excise and Service Tax Appellate Tribunal (CESTAT).pdf",
       },
       {
         title: "Chapter 10 - Appeals to High Court",
@@ -264,19 +254,17 @@ export default function IndirectTaxPage() {
         src: "/pdf/indirecttax/customsact/Chapter-12 Appeals to the Settlement Commission.pdf",
         download: "Chapter-12 Appeals to the Settlement Commission.pdf",
       },
-      
       {
         title: "Chapter-13 Authority for Advance Ruling",
         src: "/pdf/indirecttax/customsact/Chapter-13 Authority for Advance Ruling.pdf",
-        download:
-          "Chapter-13 Authority for Advance Ruling.pdf",
+        download: "Chapter-13 Authority for Advance Ruling.pdf",
       },
       {
         title: "Chapter-14 Foreign Trade Policy 2015-2020",
         src: "/pdf/indirecttax/customsact/Chapter-14 Foreign Trade Policy 2015-2020.pdf",
         download: "Chapter-14 Foreign Trade Policy 2015-2020.pdf",
       },
-       {
+      {
         title: "Chapter-15 Comprehensive Issues under Customs",
         src: "/pdf/indirecttax/customsact/Chapter-15 Comprehensive Issues under Customs.pdf",
         download: "Chapter-15 Comprehensive Issues under Customs.pdf",
@@ -305,112 +293,118 @@ export default function IndirectTaxPage() {
   /*  Render */
   /* --------------------------------------------------------------- */
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gray-100 py-6 px-4 sm:py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Back Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
+          className="flex items-center text-blue-600 hover:text-blue-800 mb-6 text-sm sm:text-base font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
           Back to Dashboard
         </button>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="md:flex">
-            <div className="md:flex-shrink-0">
+        {/* Hero Card */}
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+          <div className="flex flex-col md:flex-row">
+            <div className="md:w-64 flex-shrink-0">
               <Image
-                className="h-48 w-full object-cover md:w-48"
-                src={indirecttax} // Fixed: was 'complaince'
-                alt="Indirect Tax"
-                width={200}
+                src={indirecttax}
+                alt="Indirect Taxation"
+                width={300}
                 height={200}
+                className="w-full h-48 object-cover md:h-full md:w-full"
+                priority
               />
             </div>
-            <div className="p-8">
-              <div className="text-sm font-semibold text-gray-600">Course</div>
-              <div className="block mt-1 text-2xl leading-tight font-bold text-gray-900">
-                Indirect Taxation (GST & Customs)
+            <div className="p-6 md:p-8 flex-1">
+              <div className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                Course
               </div>
-              <p className="mt-2 text-gray-600">
+              <h1 className="mt-1 text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+                Indirect Taxation (GST & Customs)
+              </h1>
+              <p className="mt-3 text-sm sm:text-base text-gray-600 leading-relaxed">
                 Comprehensive study material on GST, Customs Act, compliance, appeals, and advanced concepts.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-8">
-          <div className="grid md:grid-cols-2 gap-6">
-            {Object.entries(conceptPDFs).map(([concept, pdfs]) => (
-              <div key={concept} className="bg-white rounded-lg shadow-md p-6">
-                <h3
-                  className="text-xl font-semibold text-gray-800 mb-4 cursor-pointer hover:text-blue-600 flex items-center justify-between"
-                  onClick={() => toggleConcept(concept)}
-                >
+        {/* Accordion Sections */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {Object.entries(conceptPDFs).map(([concept, pdfs]) => (
+            <div key={concept} className="bg-white rounded-lg shadow-md p-6">
+              <button
+                onClick={() => toggleConcept(concept)}
+                className="w-full flex items-center justify-between text-left hover:text-blue-600 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded"
+              >
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 pr-4">
                   {concept}
-                  {selectedConcept === concept ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
                 </h3>
-                {selectedConcept === concept && (
-                  <div className="space-y-3">
-                    {pdfs.map((pdf, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <span className="text-gray-700 flex-grow mr-4 text-sm">
-                          {pdf.title}
-                        </span>
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => handlePDFClick(pdf)}
-                            className="text-blue-600 hover:text-blue-800 transition-colors"
-                            title="View PDF"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
-                          <a
-                            href={pdf.src}
-                            download={pdf.download}
-                            className="text-green-600 hover:text-green-800 transition-colors"
-                            title="Download PDF"
-                          >
-                            <Download className="w-5 h-5" />
-                          </a>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {selectedConcept === concept ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 )}
-              </div>
-            ))}
-          </div>
+              </button>
+
+              {/* PDF List */}
+              {selectedConcept === concept && (
+                <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+                  {pdfs.map((pdf, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <span className="text-gray-700 text-sm sm:text-base flex-grow pr-2 line-clamp-2">
+                        {pdf.title}
+                      </span>
+                      <div className="flex gap-2 mt-2 sm:mt-0">
+                        <button
+                          onClick={() => handlePDFClick(pdf)}
+                          className="px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                        >
+                          View
+                        </button>
+                        <a
+                          href={pdf.src}
+                          download={pdf.download}
+                          className="px-3 py-1.5 text-xs sm:text-sm font-medium text-green-600 bg-green-50 rounded hover:bg-green-100 transition-colors whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2"
+                        >
+                          Download
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
       {/* PDF Viewer Modal */}
       {showModal && selectedPDF && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="relative bg-white w-full max-w-4xl rounded-lg shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b bg-gray-50">
-              <h3 className="text-lg font-semibold text-gray-900 truncate max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="relative bg-white w-full max-w-4xl max-h-[90vh] rounded-lg shadow-xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b bg-gray-50">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate pr-4">
                 {selectedPDF.title}
               </h3>
               <button
                 onClick={handleCloseModal}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-4 h-[calc(100vh-200px)]">
+            <div className="h-[60vh] sm:h-[70vh] md:h-[75vh]">
               <iframe
                 src={selectedPDF.src}
-                className="w-full h-[calc(250vh-100px)] border-0 rounded "
+                className="w-full h-full border-0"
                 title={selectedPDF.title}
-                
+                allowFullScreen
               />
             </div>
           </div>
