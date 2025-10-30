@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LayoutDashboard, ClipboardList, User2, LogOut } from "lucide-react";
 import Image from "next/image";
-import { supabase } from "@/lib/Supabase";
 import logo from "../../assets/ICTPL_image.png";
-import Confetti from "react-confetti";
+// import Confetti from "react-confetti"; // Commented out
 
 interface UserType {
   uid: string;
@@ -23,10 +22,9 @@ interface AuthContextType {
 const ResultPage = () => {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [resultMessage, setResultMessage] = useState<string | null>(null);
+  // const [showConfetti, setShowConfetti] = useState(false); // Removed
+  // const [windowSize, setWindowSize] = useState({ width: 0, height: 0 }); // Removed
 
   // Redirect if no user
   useEffect(() => {
@@ -34,13 +32,7 @@ const ResultPage = () => {
     if (!auth.loading && !auth.user) router.push("/");
   }, [auth, router]);
 
-  // Window resize for Confetti
-  useEffect(() => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    const handleResize = () => setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Removed window resize effect for Confetti
 
   const handleSignOut = async () => {
     try {
@@ -55,35 +47,9 @@ const ResultPage = () => {
     }
   };
 
-  const fetchResult = async () => {
-    console.log(auth?.user?.email);
-    if (!auth?.user?.email) {
-      setError("User email not found");
-      return;
-    }
-
-    try {
-      const { data, error: supabaseError } = await supabase
-        .from("results")
-        .select("status")
-        .eq("email", auth.user.email)
-        .single();
-
-      if (supabaseError) throw supabaseError;
-
-      if (data) {
-        setResult(data.status);
-        if (data.status === "passed") {
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 10000); // Confetti for 10 seconds
-        }
-      } else {
-        setError("No result found for this user");
-      }
-    } catch (err) {
-      console.error("Error fetching result:", err);
-      setError("Failed to fetch result. Please try again.");
-    }
+  // Updated: Show "Result not yet uploaded" directly
+  const handleShowResults = () => {
+    setResultMessage("Result not yet uploaded");
   };
 
   const handleGoBack = () => {
@@ -150,69 +116,47 @@ const ResultPage = () => {
         {/* Result Section */}
         <main className="p-8 flex flex-col items-center justify-center flex-1 relative bg-gray-100">
           <button
-            onClick={fetchResult}
+            onClick={handleShowResults}
             className="mb-6 px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
           >
             Show Results
           </button>
 
-          {error && <p className="text-red-500 mb-4">{error}</p>}
-
-          {result && (
-            <>
-              {result === "passed" && showConfetti && (
-                <Confetti
-                  width={windowSize.width}
-                  height={windowSize.height}
-                  recycle={false}
-                  numberOfPieces={800}
-                  gravity={0.15}
-                  initialVelocityX={20}
-                  initialVelocityY={0}
-                  colors={["#FFD700", "#FF4500", "#00FF00", "#1E90FF", "#FF69B4"]}
-                  run={showConfetti}
-                />
-              )}
-              <div
+          {resultMessage && (
+            <div
+              style={{
+                position: "relative",
+                textAlign: "center",
+                padding: "30px",
+                background: "white",
+                borderRadius: "10px",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+                maxWidth: "400px",
+                width: "100%",
+              }}
+            >
+              <h2 style={{ color: "#2d3748", marginBottom: "16px" }}>Exam Results</h2>
+              <p style={{ color: "#f97316", fontSize: "1.2em", fontWeight: "500" }}>
+                {resultMessage}
+              </p>
+              <p className="text-gray-600 mt-2 text-sm">
+                Please check back later or contact the administrator.
+              </p>
+              <button
+                onClick={handleGoBack}
                 style={{
-                  position: "relative",
-                  textAlign: "center",
-                  padding: "20px",
-                  background: "white",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-                  zIndex: 20, // Card raised above confetti
+                  marginTop: "20px",
+                  padding: "10px 20px",
+                  background: "#4299e1",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
                 }}
               >
-                <h2 style={{ color: "#2d3748" }}>Exam Results</h2>
-                {result === "passed" ? (
-                  <>
-                    <p style={{ color: "#48bb78", fontSize: "1.5em" }}>🎉 Congratulations!</p>
-                    <p className="text-black">You have successfully passed the assessment.</p>
-                  </>
-                ) : (
-                  <>
-                    <p style={{ color: "#e50909ff", fontSize: "1.5em" }}>Result: Failed</p>
-                    <p className="text-black">Unfortunately, you did not pass this time.</p>
-                    <p className="text-black">Better luck next time!</p>
-                  </>
-                )}
-                <button
-                  onClick={handleGoBack}
-                  style={{
-                    marginTop: "20px",
-                    padding: "10px 20px",
-                    background: "#4299e1",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Go Back
-                </button>
-              </div>
-            </>
+                Go Back to Dashboard
+              </button>
+            </div>
           )}
         </main>
       </div>
