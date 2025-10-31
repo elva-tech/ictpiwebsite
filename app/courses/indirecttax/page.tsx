@@ -207,12 +207,10 @@ export default function IndirectTaxPage() {
         <div className="fixed inset-0 z-50 flex bg-black bg-opacity-70">
           <div className="relative w-full h-full flex flex-col bg-white">
             <div className="flex items-center justify-between p-4 border-b bg-gray-50 flex-shrink-0">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate pr-4 max-w-[70%]">
-                {selectedPDF.title}
-              </h3>
+            
               <button
                 onClick={handleCloseModal}
-                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
