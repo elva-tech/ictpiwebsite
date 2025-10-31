@@ -47,7 +47,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError("Incorrect password or invalid credentials.");
+        setError("Incorrect password or invalid credentials or Check your network connections.");
       } else {
         setError("An unexpected error occurred.");
       }
