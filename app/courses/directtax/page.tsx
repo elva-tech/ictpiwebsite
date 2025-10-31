@@ -355,7 +355,7 @@ const pdfData: Category = {
         download: "Business_Connections.pdf",
       },
       {
-        Isid: "Calculation of Interest on Late Payment u_s 234",
+        title: "Calculation of Interest on Late Payment u_s 234",
         src: "/pdf/directtax/international/Calculation of Interest on Late Payment u_s 234.pdf",
         download: "Late_Payment_Interest_International.pdf",
       },
