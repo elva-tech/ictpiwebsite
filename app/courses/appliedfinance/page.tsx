@@ -57,12 +57,12 @@ export default function AppliedFinancePage() {
   if (!auth.user) return null;
 
   const conceptPDFs: ConceptPDFs = {
-    "Chapter-01": [
+    "Chapter-1 Meaning and Scope of Accounting": [
       { title: "Chapter 1.1 - Accounting Assumptions and Concepts", src: "/pdf/appliedfinance/chapter1/Accounting Assumptions and Concepts.pdf", download: "Accounting Assumptions and Concepts.pdf" },
       { title: "Chapter 1.2 - Preliminaries", src: "/pdf/appliedfinance/chapter1/Preliminaries.pdf", download: "Preliminaries.pdf" },
       { title: "Chapter 1.3 - Other Related Matters", src: "/pdf/appliedfinance/chapter1/Other Related Matters.pdf", download: "Other Related Matters.pdf" },
     ],
-    "Chapter-02": [
+    "Chapter-2 Accounting process-Basics and Journal": [
       { title: "Chapter 2.1 - 2A Journal", src: "/pdf/appliedfinance/chapter2/2A Journal.pdf", download: "2A Journal.pdf" },
       { title: "Chapter 2.2 - 2B Ledger", src: "/pdf/appliedfinance/chapter2/2B Ledger.pdf", download: "2B Ledger.pdf" },
       { title: "Chapter 2.3 - 2C Trial Balance", src: "/pdf/appliedfinance/chapter2/2C Trial Balance.pdf", download: "2C Trial Balance.pdf" },
@@ -71,30 +71,30 @@ export default function AppliedFinancePage() {
       { title: "Chapter 2.6 - 2F Capital vs Revenue", src: "/pdf/appliedfinance/chapter2/2F Capital vs Revenue.pdf", download: "2F Capital vs Revenue.pdf" },
       { title: "Chapter 2.7 - 2G Contingent Asset and Liabilities", src: "/pdf/appliedfinance/chapter2/2G Contingent Asset and Liabilities.pdf", download: "2G Contingent Asset and Liabilities.pdf" },
     ],
-    "Chapter-03": [
+    "Chapter-3 Rectification of Errors": [
       { title: "Chapter 3 - Rectification of Errors", src: "/pdf/appliedfinance/chapter3/Rectification of Errors.pdf", download: "Rectification of Errors.pdf" },
     ],
-    "Chapter-04": [
+    "Chapter-4 Bank Reconciliation Statement": [
       { title: "Chapter 4 - Bank Reconciliation Statement", src: "/pdf/appliedfinance/chapter4/Bank Reconciliation Statement.pdf", download: "Bank Reconciliation Statement.pdf" },
     ],
-    "Chapter-05": [
+    "Chapter-5 Inventories": [
       { title: "Chapter 5.1 - Inventories Basics", src: "/pdf/appliedfinance/chapter5/Inventories- Basics.pdf", download: "Inventories- Basics.pdf" },
       { title: "Chapter 5.2 - Inventory Systems", src: "/pdf/appliedfinance/chapter5/Inventory Systems.pdf", download: "Inventory Systems.pdf" },
       { title: "Chapter 5.3 - Techniques & Formula for Inventory Variation", src: "/pdf/appliedfinance/chapter5/Techniques_ Formula for Inventory Variation.pdf", download: "Techniques_ Formula for Inventory Variation.pdf" },
     ],
-    "Chapter-06": [
+    "Chapter-6 Depriciation": [
       { title: "Chapter 6.1 - Basic Terms of Depreciation", src: "/pdf/appliedfinance/chapter6/Basic Terms.pdf", download: "Basic Terms.pdf" },
       { title: "Chapter 6.2 - Methods of Depreciation", src: "/pdf/appliedfinance/chapter6/Methods of Depreciation.pdf", download: "Methods of Depreciation.pdf" },
       { title: "Chapter 6.3 - Related Matters", src: "/pdf/appliedfinance/chapter6/Related Matters.pdf", download: "Related Matters.pdf" },
     ],
-    "Chapter-07": [
+    "Chapter-7 Accounting for Spcial Transactions": [
       { title: "Chapter 7.1 - Account Current", src: "/pdf/appliedfinance/chapter7/Account Current.pdf", download: "Account Current.pdf" },
       { title: "Chapter 7.2 - Average Due Date", src: "/pdf/appliedfinance/chapter7/Average Due Date.pdf", download: "Average Due Date.pdf" },
       { title: "Chapter 7.3 - Bills of Exchange", src: "/pdf/appliedfinance/chapter7/Bills of Exchange.pdf", download: "Bills of Exchange.pdf" },
       { title: "Chapter 7.4 - Consignment", src: "/pdf/appliedfinance/chapter7/Consignment.pdf", download: "Consignment.pdf" },
       { title: "Chapter 7.5 - Sales on Approval or Return Basis", src: "/pdf/appliedfinance/chapter7/Sales on Approval or Return Basis.pdf", download: "Sales on Approval or Return Basis.pdf" },
     ],
-    "Chapter-08": [
+    "Chapter-8 Financial Statement -Final Accounts of Sole Proprietorship Entities": [
       { title: "Chapter 8.1 - Adjustments", src: "/pdf/appliedfinance/chapter8/Adjustments.pdf", download: "Adjustments.pdf" },
       { title: "Chapter 8.2 - Balance Sheet", src: "/pdf/appliedfinance/chapter8/Balance Sheet.pdf", download: "Balance Sheet.pdf" },
       { title: "Chapter 8.3 - Financial Statement", src: "/pdf/appliedfinance/chapter8/Financial Statement.pdf", download: "Financial Statement.pdf" },
@@ -102,23 +102,23 @@ export default function AppliedFinancePage() {
       { title: "Chapter 8.5 - Profit and Loss Account", src: "/pdf/appliedfinance/chapter8/Profit and Loss Account.pdf", download: "Profit and Loss Account.pdf" },
       { title: "Chapter 8.6 - Trading Account", src: "/pdf/appliedfinance/chapter8/Trading Account.pdf", download: "Trading Account.pdf" },
     ],
-    "Chapter-09": [
+    "Chapter-9 Accounting for partnership firms": [
       { title: "Chapter 9.1 - Admission of New Partner", src: "/pdf/appliedfinance/chapter9/Admission of New Partner.pdf", download: "Admission of New Partner.pdf" },
       { title: "Chapter 9.2 - Goodwill", src: "/pdf/appliedfinance/chapter9/Goodwill.pdf", download: "Goodwill.pdf" },
       { title: "Chapter 9.3 - Partnership Basics", src: "/pdf/appliedfinance/chapter9/Partnership Basics.pdf", download: "Partnership Basics.pdf" },
       { title: "Chapter 9.4 - Retirement and Death", src: "/pdf/appliedfinance/chapter9/Retirement and Death.pdf", download: "Retirement and Death.pdf" },
     ],
-    "Chapter-10": [
+    "Chapter-10 Accounting For Not -For-Profit and Educational Organisations": [
       { title: "Chapter 10 - Accounting For Not-For-Profit and Educational Organisations", src: "/pdf/appliedfinance/chapter10/Accounting For Not -For-Profit and Educational Organisations.pdf", download: "Accounting For Not -For-Profit and Educational Organisations.pdf" },
     ],
-    "Chapter-11": [
+    "Chapter-11 Accounting For Companices": [
       { title: "Chapter 11.1 - Company Basics", src: "/pdf/appliedfinance/chapter11/Company Basics.pdf", download: "Company Basics.pdf" },
       { title: "Chapter 11.2 - Financial Statement", src: "/pdf/appliedfinance/chapter11/Financial Statement.pdf", download: "Financial Statement.pdf" },
       { title: "Chapter 11.3 - Preferences Shares", src: "/pdf/appliedfinance/chapter11/Preferences Shares.pdf", download: "Preferences Shares.pdf" },
       { title: "Chapter 11.4 - Debentures", src: "/pdf/appliedfinance/chapter11/Debentures.pdf", download: "Debentures.pdf" },
       { title: "Chapter 11.5 - Shares- Issue, Forfeiture and Re- Issues", src: "/pdf/appliedfinance/chapter11/Shares- Issue, Forfeiture and Re- Issues.pdf", download: "Shares- Issue, Forfeiture and Re- Issues.pdf" },
     ],
-    "Chapter-12": [
+    "Chapter-12 Accounting standards": [
       { title: "Chapter 12.1 - Basic Accounting Standard", src: "/pdf/appliedfinance/chapter12/Basic Accounting Standard.pdf", download: "Basic Accounting Standard.pdf" },
       { title: "Chapter 12.2 - Framework for Financial Statements", src: "/pdf/appliedfinance/chapter12/Framework for Preparation and Presentation of Financial Statements.pdf", download: "Framework for Preparation and Presentation of Financial Statements.pdf" },
       { title: "Chapter 12.3 - Introduction to Accounting Standards", src: "/pdf/appliedfinance/chapter12/Introduction to Accounting Standards.pdf", download: "Introduction to Accounting Standards.pdf" },
