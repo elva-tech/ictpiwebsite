@@ -6,7 +6,9 @@ import Link from "next/link";
 import { LayoutDashboard, ClipboardList, User2, LogOut } from "lucide-react";
 import Image from "next/image";
 import logo from "../../assets/ICTPL_image.png";
-// import Confetti from "react-confetti"; // Commented out
+
+/* ─────── NEW: Email → Name Map ─────── */
+import emailNamePairs from "../../public/names.json";
 
 interface UserType {
   uid: string;
@@ -19,20 +21,22 @@ interface AuthContextType {
   signOut?: () => Promise<void>;
 }
 
+/* ─────── Build Email to Name Map ─────── */
+const emailToName = new Map<string, string>();
+Object.entries(emailNamePairs as Record<string, string>).forEach(([email, name]) => {
+  emailToName.set(email.toLowerCase(), name);
+});
+
 const ResultPage = () => {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
   const [resultMessage, setResultMessage] = useState<string | null>(null);
-  // const [showConfetti, setShowConfetti] = useState(false); // Removed
-  // const [windowSize, setWindowSize] = useState({ width: 0, height: 0 }); // Removed
 
   // Redirect if no user
   useEffect(() => {
     if (!auth) return;
     if (!auth.loading && !auth.user) router.push("/");
   }, [auth, router]);
-
-  // Removed window resize effect for Confetti
 
   const handleSignOut = async () => {
     try {
@@ -47,7 +51,6 @@ const ResultPage = () => {
     }
   };
 
-  // Updated: Show "Result not yet uploaded" directly
   const handleShowResults = () => {
     setResultMessage("Result not yet uploaded");
   };
@@ -56,7 +59,18 @@ const ResultPage = () => {
     router.push("/dashboard");
   };
 
-  if (!auth || auth.loading) return <p className="text-center mt-10 text-gray-600">Loading...</p>;
+  /* ─────── Get Full Name from Email ─────── */
+  const getUserDisplayName = () => {
+    const userEmail = auth?.user?.email?.toLowerCase();
+    if (userEmail && emailToName.has(userEmail)) {
+      return emailToName.get(userEmail)!;
+    }
+    // Fallback: show email prefix
+    return auth?.user?.email?.split("@")[0] || "User";
+  };
+
+  if (!auth || auth.loading)
+    return <p className="text-center mt-10 text-gray-600">Loading...</p>;
   if (!auth.user) return null;
 
   return (
@@ -70,6 +84,9 @@ const ResultPage = () => {
           <Link href="/results" className="flex items-center px-5 py-2 bg-blue-500">
             <ClipboardList className="w-5 h-5 mr-3" /> Result
           </Link>
+          <Link href="/sessions" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <ClipboardList className="w-5 h-5 mr-3" /> Sessions
+          </Link>
         </nav>
       </aside>
 
@@ -80,6 +97,9 @@ const ResultPage = () => {
         </Link>
         <Link href="/results" className="flex flex-col items-center text-xs">
           <ClipboardList className="w-5 h-5 mb-1" /> Results
+        </Link>
+        <Link href="/sessions" className="flex flex-col items-center text-xs">
+          <ClipboardList className="w-5 h-5 mb-1" /> Sessions
         </Link>
         <button onClick={handleSignOut} className="flex flex-col items-center text-xs">
           <LogOut className="w-5 h-5 mb-1" /> Logout
@@ -95,12 +115,12 @@ const ResultPage = () => {
             <div className="flex items-center gap-2">
               <User2 className="w-5 h-5 text-gray-700" />
               <div className="text-sm text-gray-800 text-right">
-                <div className="font-semibold truncate max-w-[100px] md:max-w-none">
-                  {auth.user.email.split("@")[0]}
+                {/* FULL NAME ON RIGHT */}
+                <div className="font-semibold truncate max-w-[150px] md:max-w-none">
+                  {getUserDisplayName()}
                 </div>
-                <div className="text-xs text-gray-500 truncate max-w-[150px]">
-                  {auth.user.email}
-                </div>
+                {/* Optional: keep email below if needed */}
+                
               </div>
             </div>
             <button

@@ -57,7 +57,7 @@ export default function IndirectTaxPage() {
   if (!auth.user) return null;
 
   const conceptPDFs: ConceptPDFs = {
-    "GST Fundamentals": [
+    "GST LAWS": [
       { title: "Chapter 1 - Fundamentals of GST", src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-1 Fundamentals of GST.pdf", download: "Chapter-1 Fundamentals of GST.pdf" },
       { title: "Chapter 2 - Basics of GST", src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-2 Basics of GST.pdf", download: "Chapter-2 Basics of GST.pdf" },
       { title: "Chapter 3 - One Nation-One Tax", src: "/pdf/indirecttax/goodsandservices(GST)/Chapter-3 One Nation-One Tax.pdf", download: "Chapter-3 One Nation-One Tax.pdf" },

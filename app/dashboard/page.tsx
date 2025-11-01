@@ -29,6 +29,11 @@ import { format, addMinutes, isWithinInterval } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 
 /* -------------------------------------------------
+   NEW: Email → Name JSON (email as key, name as value)
+   ------------------------------------------------- */
+import emailNamePairs from "../../public/names.json";
+
+/* -------------------------------------------------
    Types – MATCH DB column names exactly
    ------------------------------------------------- */
 interface Session {
@@ -52,6 +57,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/* -------------------------------------------------
+   Email → Name Map
+   ------------------------------------------------- */
+const emailToName = new Map<string, string>();
+Object.entries(emailNamePairs as Record<string, string>).forEach(([email, name]) => {
+  emailToName.set(email.toLowerCase(), name);
+});
 
 /* -------------------------------------------------
    Dashboard Component
@@ -172,6 +185,16 @@ export default function Dashboard() {
       new Date(`${s.sessiondate}T${s.sessiontime}`) > new Date() && !isSessionLiveNow(s)
   );
 
+  /* ---------- Get Full Name from EMAIL (instead of member_id) ---------- */
+  const getUserDisplayName = () => {
+    const userEmail = auth.user?.email?.toLowerCase();
+    if (userEmail && emailToName.has(userEmail)) {
+      return emailToName.get(userEmail)!;
+    }
+    // Fallback – show the part before the @ (old behaviour)
+    return auth.user?.email?.split("@")[0] || "User";
+  };
+
   return (
     <>
       {/* Tailwind Animation + Delay Utility */}
@@ -224,7 +247,7 @@ export default function Dashboard() {
             <Image src={logo} alt="Logo" className="h-[60px] w-[60px] md:h-[100px] md:w-[100px]" />
 
             <div className="flex items-center gap-3 md:gap-5">
-              {/* Live / Upcoming Badge - GREEN & SMALLER */}
+              {/* Live / Upcoming Badge */}
               {(liveNow || hasUpcoming) && nearest && (
                 <button
                   onClick={() => openModal(nearest)}
@@ -254,15 +277,12 @@ export default function Dashboard() {
                 </button>
               )}
 
-              {/* User Info */}
+              {/* User Info – FULL NAME FROM EMAIL */}
               <div className="flex items-center gap-2">
                 <User2 className="w-5 h-5 text-gray-700" />
                 <div className="text-sm text-gray-800 text-right">
-                  <div className="font-semibold truncate max-w-[100px] md:max-w-none">
-                    {auth.user?.email?.split("@")[0]}
-                  </div>
-                  <div className="text-xs text-gray-500 truncate max-w-[150px]">
-                    {auth.user?.email}
+                  <div className="font-semibold truncate max-w-[150px] md:max-w-none">
+                    {getUserDisplayName()}
                   </div>
                 </div>
               </div>
@@ -291,8 +311,6 @@ export default function Dashboard() {
             ))}
           </main>
         </div>
-
-        
 
         {/* All-Sessions Modal */}
         {showSessionsModal && (

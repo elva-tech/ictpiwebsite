@@ -21,6 +21,9 @@ import { createClient } from "@supabase/supabase-js";
 /* ─────── Assets ─────── */
 import logo from "../../assets/ICTPL_image.png";
 
+/* ─────── NEW ─────── */
+import emailNamePairs from "../../public/names.json";
+
 /* ─────── Types ─────── */
 interface Session {
   sessionid: number;
@@ -40,6 +43,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/* ─────── Email to Name Map ─────── */
+const emailToName = new Map<string, string>();
+Object.entries(emailNamePairs as Record<string, string>).forEach(([email, name]) => {
+  emailToName.set(email.toLowerCase(), name);
+});
 
 /* ─────── Helper – format time ─────── */
 const formatTime = (time: string): string => {
@@ -94,6 +103,16 @@ export default function Dashboard() {
     } catch (e) {
       console.error(e);
     }
+  };
+
+  /* ---------- Get Full Name from Email ---------- */
+  const getUserDisplayName = () => {
+    const userEmail = auth.user?.email?.toLowerCase();
+    if (userEmail && emailToName.has(userEmail)) {
+      return emailToName.get(userEmail)!;
+    }
+    // fallback – email prefix (same as before)
+    return auth.user?.email?.split("@")[0] || "User";
   };
 
   if (!auth || auth.loading)
@@ -170,10 +189,10 @@ export default function Dashboard() {
               <div className="hidden md:flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <User2 className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <p className="font-medium">{auth.user?.email?.split("@")[0]}</p>
-                    <p className="text-xs text-gray-500">{auth.user?.email}</p>
-                  </div>
+                  {/* FULL NAME FROM EMAIL */}
+                  <span className="font-medium text-gray-800">
+                    {getUserDisplayName()}
+                  </span>
                 </div>
                 <button
                   onClick={signOut}
@@ -254,7 +273,7 @@ export default function Dashboard() {
 
                     <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center text-xs">
                       <span className="font-medium text-gray-500">
-                        ID: {session.sessionid}
+                        SESSION-ID: {session.sessionid}
                       </span>
                       <a
                         href={session.sessionlink}
