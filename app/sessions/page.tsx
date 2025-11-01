@@ -267,7 +267,7 @@ export default function Dashboard() {
                           {/* Trainer */}
                           <div className="flex items-center gap-2">
                             <User2 className="w-4 h-4 text-blue-600" />
-                            <span className="font-medium">{trainerName}</span>
+                            <span className="font-medium">{trainerName.toUpperCase()}</span>
                           </div>
 
                           {/* Day of Week */}
