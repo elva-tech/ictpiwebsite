@@ -31,6 +31,8 @@ interface Session {
   sessiondate: string;   // YYYY-MM-DD
   sessiontime: string;   // HH:MM[:SS]
   sessionlink: string;
+  name_of_the_trainer?: string;  // Email of trainer
+  day?: string;                  // Optional: "Monday", etc.
 }
 
 /* ─────── Supabase ─────── */
@@ -111,7 +113,6 @@ export default function Dashboard() {
     if (userEmail && emailToName.has(userEmail)) {
       return emailToName.get(userEmail)!;
     }
-    // fallback – email prefix (same as before)
     return auth.user?.email?.split("@")[0] || "User";
   };
 
@@ -189,7 +190,6 @@ export default function Dashboard() {
               <div className="hidden md:flex items-center gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <User2 className="w-5 h-5 text-blue-600" />
-                  {/* FULL NAME FROM EMAIL */}
                   <span className="font-medium text-gray-800">
                     {getUserDisplayName()}
                   </span>
@@ -238,54 +238,87 @@ export default function Dashboard() {
             ) : (
               /* Sessions Grid */
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sessions.map((session) => (
-                  <div
-                    key={session.sessionid}
-                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden flex flex-col"
-                  >
-                    <div className="p-6 flex-1">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-3 line-clamp-2">
-                        {session.sessiontitle}
-                      </h3>
+                {sessions.map((session) => {
+                  // Derive day name from sessiondate
+                  const dateObj = new Date(session.sessiondate);
+                  const dayName = isNaN(dateObj.getTime())
+                    ? session.day || "Unknown Day"
+                    : dateObj.toLocaleDateString("en-US", { weekday: "long" });
 
-                      <div className="space-y-3 text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-blue-600" />
-                          <span>{session.sessiondate}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-blue-600" />
-                          <span>{formatTime(session.sessiontime)}</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <Link2 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                          <a
-                            href={session.sessionlink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline break-all text-xs"
-                          >
-                            {session.sessionlink}
-                          </a>
+                  // Get trainer name
+                  const trainerEmail = session.name_of_the_trainer?.toLowerCase();
+                  const trainerName = trainerEmail && emailToName.has(trainerEmail)
+                    ? emailToName.get(trainerEmail)!
+                    : trainerEmail
+                    ? trainerEmail.split("@")[0]
+                    : "Not Assigned";
+
+                  return (
+                    <div
+                      key={session.sessionid}
+                      className="bg-white rounded-xl shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden flex flex-col"
+                    >
+                      <div className="p-6 flex-1">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3 line-clamp-2">
+                          {session.sessiontitle}
+                        </h3>
+
+                        <div className="space-y-3 text-sm text-gray-600">
+                          {/* Trainer */}
+                          <div className="flex items-center gap-2">
+                            <User2 className="w-4 h-4 text-blue-600" />
+                            <span className="font-medium">{trainerName}</span>
+                          </div>
+
+                          {/* Day of Week */}
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-green-600" />
+                            <span>{dayName}</span>
+                          </div>
+
+                          {/* Date */}
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-blue-600" />
+                            <span>{session.sessiondate}</span>
+                          </div>
+
+                          {/* Time */}
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-blue-600" />
+                            <span>{formatTime(session.sessiontime)}</span>
+                          </div>
+
+                          {/* Link */}
+                          <div className="flex items-start gap-2">
+                            <Link2 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <a
+                              href={session.sessionlink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline break-all text-xs"
+                            >
+                              {session.sessionlink}
+                            </a>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center text-xs">
-                      <span className="font-medium text-gray-500">
-                        SESSION-ID: {session.sessionid}
-                      </span>
-                      <a
-                        href={session.sessionlink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium"
-                      >
-                        Open <ExternalLink className="w-3 h-3" />
-                      </a>
+                      <div className="bg-gray-50 px-6 py-3 border-t border-gray-200 flex justify-between items-center text-xs">
+                        <span className="font-medium text-gray-500">
+                          SESSION-ID: {session.sessionid}
+                        </span>
+                        <a
+                          href={session.sessionlink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Open <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </main>
