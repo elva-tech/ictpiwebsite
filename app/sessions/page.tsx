@@ -59,6 +59,19 @@ const formatTime = (time: string): string => {
   return parts.map(p => p.padStart(2, "0")).join(":");
 };
 
+/* ─────── Helper – custom capitalize trainer name ─────── */
+const capitalizeTrainerName = (name: string): string => {
+  return name
+    .split(" ")
+    .map(word => {
+      if (word.toLowerCase() === "ctpr") {
+        return "CTPr"; // Keep 'r' lowercase, rest uppercase
+      }
+      return word.toUpperCase();
+    })
+    .join(" ");
+};
+
 /* ─────── Dashboard ─────── */
 export default function Dashboard() {
   const auth = useAuth() as any;
@@ -248,9 +261,9 @@ export default function Dashboard() {
                   // Get trainer name
                   const trainerEmail = session.name_of_the_trainer?.toLowerCase();
                   const trainerName = trainerEmail && emailToName.has(trainerEmail)
-                    ? emailToName.get(trainerEmail)!
+                    ? capitalizeTrainerName(emailToName.get(trainerEmail)!)
                     : trainerEmail
-                    ? trainerEmail.split("@")[0]
+                    ? capitalizeTrainerName(trainerEmail.split("@")[0])
                     : "Not Assigned";
 
                   return (
@@ -267,7 +280,7 @@ export default function Dashboard() {
                           {/* Trainer */}
                           <div className="flex items-center gap-2">
                             <User2 className="w-4 h-4 text-blue-600" />
-                            <span className="font-medium">{trainerName.toUpperCase()}</span>
+                            <span className="font-medium">{trainerName}</span>
                           </div>
 
                           {/* Day of Week */}
