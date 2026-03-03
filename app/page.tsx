@@ -305,25 +305,7 @@ export default function Home() {
               ))}
             </div>
           </section>
-        </Reveal>
-
-        {/* Banners and Editorials */}
-        <Reveal delay={200}>
-          <section className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-10 tracking-tight">
-              Banners and Editorials
-            </h2>
-            <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl ring-1 ring-slate-200/60">
-              <Image
-                src="/images/editorial.png"
-                alt="Editorial Banner from ICTPI"
-                width={1200}
-                height={600}
-                className="w-full h-auto"
-              />
-            </div>
-          </section>
-        </Reveal>
+        </Reveal>   
       </main>
 
       {/* Footer – full address and contact */}
