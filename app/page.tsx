@@ -5,8 +5,14 @@ import Link from "next/link";
 import { AppLogo } from "@/components/AppLogo";
 import { useRef, useEffect, useState } from "react";
 
+interface RevealProps {
+  children: React.ReactNode;
+  className?: string;
+  delay?: number;
+}
+
 // Staggered reveal: add class when in view
-function useReveal(ref: React.RefObject<HTMLElement>, delay = 0) {
+function useReveal(ref: React.RefObject<HTMLElement | null>, delay = 0): boolean {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
@@ -26,15 +32,7 @@ function useReveal(ref: React.RefObject<HTMLElement>, delay = 0) {
   return visible;
 }
 
-function Reveal({
-  children,
-  className = "",
-  delay = 0,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  delay?: number;
-}) {
+function Reveal({ children, className = "", delay = 0 }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useReveal(ref, delay);
   return (
@@ -49,15 +47,26 @@ function Reveal({
   );
 }
 
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+interface RecognitionLink {
+  label: string;
+  href: string;
+  icon: string;
+}
+
 export default function Home() {
-  const navItems = [
+  const navItems: NavItem[] = [
     { label: "Home", href: "/" },
     { label: "Member Login", href: "/login" },
     { label: "Admin Login", href: "https://results-vdct.vercel.app/" },
     { label: "Refer", href: "/refer" },
   ];
 
-  const recognitionLinks = [
+  const recognitionLinks: RecognitionLink[] = [
     { label: "National Qualification Register", href: "https://www.nqr.gov.in/qualifications/3521", icon: "🏆" },
     { label: "Register of National Occupational Standards", href: "https://www.mepsc.in/occupational_standar/entrepreneurship/", icon: "📋" },
     { label: "RPL for Seniors", href: "https://www.ictpi.in/rpl", icon: "🔄" },
