@@ -18,13 +18,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
+import { AppLogo } from "@/components/AppLogo";
 
 // Assets
 import accountancy from "../../assets/Accountancy.webp";
 import complaince from "../../assets/complaiance.webp";
 import directax from "../../assets/directtax.webp";
 import appliedfinance from "../../assets/fourthimage.webp";
-import logo from "../../assets/ICTPL_image.png";
 
 // Date utilities
 import { format, addMinutes, isWithinInterval } from "date-fns";
@@ -309,7 +309,7 @@ export default function Dashboard() {
         <div className="flex-1 flex flex-col">
           <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white shadow px-4 md:px-6 py-4 sticky top-0 z-40 gap-4">
             <div className="flex items-center gap-4">
-              <Image src={logo} alt="Logo" className="h-16 w-16 md:h-24 md:w-24" />
+              <AppLogo variant="header" />
             </div>
 
             <div className="flex items-center gap-5 md:gap-8">

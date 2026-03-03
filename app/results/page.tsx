@@ -3,21 +3,9 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import {
-  LayoutDashboard,
-  ClipboardList,
-  User2,
-  LogOut,
-  History,
-  GraduationCap,
-  ClipboardPenLine,
-  FileCheck,
-} from "lucide-react";
-import Image from "next/image";
-import logo from "../../assets/ICTPL_image.png";
 import { supabase } from "@/lib/Supabase";
-
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { Link } from "lucide-react";
 interface Candidate {
   membership_id: number;
   name: string;
@@ -43,12 +31,6 @@ const ResultPage = () => {
   const [fullName, setFullName] = useState<string>("User");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (auth && !auth.loading && !auth.user) {
-      router.push("/");
-    }
-  }, [auth, router]);
 
   useEffect(() => {
     if (!auth?.user?.email) return;
@@ -126,16 +108,6 @@ const ResultPage = () => {
     fetchUserAndResults();
   }, [auth?.user?.email]);
 
-  const handleSignOut = async () => {
-    try {
-      if (auth?.signOut) await auth.signOut();
-      await supabase.auth.signOut();
-      router.push("/");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   const getLevelStatus = (field?: string) => {
     const value = field?.trim().toUpperCase();
     if (value === "COMPLETED") return { text: "COMPLETED ✅", color: "bg-gradient-to-br from-emerald-500 to-teal-600", glow: "shadow-emerald-500/60" };
@@ -182,89 +154,7 @@ const ResultPage = () => {
   if (!auth?.user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-100 relative overflow-hidden flex-col md:flex-row">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-60 bg-[#0062cc] text-white flex-col">
-        <nav className="flex-1 mt-4 space-y-3">
-          <Link href="/dashboard" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <LayoutDashboard className="w-5 h-5 mr-3" /> Dashboard
-          </Link>
-          <Link href="/results" className="flex items-center px-5 py-2 bg-blue-700 font-semibold">
-            <ClipboardList className="w-5 h-5 mr-3" /> Result
-          </Link>
-          <Link href="/sessions" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardList className="w-5 h-5 mr-3" /> Sessions
-          </Link>
-          <Link href="/previous" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <History className="w-5 h-5 mr-3" /> Previous sessions
-          </Link>
-          <Link href="/vlogs" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardList className="w-5 h-5 mr-3" /> B/Vlogs
-          </Link>
-          <Link href="/schedule" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <GraduationCap className="w-5 h-5 mr-3" /> Exam Information
-          </Link>
-          <Link href="/modelpaper" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardPenLine className="w-5 h-5 mr-3" /> Model papers
-          </Link>
-          <Link href="/tests" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardPenLine className="w-5 h-5 mr-3" /> Practice Tests
-          </Link>
-          <Link href="/certificates" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <FileCheck className="w-5 h-5 mr-3" /> Certificates
-          </Link>
-        </nav>
-      </aside>
-
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50 text-xs">
-        <Link href="/dashboard" className="flex flex-col items-center py-1">
-          <LayoutDashboard className="w-5 h-5 mb-1" /> Dashboard
-        </Link>
-        <Link href="/results" className="flex flex-col items-center py-1">
-          <ClipboardList className="w-5 h-5 mb-1" /> Results
-        </Link>
-        <Link href="/sessions" className="flex flex-col items-center py-1">
-          <ClipboardList className="w-5 h-5 mb-1" /> Sessions
-        </Link>
-        <Link href="/previous" className="flex flex-col items-center py-1">
-          <History className="w-5 h-5 mb-1" /> Previous
-        </Link>
-        <Link href="/modelpaper" className="flex flex-col items-center py-1">
-          <ClipboardPenLine className="w-5 h-5 mb-1" /> Model
-        </Link>
-        <Link href="/tests" className="flex flex-col items-center py-1">
-          <ClipboardPenLine className="w-5 h-5 mb-1" /> Tests
-        </Link>
-        <Link href="/certificates" className="flex flex-col items-center text-xs">
-          <FileCheck className="w-5 h-5 mb-1" /> Certs
-        </Link>
-        <button onClick={handleSignOut} className="flex flex-col items-center py-1">
-          <LogOut className="w-5 h-5 mb-1" /> Logout
-        </button>
-      </nav>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-y-auto pb-20 md:pb-0">
-        <header className="flex justify-between items-center bg-white shadow px-4 md:px-6 py-3 sticky top-0 z-40">
-          <Image src={logo} alt="Logo" className="h-[60px] w-[60px] md:h-[100px] md:w-[100px]" />
-          <div className="flex items-center gap-3 md:gap-5">
-            <div className="flex items-center gap-2">
-              <User2 className="w-5 h-5 text-gray-700" />
-              <div className="text-sm text-gray-800 text-right">
-                <div className="font-semibold">{fullName}</div>
-              </div>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="hidden md:flex items-center gap-2 px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
-            >
-              <LogOut className="w-5 h-5" /> Sign Out
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 bg-gray-100 px-4 py-8 md:p-10">
+    <AuthenticatedLayout title="Results" maxWidth="lg">
           <div className="max-w-5xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold text-white bg-blue-600 py-6 rounded-t-2xl shadow-lg text-center mb-8">
               RESULTS
@@ -413,9 +303,7 @@ const ResultPage = () => {
               </div>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+    </AuthenticatedLayout>
   );
 };
 

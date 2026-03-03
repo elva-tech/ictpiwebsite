@@ -3,21 +3,9 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import {
-  LayoutDashboard,
-  ClipboardList,
-  LogOut,
-  History,
-  User2,
-  PlayCircle,
-  GraduationCap,
-  ClipboardPenLine,
-  FileCheck,
-} from "lucide-react";
-import Image from "next/image";
-import logo from "../../assets/ICTPL_image.png";
+import { PlayCircle, History } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -168,16 +156,6 @@ export default function PreviousSessions() {
 
   if (!auth.user) return null;
 
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut?.();
-      await supabase.auth.signOut();
-      router.push("/");
-    } catch (err) {
-      console.error("Sign out failed:", err);
-    }
-  };
-
   const extractYouTubeId = (url: string) => {
     const match = url.match(
       /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
@@ -186,102 +164,7 @@ export default function PreviousSessions() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-60 bg-[#0062cc] text-white flex-col sticky top-0 h-screen overflow-y-auto">
-        <nav className="flex-1 mt-4 space-y-3">
-          <Link href="/dashboard" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <LayoutDashboard className="w-5 h-5 mr-3" /> Dashboard
-          </Link>
-          <Link href="/results" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardList className="w-5 h-5 mr-3" /> Result
-          </Link>
-          <Link href="/sessions" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardList className="w-5 h-5 mr-3" /> Sessions
-          </Link>
-          <Link href="/previous" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <History className="w-5 h-5 mr-3" /> Previous Sessions
-          </Link>
-          <Link href="/vlogs" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardList className="w-5 h-5 mr-3" /> B/Vlogs
-          </Link>
-          <Link href="/schedule" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <GraduationCap className="w-5 h-5 mr-3" /> Exam Information
-          </Link>
-          <Link href="/modelpaper" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardPenLine className="w-5 h-5 mr-3" /> Model papers
-          </Link>
-          <Link href="/tests" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <ClipboardPenLine className="w-5 h-5 mr-3" /> Practice Tests
-          </Link>
-          <Link href="/certificates" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
-            <FileCheck className="w-5 h-5 mr-3" /> Certificates
-          </Link>
-        </nav>
-      </aside>
-
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50">
-        <div className="flex justify-around items-center py-2">
-          <Link href="/dashboard" className="flex flex-col items-center text-xs text-gray-700">
-            <LayoutDashboard className="w-6 h-6 mb-1" /> Dash
-          </Link>
-          <Link href="/results" className="flex flex-col items-center text-xs text-gray-700">
-            <ClipboardList className="w-6 h-6 mb-1" /> Results
-          </Link>
-          <Link href="/sessions" className="flex flex-col items-center text-xs text-gray-700">
-            <ClipboardList className="w-6 h-6 mb-1" /> Sessions
-          </Link>
-          <Link href="/previous" className="flex flex-col items-center text-xs font-bold text-[#0062cc]">
-            <History className="w-6 h-6 mb-1" /> Prev
-          </Link>
-          <Link href="/vlogs" className="flex flex-col items-center text-xs text-gray-700">
-            <ClipboardList className="w-6 h-6 mb-1" /> B/Vlogs
-          </Link>
-          <Link href="/schedule" className="flex flex-col items-center text-xs text-gray-700">
-            <GraduationCap className="w-6 h-6 mb-1" /> Exam
-          </Link>
-          <Link href="/modelpaper" className="flex flex-col items-center text-xs text-gray-700">
-            <ClipboardPenLine className="w-6 h-6 mb-1" /> Papers
-          </Link>
-          <Link href="/tests" className="flex flex-col items-center text-xs text-gray-700">
-            <ClipboardPenLine className="w-6 h-6 mb-1" /> Tests
-          </Link>
-          <Link href="/certificates" className="flex flex-col items-center text-xs text-gray-700">
-            <FileCheck className="w-6 h-6 mb-1" /> Certs
-          </Link>
-          <button onClick={handleSignOut} className="flex flex-col items-center text-xs text-red-600">
-            <LogOut className="w-6 h-6 mb-1" /> Logout
-          </button>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Fixed Header */}
-        <header className="fixed top-0 left-0 md:left-60 right-0 bg-white shadow-md z-40 flex items-center justify-between px-5 py-4">
-          <div className="relative">
-            <Image src={logo} alt="Logo" className="h-16 w-16 md:h-24 md:w-24" />
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-lg">
-              <User2 className="w-5 h-5 text-gray-600" />
-              <span className="font-semibold text-gray-800 text-sm md:text-base">
-                {fullName}
-              </span>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition shadow-sm"
-            >
-              <LogOut className="w-5 h-5" /> Sign Out
-            </button>
-          </div>
-        </header>
-
-        {/* Scrollable Main Area */}
-        <main className="flex-1 pt-28 md:pt-36 pb-24 md:pb-12 px-5 md:px-8 bg-gradient-to-br from-gray-50 to-gray-100 overflow-y-auto">
+    <AuthenticatedLayout title="Previous Sessions" maxWidth="full">
           <div className="max-w-7xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 mt-4">
               Previous Sessions
@@ -338,11 +221,6 @@ export default function PreviousSessions() {
               </div>
             )}
           </div>
-
-          {/* Extra bottom padding for mobile nav */}
-          <div className="h-20 md:hidden"></div>
-        </main>
-      </div>
-    </div>
+    </AuthenticatedLayout>
   );
 }

@@ -1,29 +1,18 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import {
-  LayoutDashboard,
-  ClipboardList,
-  History,
-  GraduationCap,
-  ClipboardPenLine,
-  User2,
-  LogOut,
   Eye,
   Download,
   X,
   ChevronDown,
   ChevronRight,
   BookOpen,
-  FileCheck,
   Upload,
 } from "lucide-react";
-import logo from "../../assets/ICTPL_image.png";
-import { supabase } from "@/lib/Supabase"; // assuming this is your supabase client
+import { supabase } from "@/lib/Supabase";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface PdfItem {
@@ -70,8 +59,6 @@ const baskaranMaterials: PdfItem[] = [
 
 export default function StudyMaterialsPage() {
   const auth = useAuth() as any;
-  const router = useRouter();
-  const pathname = usePathname();
 
   const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -119,28 +106,7 @@ export default function StudyMaterialsPage() {
     fetchUserName();
   }, [auth?.user?.email]);
 
-  // ── Auth protection ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (auth?.loading) return;
-    if (!auth?.user) {
-      router.replace("/");
-    }
-  }, [auth?.loading, auth?.user, router]);
-
-  const handleSignOut = async () => {
-    if (auth?.signOut) await auth.signOut();
-    router.replace("/");
-  };
-
-  if (auth?.loading || loadingUser) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <p className="text-xl text-gray-600 animate-pulse">Loading...</p>
-      </div>
-    );
-  }
-
-  if (!auth?.user) return null;
+  if (!auth?.user && !auth?.loading) return null;
 
   const selectedTitle =
     [...ictpiMaterials, ...sreedharaMaterials, ...subramanianMaterials, ...baskaranMaterials]
@@ -227,58 +193,9 @@ export default function StudyMaterialsPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:block w-64 bg-[#0062cc] text-white h-screen sticky top-0 overflow-y-auto">
-        <nav className="p-4 space-y-1.5">
-          {[
-            { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-            { href: "/results", icon: ClipboardList, label: "Results" },
-            { href: "/sessions", icon: ClipboardList, label: "Sessions" },
-            { href: "/previous", icon: History, label: "Previous" },
-            { href: "/schedule", icon: GraduationCap, label: "Schedule" },
-            { href: "/modelpaper", icon: ClipboardPenLine, label: "Model Papers" },
-            { href: "/tests", icon: ClipboardPenLine, label: "Practice Tests" },
-            { href: "/certificates", icon: FileCheck, label: "Certificates" },
-          ].map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors font-medium ${
-                pathname === item.href ? "bg-blue-800 shadow-md" : "hover:bg-blue-700/80"
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-      </aside>
-
-      {/* Main Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm sticky top-0 z-40 px-5 py-3 flex items-center justify-between">
-          <Image src={logo} alt="Logo" className="h-14 w-14 md:h-16 md:w-16 object-contain" priority />
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="font-semibold text-gray-800">{fullName}</p>
-            </div>
-            <User2 className="w-9 h-9 text-gray-600" />
-            <button
-              onClick={handleSignOut}
-              className="hidden md:flex items-center gap-2 px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
-          </div>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 p-5 md:p-8 lg:p-10">
-          <div className="max-w-5xl mx-auto space-y-8">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Faculty Study Materials</h1>
+    <AuthenticatedLayout title="Vlogs & Materials" maxWidth="lg">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Faculty Study Materials</h1>
 
             <AccordionSection
               title="ICTPI Core Materials"
@@ -307,32 +224,6 @@ export default function StudyMaterialsPage() {
               expanded={expandedBaskaran}
               setExpanded={setExpandedBaskaran}
             />
-          </div>
-        </main>
-
-        {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc] text-white z-50 shadow-2xl border-t border-blue-700">
-          <div className="flex justify-around py-2 px-1 text-xs">
-            {[
-              { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
-              { href: "/results", icon: ClipboardList, label: "Results" },
-              { href: "/sessions", icon: ClipboardList, label: "Sessions" },
-              { href: "/previous", icon: History, label: "Prev" },
-              { href: "/modelpaper", icon: ClipboardPenLine, label: "Papers" },
-              { href: "/tests", icon: ClipboardPenLine, label: "Tests" },
-              { href: "/certificates", icon: FileCheck, label: "Certs" },
-            ].map((item) => (
-              <Link key={item.href} href={item.href} className="flex flex-col items-center py-1 px-2 min-w-[60px]">
-                <item.icon className="w-6 h-6 mb-0.5" />
-                {item.label}
-              </Link>
-            ))}
-            <button onClick={handleSignOut} className="flex flex-col items-center py-1 px-2 min-w-[60px] text-red-200">
-              <LogOut className="w-6 h-6 mb-0.5" />
-              Logout
-            </button>
-          </div>
-        </nav>
       </div>
 
       {/* PDF Viewer Modal */}
@@ -361,6 +252,6 @@ export default function StudyMaterialsPage() {
           <iframe src={selectedPdf} className="flex-1 w-full bg-white" title="PDF Viewer" allowFullScreen />
         </div>
       )}
-    </div>
+    </AuthenticatedLayout>
   );
 }

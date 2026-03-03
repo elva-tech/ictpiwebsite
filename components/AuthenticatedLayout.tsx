@@ -1,0 +1,216 @@
+"use client";
+
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { AppLogo } from "@/components/AppLogo";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  History,
+  GraduationCap,
+  ClipboardPenLine,
+  FileCheck,
+  LogOut,
+  ArrowLeft,
+  User2,
+} from "lucide-react";
+import { supabase } from "@/lib/Supabase";
+
+const NAV_LINKS = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/results", label: "Result", icon: ClipboardList },
+  { href: "/sessions", label: "Sessions", icon: ClipboardList },
+  { href: "/previous", label: "Previous Sessions", icon: History },
+  { href: "/vlogs", label: "B/Vlogs", icon: ClipboardList },
+  { href: "/schedule", label: "Exam Information", icon: GraduationCap },
+  { href: "/modelpaper", label: "Model papers", icon: ClipboardPenLine },
+  { href: "/tests", label: "Practice Tests", icon: ClipboardPenLine },
+  { href: "/certificates", label: "Certificates", icon: FileCheck },
+] as const;
+
+interface AuthenticatedLayoutProps {
+  children: React.ReactNode;
+  title: string;
+  showBack?: boolean;
+  backHref?: string;
+  /** Extra header content (e.g. action buttons) */
+  headerActions?: React.ReactNode;
+  /** Max width of main content: "sm" | "md" | "lg" | "full" */
+  maxWidth?: "sm" | "md" | "lg" | "full";
+}
+
+const maxWidthClass = {
+  sm: "max-w-2xl",
+  md: "max-w-4xl",
+  lg: "max-w-6xl",
+  full: "max-w-[1400px]",
+};
+
+export function AuthenticatedLayout({
+  children,
+  title,
+  showBack = false,
+  backHref = "/dashboard",
+  headerActions,
+  maxWidth = "lg",
+}: AuthenticatedLayoutProps) {
+  const auth = useAuth() as any;
+  const router = useRouter();
+  const [fullName, setFullName] = useState<string>("User");
+
+  useEffect(() => {
+    if (!auth?.user?.email) return;
+    const email = auth.user.email.toLowerCase().trim();
+    const fetchUser = async () => {
+      try {
+        const { data } = await supabase
+          .from("memberinformation")
+          .select("name")
+          .eq("email", email)
+          .maybeSingle();
+        if (data?.name?.trim()) setFullName(data.name.trim());
+        else setFullName(email.split("@")[0] || "User");
+      } catch {
+        setFullName(email.split("@")[0] || "User");
+      }
+    };
+    fetchUser();
+  }, [auth?.user?.email]);
+
+  useEffect(() => {
+    if (!auth?.loading && !auth?.user) router.push("/");
+  }, [auth, router]);
+
+  const handleSignOut = async () => {
+    try {
+      if (auth?.signOut) await auth.signOut();
+      await supabase.auth.signOut();
+      router.push("/");
+    } catch (e) {
+      console.error("Sign out failed:", e);
+    }
+  };
+
+  if (!auth || auth.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <p className="text-lg text-gray-600 animate-pulse">Loading...</p>
+      </div>
+    );
+  }
+  if (!auth.user) return null;
+
+  return (
+    <>
+      <style jsx global>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:sticky md:top-0 md:flex md:flex-col md:w-60 md:h-screen md:bg-[#0062cc] md:text-white md:overflow-y-auto scrollbar-hide">
+          <nav className="flex-1 mt-4 space-y-3 px-3">
+            {NAV_LINKS.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center px-5 py-2 rounded-lg hover:bg-blue-500/80 transition-colors"
+              >
+                <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                <span>{label}</span>
+              </Link>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Mobile Bottom Nav */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50 text-xs">
+          <Link href="/dashboard" className="flex flex-col items-center py-1">
+            <LayoutDashboard className="w-5 h-5 mb-1" /> Dash
+          </Link>
+          <Link href="/results" className="flex flex-col items-center py-1">
+            <ClipboardList className="w-5 h-5 mb-1" /> Results
+          </Link>
+          <Link href="/sessions" className="flex flex-col items-center py-1">
+            <ClipboardList className="w-5 h-5 mb-1" /> Sessions
+          </Link>
+          <Link href="/previous" className="flex flex-col items-center py-1">
+            <History className="w-5 h-5 mb-1" /> Prev
+          </Link>
+          <Link href="/schedule" className="flex flex-col items-center py-1">
+            <GraduationCap className="w-5 h-5 mb-1" /> Exam
+          </Link>
+          <Link href="/modelpaper" className="flex flex-col items-center py-1">
+            <ClipboardPenLine className="w-5 h-5 mb-1" /> Papers
+          </Link>
+          <Link href="/tests" className="flex flex-col items-center py-1">
+            <ClipboardPenLine className="w-5 h-5 mb-1" /> Tests
+          </Link>
+          <Link href="/certificates" className="flex flex-col items-center py-1">
+            <FileCheck className="w-5 h-5 mb-1" /> Certs
+          </Link>
+          <button
+            onClick={handleSignOut}
+            className="flex flex-col items-center py-1"
+          >
+            <LogOut className="w-5 h-5 mb-1" /> Logout
+          </button>
+        </nav>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center bg-white shadow px-4 md:px-6 py-4 sticky top-0 z-40 gap-4">
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              {showBack && (
+                <button
+                  onClick={() => router.push(backHref)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="w-6 h-6 text-gray-800" />
+                </button>
+              )}
+              <AppLogo variant="header" />
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800 truncate">
+                {title}
+              </h1>
+            </div>
+            <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto justify-end">
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 hover:opacity-90 transition-all group"
+                title="View profile"
+              >
+                <div className="bg-blue-50 text-blue-700 rounded-full p-2.5 group-hover:bg-blue-100 transition-colors">
+                  <User2 className="w-5 h-5" />
+                </div>
+                <span className="text-sm font-semibold text-gray-800 truncate max-w-[140px] md:max-w-[180px]">
+                  {fullName}
+                </span>
+              </Link>
+              <button
+                onClick={handleSignOut}
+                className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm font-medium shadow-sm"
+              >
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
+              {headerActions}
+            </div>
+          </header>
+
+          <main className={`flex-1 overflow-y-auto pb-24 md:pb-8 px-4 md:px-6 py-6 md:py-8 ${maxWidthClass[maxWidth]} mx-auto w-full`}>
+            {children}
+          </main>
+        </div>
+      </div>
+    </>
+  );
+}

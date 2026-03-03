@@ -1,19 +1,15 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
-import Image from "next/image";
 import {
-  LayoutDashboard, History, ClipboardList, GraduationCap,
-  ClipboardPenLine, User2, LogOut, Eye, Download, X, Radio, Circle,
-  FileCheck
+  Eye, Download, X, Radio, Circle,
 } from "lucide-react";
-import logo from "../../assets/ICTPL_image.png";
 import { createClient } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,7 +33,6 @@ interface ModelPaper {
 export default function ModelPaperPage() {
   const auth = useAuth() as any;
   const router = useRouter();
-  const pathname = usePathname();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -165,16 +160,6 @@ export default function ModelPaperPage() {
     }
   }, [auth, router, mounted]);
 
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut?.();
-      await supabase.auth.signOut();
-      router.push("/");
-    } catch (err) {
-      console.error("Sign out failed:", err);
-    }
-  };
-
   const badgeSession = liveNow
     ? sessions.find(isSessionLiveNow) ?? null
     : nearestFutureSession;
@@ -189,10 +174,6 @@ export default function ModelPaperPage() {
 
   if (!auth.user) return null;
 
-  const nameParts = fullName.split(/\s+/);
-  const firstName = nameParts[0];
-  const lastName = nameParts.slice(1).join(" ");
-
   return (
     <>
       <style jsx>{`
@@ -205,101 +186,28 @@ export default function ModelPaperPage() {
         }
       `}</style>
 
-      <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
-        {/* Sidebar */}
-        <aside className="hidden md:flex w-60 bg-[#0062cc] text-white flex-col h-screen sticky top-0 overflow-y-auto">
-          <nav className="flex-1 px-4 py-4 space-y-1">
-            <Link href="/dashboard" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/dashboard" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <LayoutDashboard className="w-5 h-5 mr-3" /> Dashboard
-            </Link>
-            <Link href="/results" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/results" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <ClipboardList className="w-5 h-5 mr-3" /> Result
-            </Link>
-            <Link href="/sessions" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/sessions" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <ClipboardList className="w-5 h-5 mr-3" /> Sessions
-            </Link>
-            <Link href="/previous" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/previous" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <History className="w-5 h-5 mr-3" /> Previous Sessions
-            </Link>
-            <Link href="/vlogs" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/vlogs" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <ClipboardList className="w-5 h-5 mr-3" /> B/Vlogs
-            </Link>
-            <Link href="/schedule" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/schedule" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <GraduationCap className="w-5 h-5 mr-3" /> Exam Information
-            </Link>
-            <Link href="/modelpaper" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/modelpaper" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <ClipboardPenLine className="w-5 h-5 mr-3" /> Model papers
-            </Link>
-            <Link href="/tests" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/tests" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <ClipboardPenLine className="w-5 h-5 mr-3" /> Practice Tests
-            </Link>
-            <Link href="/certificates" className={`flex items-center px-4 py-3 rounded-lg transition ${pathname === "/certificates" ? "bg-blue-700 font-semibold" : "hover:bg-blue-500"}`}>
-              <FileCheck className="w-5 h-5 mr-3" /> Certificates
-            </Link>
-          </nav>
-        </aside>
-
-        {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50 text-xs">
-          <Link href="/dashboard" className="flex flex-col items-center"><LayoutDashboard className="w-5 h-5 mb-1" /> Dash</Link>
-          <Link href="/results" className="flex flex-col items-center"><ClipboardList className="w-5 h-5 mb-1" /> Results</Link>
-          <Link href="/sessions" className="flex flex-col items-center"><ClipboardList className="w-5 h-5 mb-1" /> Sessions</Link>
-          <Link href="/previous" className="flex flex-col items-center"><History className="w-5 h-5 mb-1" /> Prev</Link>
-          <Link href="/modelpaper" className="flex flex-col items-center"><ClipboardPenLine className="w-5 h-5 mb-1" /> Papers</Link>
-          <Link href="/tests" className="flex flex-col items-center"><ClipboardPenLine className="w-5 h-5 mb-1" /> Tests</Link>
-          <Link href="/certificates" className="flex flex-col items-center"><FileCheck className="w-5 h-5 mb-1" /> Certs</Link>
-          <button onClick={handleSignOut} className="flex flex-col items-center"><LogOut className="w-5 h-5 mb-1" /> Out</button>
-        </nav>
-
-        <div className="flex-1 flex flex-col">
-          <header className="flex justify-between items-center bg-white shadow px-4 md:px-6 py-3 sticky top-0 z-40">
-            <Image src={logo} alt="Logo" className="h-[60px] w-[60px] md:h-[100px] md:w-[100px]" />
-            <div className="flex items-center gap-3 md:gap-5">
-              {badgeSession && (
-                <button
-                  onClick={() => setSelectedSession(badgeSession)}
-                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-sm font-medium transition ${
-                    liveNow ? "bg-green-600 hover:bg-green-700" : "bg-orange-600 hover:bg-orange-700"
-                  }`}
-                >
-                  {liveNow ? (
-                    <>
-                      <Radio className="w-4 h-4" />
-                      <span className="hidden sm:inline">LIVE NOW</span>
-                    </>
-                  ) : (
-                    <>
-                      <Circle className="w-4 h-4 fill-current" />
-                      <span className="hidden sm:inline">UPCOMING</span>
-                    </>
-                  )}
-                </button>
-              )}
-
-              <div className="flex items-center gap-2">
-                <div className="bg-blue-50 p-2 rounded-full">
-                  <User2 className="w-5 h-5 text-blue-700" />
-                </div>
-                <div className="text-sm text-right">
-                  <div className="font-semibold text-gray-800 truncate max-w-[160px] md:max-w-none">
-                    {fullName}
-                  </div>
-                  <div className="text-xs text-gray-500 truncate max-w-[160px] md:max-w-none">
-                    {userEmail}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleSignOut}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
-              >
-                <LogOut className="w-4 h-4" /> Sign Out
-              </button>
-            </div>
-          </header>
-
-          <main className="flex-1 p-6 md:p-8 bg-gray-100 mb-[80px] md:mb-0">
+      <AuthenticatedLayout
+        title="Model Papers"
+        headerActions={badgeSession ? (
+          <button
+            onClick={() => setSelectedSession(badgeSession)}
+            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-sm font-medium transition ${liveNow ? "bg-green-600 hover:bg-green-700" : "bg-orange-600 hover:bg-orange-700"}`}
+          >
+            {liveNow ? (
+              <>
+                <Radio className="w-4 h-4" />
+                <span className="hidden sm:inline">LIVE NOW</span>
+              </>
+            ) : (
+              <>
+                <Circle className="w-4 h-4 fill-current" />
+                <span className="hidden sm:inline">UPCOMING</span>
+              </>
+            )}
+          </button>
+        ) : null}
+        maxWidth="md"
+      >
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-xl shadow-xl overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-6 text-white">
@@ -330,8 +238,6 @@ export default function ModelPaperPage() {
                 </div>
               </div>
             </div>
-          </main>
-        </div>
 
         {/* PDF Fullscreen Modal */}
         {showModal && selectedPaper && (
@@ -408,7 +314,7 @@ export default function ModelPaperPage() {
             </div>
           </div>
         )}
-      </div>
+      </AuthenticatedLayout>
     </>
   );
 }

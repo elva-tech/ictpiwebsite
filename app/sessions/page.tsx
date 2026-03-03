@@ -22,9 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
-
-/* ─────── Assets ─────── */
-import logo from "../../assets/ICTPL_image.png";
+import { AppLogo } from "@/components/AppLogo";
 
 /* ─────── Types ─────── */
 interface Session {
@@ -268,7 +266,7 @@ export default function Dashboard() {
           <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
-                <Image src={logo} alt="Logo" className="h-12 w-12" />
+                <AppLogo variant="header" />
                 
                 <div>
                   <h1 className="text-2xl font-bold text-gray-800">Sessions</h1>

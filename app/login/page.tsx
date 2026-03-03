@@ -7,8 +7,7 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import logo from "@/assets/ICTPL_image.png"; // adjust path if needed
+import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
 
 export default function LoginPage() {
@@ -145,12 +144,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md transform transition-all duration-300 hover:shadow-2xl">
         <div className="flex justify-center mb-6">
-          <Image
-            src={logo}
-            alt="ICTPI Logo"
-            className="h-70 w-auto object-contain"
-            priority
-          />
+          <AppLogo variant="card" alt="ICTPI Logo" priority />
         </div>
 
         
