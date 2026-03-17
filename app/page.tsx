@@ -90,9 +90,6 @@ export default function Home() {
         <div className="absolute top-6 left-6 z-10">
           <AppLogo variant="header" alt="ICTPI Logo" priority />
         </div>
-        <div className="absolute top-6 right-6 z-10 opacity-95">
-          <AppLogo variant="header" alt="ICTPI Logo" priority />
-        </div>
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-24 text-center z-10">
           <p className="font-[family-name:var(--font-poppins)] opacity-0 animate-[slide-up-fade_0.8s_ease-out_0.2s_forwards] text-amber-200/95 font-semibold text-lg sm:text-xl md:text-2xl tracking-wide">
@@ -189,32 +186,32 @@ export default function Home() {
           <Reveal delay={0}>
             <section>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6 text-center">
-                  <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wide mb-3">
+                <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-amber-500/20 shadow-lg p-6 text-center">
+                  <h2 className="text-lg md:text-xl font-bold text-amber-200/95 uppercase tracking-wide mb-3">
                     Our Vision
                   </h2>
-                  <p className="text-slate-700 font-semibold leading-relaxed">
+                  <p className="text-slate-100 font-semibold leading-relaxed">
                     SERVING STAKEHOLDERS IS DEEMED SERVICE TO GOVERNMENT
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-amber-50 border border-amber-200/80 shadow-sm p-6 text-center">
-                  <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wide mb-3">
+                <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-amber-500/20 shadow-lg p-6 text-center">
+                  <h2 className="text-lg md:text-xl font-bold text-amber-200/95 uppercase tracking-wide mb-3">
                     Our Motto
                   </h2>
-                  <p className="text-slate-900 font-bold uppercase tracking-widest leading-relaxed">
+                  <p className="text-slate-50 font-extrabold uppercase tracking-widest leading-relaxed">
                     From Palm-Leaf to Portal, From Ledger to Laptop
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6 text-center">
-                  <h2 className="text-lg md:text-xl font-bold text-slate-900 uppercase tracking-wide mb-3">
+                <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-amber-500/20 shadow-lg p-6 text-center">
+                  <h2 className="text-lg md:text-xl font-bold text-amber-200/95 uppercase tracking-wide mb-3">
                     Our Mission
                   </h2>
-                  <p className="text-slate-700 font-semibold leading-relaxed mb-4">
+                  <p className="text-slate-100 font-semibold leading-relaxed mb-4">
                     TO UPLIFT ANYONE & EVERYONE, ASSURE THEIR SKILLS OF FUNCTIONING
                   </p>
-                  <ul className="text-left text-slate-600 text-sm md:text-base space-y-2 list-disc list-inside leading-relaxed">
+                  <ul className="text-left text-slate-200 text-sm md:text-base space-y-2 list-disc list-inside leading-relaxed">
                     <li>Unite and transform Enrolled Tax Practitioners</li>
                     <li>Confer uniform qualification and membership</li>
                     <li>Enable value-added professionals in nation building</li>
@@ -242,28 +239,28 @@ export default function Home() {
           <Reveal delay={200}>
             <section>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6">
-                  <h2 className="text-lg md:text-xl font-bold text-slate-900 text-center uppercase tracking-wide mb-4">
+                <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-amber-500/20 shadow-lg p-6">
+                  <h2 className="text-lg md:text-xl font-bold text-amber-200/95 text-center uppercase tracking-wide mb-4">
                     Eligibility & Requirements
                   </h2>
-                  <p className="text-slate-600 text-sm md:text-base mb-4 leading-relaxed">
+                  <p className="text-slate-200 text-sm md:text-base mb-4 leading-relaxed">
                     Institute of Chartered Tax Practitioners India has outlined specific requirements for membership eligibility. To become a member, one must:
                   </p>
-                  <ol className="text-slate-700 text-sm md:text-base space-y-3 list-decimal list-inside leading-relaxed">
+                  <ol className="text-slate-100 text-sm md:text-base space-y-3 list-decimal list-inside leading-relaxed">
                     <li>Complete the NCVET-approved Skill Qualification &quot;Consultant: Chartered Tax Practitioner&quot;</li>
                     <li>Obtain a qualification certificate from MEPSC awarded upon successful completion of the course</li>
                     <li>Secure an enrolment licence to practice as a Tax Practitioner from the respective tax department(s)</li>
                   </ol>
-                  <p className="text-slate-600 text-sm md:text-base mt-4 leading-relaxed">
+                  <p className="text-slate-200 text-sm md:text-base mt-4 leading-relaxed">
                     By acknowledging these requirements, ICTPI ensures its members possess the necessary expertise and credentials to provide tax compliance services.
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-white border border-slate-200/80 shadow-sm p-6">
-                  <h2 className="text-lg md:text-xl font-bold text-slate-900 text-center uppercase tracking-wide mb-4">
+                <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-amber-500/20 shadow-lg p-6">
+                  <h2 className="text-lg md:text-xl font-bold text-amber-200/95 text-center uppercase tracking-wide mb-4">
                     Disclaimer
                   </h2>
-                  <ul className="text-slate-600 text-sm md:text-base space-y-2 list-disc list-inside leading-relaxed">
+                  <ul className="text-slate-200 text-sm md:text-base space-y-2 list-disc list-inside leading-relaxed">
                     <li>ICTPI is not affiliated in any manner to the Institute of Chartered Accountants of India (ICAI) and the activities of ICTPI do not deal with any aspect in relation to the ICAI</li>
                     <li>ICTPI does not issue any licenses to practice as an Income Tax Practitioner, GST Practitioner, or a Customs Broker.</li>
                     <li>The courses offered by ICTPI are not an essential prerequisite for obtaining any licenses from the respective departments/authorities.</li>
@@ -350,6 +347,7 @@ export default function Home() {
             </section>
           </Reveal>
 
+          {/* Banners and Editorials */}
           
         </div>
       </main>
