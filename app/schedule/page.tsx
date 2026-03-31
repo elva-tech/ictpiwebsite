@@ -11,12 +11,6 @@ import {
 import { supabase } from "@/lib/Supabase";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 
-import memberMapData from "@/public/member.json";
-
-interface MemberMap {
-  [membershipId: string]: string;
-}
-
 interface Candidate {
   membership_id: number;
   name: string;
@@ -26,14 +20,10 @@ interface Candidate {
   batch_id: string | null;
   batch_name: string | null;
   exam_date: string | null;
-
   mepsc_assesment?: string;
-  next_step?: string;
-  qualification_status?: string;
   self_test_practice?: string;
   mock_exam?: string;
   final_ctpr_exam?: string;
-
   retest_link?: string | null;
   fellowship_link?: string | null;
   new_member_link?: string | null;
@@ -41,38 +31,49 @@ interface Candidate {
 
 export default function MyExamSchedulePage() {
   const auth = useAuth();
-
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [memberMap] = useState<MemberMap>(memberMapData);
-
-  // Fetch logged-in user's own exam schedule
   useEffect(() => {
-    if (!auth?.user?.email || Object.keys(memberMap).length === 0) return;
+    if (!auth?.user?.email) {
+      setError("Please log in to view your exam schedule.");
+      setLoading(false);
+      return;
+    }
 
-    async function fetchMySchedule() {
+    async function fetchCandidateSchedule() {
       setLoading(true);
       setError(null);
 
-      const userEmail = auth.user?.email?.toLowerCase().trim();
-
-      // Find membership ID from email
-      const membershipIdStr = Object.keys(memberMap).find(
-        (id) => memberMap[id].toLowerCase().trim() === userEmail
-      );
-
-      if (!membershipIdStr) {
-        setError("No membership record found for your account.");
-        setLoading(false);
-        return;
-      }
-
-      const membershipId = Number(membershipIdStr);
+      const userEmail = auth.user!.email!.toLowerCase().trim();
+      console.log("🔍 Starting fetch for email:", userEmail);
 
       try {
-        const { data, error: supabaseError } = await supabase
+        // ==================== STEP 1: Get membership_id from memberinformation ====================
+        const { data: memberData, error: memberError } = await supabase
+          .from("memberinformation")
+          .select("membership_id")
+          .eq("email", userEmail)          // ← Change column name if it's not "email"
+          .maybeSingle();
+
+        if (memberError) {
+          console.error("❌ Error fetching from memberinformation:", memberError);
+          setError("Failed to retrieve your membership record. Please contact support.");
+          return;
+        }
+
+        if (!memberData?.membership_id) {
+          console.warn("⚠️ No membership_id found for email:", userEmail);
+          setError("No membership record found for your account.");
+          return;
+        }
+
+        const membershipId = memberData.membership_id;
+        console.log("✅ Membership ID found:", membershipId);
+
+        // ==================== STEP 2: Fetch exam schedule using membership_id ====================
+        const { data: scheduleData, error: scheduleError } = await supabase
           .from("candidate_exam_schedule")
           .select(`
             membership_id,
@@ -87,33 +88,36 @@ export default function MyExamSchedulePage() {
             self_test_practice,
             mock_exam,
             final_ctpr_exam,
-            
+            retest_link,
             fellowship_link,
-            new_member_link
           `)
           .eq("membership_id", membershipId)
           .maybeSingle();
 
-        if (supabaseError) {
-          console.error("Supabase error:", supabaseError);
+        if (scheduleError) {
+          console.error("❌ Error fetching exam schedule:", scheduleError);
           setError("Failed to load your exam schedule. Please try again later.");
-        } else if (data) {
-          setCandidate(data);
-        } else {
-          setError("No exam schedule found for your membership ID.");
+          return;
         }
-      } catch (err) {
-        console.error("Network error:", err);
-        setError("Network error. Please check your connection.");
+
+        if (scheduleData) {
+          console.log("🎉 Full candidate data loaded successfully:", scheduleData);
+          setCandidate(scheduleData);
+        } else {
+          setError("Exam schedule not found for your membership ID.");
+        }
+      } catch (err: any) {
+        console.error("🚨 Unexpected error:", err);
+        setError("An unexpected error occurred. Please check your connection.");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchMySchedule();
-  }, [auth?.user?.email, memberMap]);
+    fetchCandidateSchedule();
+  }, [auth?.user?.email]);
 
-  const isNewMemberPending = candidate?.new_member_link ? true : false;
+  const isNewMemberPending = !!candidate?.new_member_link;
 
   return (
     <AuthenticatedLayout title="Exam Schedule" maxWidth="lg">
@@ -123,13 +127,13 @@ export default function MyExamSchedulePage() {
             <p className="text-xl text-gray-600">Loading your exam schedule...</p>
           </div>
         )}
+
         {!loading && (
           <>
             <h1 className="text-4xl md:text-5xl font-bold text-white bg-blue-600 py-6 rounded-t-2xl shadow-lg text-center mb-10">
               EXAM SCHEDULE
             </h1>
 
-            {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 p-8 rounded-xl text-red-700 text-center mb-12">
                 <p className="text-2xl font-bold">Error</p>
@@ -137,18 +141,23 @@ export default function MyExamSchedulePage() {
               </div>
             )}
 
-            {/* Candidate Schedule Display */}
             {candidate && (
               <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden max-w-4xl mx-auto">
                 <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-6 text-center">
-                  <h2 className="text-2xl md:text-3xl font-bold">Examination </h2>
-                  <p className="mt-1 text-blue-100 text-lg">Consultant Chartered Tax Practitioner (CTPR)</p>
+                  <h2 className="text-2xl md:text-3xl font-bold">Examination</h2>
+                  <p className="mt-1 text-blue-100 text-lg">
+                    Consultant Chartered Tax Practitioner (CTPR)
+                  </p>
                 </div>
 
                 <div className="p-6 md:p-10 space-y-8">
                   <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600 uppercase tracking-wider">Full Name</p>
-                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mt-3">{candidate.name}</h1>
+                    <p className="text-sm font-medium text-gray-600 uppercase tracking-wider">
+                      Full Name
+                    </p>
+                    <h1 className="text-3xl md:text-4xl font-black text-gray-900 mt-3">
+                      {candidate.name}
+                    </h1>
                   </div>
 
                   {/* IDs */}
@@ -164,9 +173,10 @@ export default function MyExamSchedulePage() {
                       <>
                         <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
                           <p className="text-sm text-gray-600">Candidate ID</p>
-                          <p className="text-2xl font-bold text-blue-800 mt-2">{candidate.can_id}</p>
+                          <p className="text-2xl font-bold text-blue-800 mt-2">
+                            {candidate.can_id}
+                          </p>
                         </div>
-
                         <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6 text-center">
                           <p className="text-sm text-gray-600">Batch</p>
                           <p className="text-2xl font-bold text-blue-800 mt-2">
@@ -212,12 +222,20 @@ export default function MyExamSchedulePage() {
                     </div>
                   )}
 
-                  {/* Special Cases */}
+                  {/* Special Alerts with Action Buttons */}
                   {candidate.new_member_link && (
                     <div className="bg-orange-50 border-2 border-orange-300 rounded-xl p-6 text-center">
                       <AlertCircle className="w-12 h-12 text-orange-600 mx-auto mb-4" />
                       <p className="text-xl font-bold text-orange-800">Membership Registration Pending</p>
-                      <p className="mt-2 text-gray-700">Please complete your membership registration to proceed with exams.</p>
+                      <p className="mt-2 text-gray-700">Please complete your membership registration to proceed.</p>
+                      <a
+                        href={candidate.new_member_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-block bg-orange-600 hover:bg-orange-700 text-white px-6 py-2.5 rounded-lg font-medium transition"
+                      >
+                        Complete Registration Now
+                      </a>
                     </div>
                   )}
 
@@ -226,6 +244,14 @@ export default function MyExamSchedulePage() {
                       <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
                       <p className="text-xl font-bold text-red-800">MEPSC Retest Required</p>
                       <p className="mt-2 text-gray-700">You need to retake the MEPSC Assessment.</p>
+                      <a
+                        href={candidate.retest_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-4 inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition"
+                      >
+                        Take Retest Now
+                      </a>
                     </div>
                   )}
                 </div>
@@ -236,7 +262,6 @@ export default function MyExamSchedulePage() {
               </div>
             )}
 
-            {/* No Data */}
             {!candidate && !error && (
               <div className="text-center py-20">
                 <p className="text-2xl text-gray-600">No exam schedule available yet.</p>
