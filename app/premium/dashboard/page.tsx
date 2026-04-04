@@ -22,10 +22,10 @@ import { AppLogo } from "@/components/AppLogo";
 import { PremiumModeButton } from "@/components/PremiumModeButton";
 
 // Assets
-import accountancy from "../../assets/Accountancy.webp";
-import complaince from "../../assets/complaiance.webp";
-import directax from "../../assets/directtax.webp";
-import appliedfinance from "../../assets/fourthimage.webp";
+import accountancy from "../../../assets/Accountancy.webp";
+import complaince from "../../../assets/complaiance.webp";
+import directax from "../../../assets/directtax.webp";
+import appliedfinance from "../../../assets/fourthimage.webp";
 
 // Date utilities
 import { format, addMinutes, isWithinInterval } from "date-fns";
@@ -242,19 +242,19 @@ export default function Dashboard() {
         {/* Desktop Sidebar */}
         <aside className="hidden md:sticky md:top-0 md:flex md:flex-col md:w-60 md:h-screen md:bg-[#0062cc] md:text-white md:overflow-y-auto scrollbar-hide">
           <nav className="flex-1 mt-4 space-y-3">
-            <Link href="/dashboard" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <Link href="/premium" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <LayoutDashboard className="w-5 h-5 mr-3" /> Dashboard
             </Link>
-            <Link href="/results" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <Link href="/premium/results" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <ClipboardList className="w-5 h-5 mr-3" /> Result
             </Link>
-            <Link href="/sessions" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <Link href="/premium/sessions" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <ClipboardList className="w-5 h-5 mr-3" /> Sessions
             </Link>
             <Link href="/previous" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <History className="w-5 h-5 mr-3" /> Previous Sessions
             </Link>
-            <Link href="/vlogs" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <Link href="/premium/vlogs" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <ClipboardList className="w-5 h-5 mr-3" /> B/Vlogs
             </Link>
             <Link href="/schedule" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
@@ -263,10 +263,10 @@ export default function Dashboard() {
             <Link href="/modelpaper" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <ClipboardPenLine className="w-5 h-5 mr-3" /> Model papers
             </Link>
-            <Link href="/tests" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <Link href="/premium/tests" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <ClipboardPenLine className="w-5 h-5 mr-3" /> Practice Tests
             </Link>
-            <Link href="/certificates" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+            <Link href="/premium/certificates" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <FileCheck className="w-5 h-5 mr-3" /> Certificates
             </Link>
           </nav>
@@ -274,19 +274,19 @@ export default function Dashboard() {
 
         {/* Mobile Bottom Nav */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50">
-          <Link href="/dashboard" className="flex flex-col items-center text-xs">
+          <Link href="/premium" className="flex flex-col items-center text-xs">
             <LayoutDashboard className="w-5 h-5 mb-1" /> Dashboard
           </Link>
-          <Link href="/results" className="flex flex-col items-center text-xs">
+          <Link href="/premium/results" className="flex flex-col items-center text-xs">
             <ClipboardList className="w-5 h-5 mb-1" /> Results
           </Link>
-          <Link href="/sessions" className="flex flex-col items-center text-xs">
+          <Link href="/premium/sessions" className="flex flex-col items-center text-xs">
             <ClipboardList className="w-5 h-5 mb-1" /> Sessions
           </Link>
           <Link href="/previous" className="flex flex-col items-center text-xs">
             <History className="w-5 h-5 mb-1" /> Previous
           </Link>
-          <Link href="/vlogs" className="flex flex-col items-center text-xs">
+          <Link href="/premium/vlogs" className="flex flex-col items-center text-xs">
             <ClipboardList className="w-5 h-5 mb-1" /> B/Vlogs
           </Link>
           <Link href="/schedule" className="flex flex-col items-center text-xs">
@@ -295,10 +295,10 @@ export default function Dashboard() {
           <Link href="/modelpaper" className="flex flex-col items-center text-xs">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Papers
           </Link>
-          <Link href="/tests" className="flex flex-col items-center text-xs">
+          <Link href="/premium/tests" className="flex flex-col items-center text-xs">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Tests
           </Link>
-          <Link href="/certificates" className="flex flex-col items-center text-xs">
+          <Link href="/premium/certificates" className="flex flex-col items-center text-xs">
             <FileCheck className="w-5 h-5 mb-1" /> Certs
           </Link>
           <button onClick={handleSignOut} className="flex flex-col items-center text-xs">
@@ -382,7 +382,7 @@ export default function Dashboard() {
             {courses.map((c, i) => (
               <div
                 key={i}
-                onClick={() => router.push(`/courses/${c.route}`)}
+                onClick={() => router.push(`/premium/courses/${c.route}`)}
                 className="bg-white shadow-md rounded-xl p-5 hover:shadow-xl transition cursor-pointer transform hover:-translate-y-1 active:scale-98"
               >
                 <Image

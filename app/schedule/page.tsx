@@ -75,22 +75,9 @@ export default function MyExamSchedulePage() {
         // ==================== STEP 2: Fetch exam schedule using membership_id ====================
         const { data: scheduleData, error: scheduleError } = await supabase
           .from("candidate_exam_schedule")
-          .select(`
-            membership_id,
-            name,
-            place,
-            state,
-            can_id,
-            batch_id,
-            batch_name,
-            exam_date,
-            mepsc_assesment,
-            self_test_practice,
-            mock_exam,
-            final_ctpr_exam,
-            retest_link,
-            fellowship_link,
-          `)
+          .select(
+            "membership_id, name, place, state, can_id, batch_id, batch_name, exam_date, mepsc_assesment, self_test_practice, mock_exam, final_ctpr_exam, retest_link, fellowship_link, new_member_link"
+          )
           .eq("membership_id", membershipId)
           .maybeSingle();
 
@@ -102,7 +89,7 @@ export default function MyExamSchedulePage() {
 
         if (scheduleData) {
           console.log("🎉 Full candidate data loaded successfully:", scheduleData);
-          setCandidate(scheduleData);
+          setCandidate(scheduleData as Candidate);
         } else {
           setError("Exam schedule not found for your membership ID.");
         }

@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { X, ArrowLeft, ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
-import appliedfinance from "../../../assets/fourthimage.webp";
-import "../../globals.css";
+import appliedfinance from "../../../../assets/fourthimage.webp";
+import "../../../globals.css";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 
 interface AuthContextType {
@@ -156,7 +156,7 @@ export default function AppliedFinancePage() {
     <div className="min-h-screen bg-gray-100 py-6 px-4 sm:py-8 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <button
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/premium")}
           className="flex items-center text-blue-600 hover:text-blue-800 mb-6 text-sm sm:text-base font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />

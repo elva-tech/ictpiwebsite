@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLogo } from "@/components/AppLogo";
+import { PremiumModeButton } from "@/components/PremiumModeButton";
+import { usePortalMode } from "@/lib/portalTheme";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -29,6 +31,21 @@ const NAV_LINKS = [
   { href: "/tests", label: "Practice Tests", icon: ClipboardPenLine },
   { href: "/certificates", label: "Certificates", icon: FileCheck },
 ] as const;
+
+/** Map standard portal routes to premium mirrors under /premium */
+const PREMIUM_NAV_HREF: Partial<Record<string, string>> = {
+  "/results": "/premium/results",
+  "/sessions": "/premium/sessions",
+  "/vlogs": "/premium/vlogs",
+  "/tests": "/premium/tests",
+  "/certificates": "/premium/certificates",
+};
+
+function navHrefForPortal(baseHref: string, isPremium: boolean, homeHref: string) {
+  if (!isPremium) return baseHref;
+  if (baseHref === "/dashboard") return homeHref;
+  return PREMIUM_NAV_HREF[baseHref] ?? baseHref;
+}
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode;
@@ -58,7 +75,9 @@ export function AuthenticatedLayout({
 }: AuthenticatedLayoutProps) {
   const auth = useAuth() as any;
   const router = useRouter();
+  const { isPremium } = usePortalMode();
   const [fullName, setFullName] = useState<string>("User");
+  const homeHref = isPremium ? "/premium" : "/dashboard";
 
   useEffect(() => {
     if (!auth?.user?.email) return;
@@ -121,7 +140,7 @@ export function AuthenticatedLayout({
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
-                href={href}
+                href={navHrefForPortal(href, isPremium, homeHref)}
                 className="flex items-center px-5 py-2 rounded-lg hover:bg-blue-500/80 transition-colors"
               >
                 <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
@@ -133,13 +152,13 @@ export function AuthenticatedLayout({
 
         {/* Mobile Bottom Nav */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50 text-xs">
-          <Link href="/dashboard" className="flex flex-col items-center py-1">
+          <Link href={homeHref} className="flex flex-col items-center py-1">
             <LayoutDashboard className="w-5 h-5 mb-1" /> Dash
           </Link>
-          <Link href="/results" className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/results", isPremium, homeHref)} className="flex flex-col items-center py-1">
             <ClipboardList className="w-5 h-5 mb-1" /> Results
           </Link>
-          <Link href="/sessions" className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/sessions", isPremium, homeHref)} className="flex flex-col items-center py-1">
             <ClipboardList className="w-5 h-5 mb-1" /> Sessions
           </Link>
           <Link href="/previous" className="flex flex-col items-center py-1">
@@ -151,10 +170,10 @@ export function AuthenticatedLayout({
           <Link href="/modelpaper" className="flex flex-col items-center py-1">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Papers
           </Link>
-          <Link href="/tests" className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/tests", isPremium, homeHref)} className="flex flex-col items-center py-1">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Tests
           </Link>
-          <Link href="/certificates" className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/certificates", isPremium, homeHref)} className="flex flex-col items-center py-1">
             <FileCheck className="w-5 h-5 mb-1" /> Certs
           </Link>
           <button
@@ -196,6 +215,7 @@ export function AuthenticatedLayout({
                   {fullName}
                 </span>
               </Link>
+              <PremiumModeButton currentEmail={auth.user.email} compact />
               <button
                 onClick={handleSignOut}
                 className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg transition text-sm font-medium shadow-sm"

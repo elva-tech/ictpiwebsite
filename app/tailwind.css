@@ -38,3 +38,89 @@
     50% { opacity: 0.85; }
   }
 }
+
+body[data-portal-mode="premium"] .bg-\[\#0062cc\] {
+  background-color: #6d28d9 !important;
+}
+
+body[data-portal-mode="premium"] .bg-\[\#0062cc\]\/95 {
+  background-color: rgb(109 40 217 / 0.95) !important;
+}
+
+body[data-portal-mode="premium"] .bg-blue-600 {
+  background-color: #7c3aed !important;
+}
+
+body[data-portal-mode="premium"] .hover\:bg-blue-700:hover {
+  background-color: #6d28d9 !important;
+}
+
+body[data-portal-mode="premium"] .hover\:bg-blue-500:hover {
+  background-color: #8b5cf6 !important;
+}
+
+body[data-portal-mode="premium"] .bg-blue-50 {
+  background-color: #f5f3ff !important;
+}
+
+body[data-portal-mode="premium"] .bg-blue-50\/60 {
+  background-color: rgb(245 243 255 / 0.6) !important;
+}
+
+body[data-portal-mode="premium"] .bg-blue-100 {
+  background-color: #ede9fe !important;
+}
+
+body[data-portal-mode="premium"] .text-blue-700 {
+  color: #6d28d9 !important;
+}
+
+body[data-portal-mode="premium"] .text-blue-800 {
+  color: #5b21b6 !important;
+}
+
+body[data-portal-mode="premium"] .border-blue-200 {
+  border-color: #ddd6fe !important;
+}
+
+body[data-portal-mode="premium"] .focus\:ring-blue-400:focus {
+  --tw-ring-color: #a78bfa !important;
+}
+
+body[data-portal-mode="premium"] .from-blue-50 {
+  --tw-gradient-from: #f5f3ff var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(245 243 255 / 0) var(--tw-gradient-to-position) !important;
+}
+
+body[data-portal-mode="premium"] .to-blue-50 {
+  --tw-gradient-to: #f5f3ff var(--tw-gradient-to-position) !important;
+}
+
+/* Landing page marquees (home) */
+@keyframes home-marquee-horizontal {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes home-marquee-vertical {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+.animate-home-marquee-horizontal {
+  animation: home-marquee-horizontal 50s linear infinite;
+}
+.animate-home-marquee-vertical {
+  animation: home-marquee-vertical 22s linear infinite;
+}
+
+/* Main institute title — Algerian (system font on Windows); fallbacks elsewhere */
+.font-heading-algerian {
+  font-family: "Algerian", "Times New Roman", Georgia, serif;
+}

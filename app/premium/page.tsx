@@ -1,0 +1,89 @@
+"use client";
+import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import Link from "next/link";
+import Image from "next/image";
+import accountancy from "../../assets/Accountancy.webp";
+import complaince from "../../assets/complaiance.webp";
+import directax from "../../assets/directtax.webp";
+import appliedfinance from "../../assets/fourthimage.webp";
+import {
+  ClipboardList,
+  History,
+  GraduationCap,
+  ClipboardPenLine,
+  FileCheck,
+  Radio,
+} from "lucide-react";
+
+const PremiumPage = () => {
+  const courses = [
+    { title: "Indirect Tax Laws Compliance (ITLC)", route: "/premium/courses/indirecttax", image: accountancy },
+    { title: "Business Regulatory Laws Compliance (BRLC)", route: "/premium/courses/business", image: complaince },
+    { title: "Direct Tax Laws Compliance (DTLC)", route: "/premium/courses/directtax", image: directax },
+    { title: "Applied Financial Accounting & Ethics (AFAE)", route: "/premium/courses/appliedfinance", image: appliedfinance },
+  ];
+
+  const quickLinks = [
+    { href: "/premium/results", label: "Results", icon: ClipboardList },
+    { href: "/premium/sessions", label: "Sessions", icon: Radio },
+    { href: "/previous", label: "Previous Sessions", icon: History },
+    { href: "/schedule", label: "Exam Information", icon: GraduationCap },
+    { href: "/modelpaper", label: "Model Papers", icon: ClipboardPenLine },
+    { href: "/premium/tests", label: "Practice Tests", icon: ClipboardPenLine },
+    { href: "/premium/certificates", label: "Certificates", icon: FileCheck },
+    { href: "/premium/vlogs", label: "Vlogs & Materials", icon: ClipboardList },
+  ];
+
+  return (
+    <AuthenticatedLayout title="Premium Dashboard" maxWidth="full">
+      <div className="space-y-8">
+        <section className="rounded-3xl bg-gradient-to-r from-purple-700 via-violet-700 to-fuchsia-700 text-white p-8 md:p-10 shadow-xl">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">Premium Member Access</h2>
+          <p className="text-purple-100 max-w-3xl leading-relaxed">
+            You are in premium mode. The member portal keeps the same features and layout, while premium study files are loaded from `public/premium`.
+          </p>
+        </section>
+
+        <section>
+          <h3 className="text-2xl font-bold text-slate-900 mb-5">Premium Quick Access</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {quickLinks.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 hover:shadow-md transition flex flex-col gap-3"
+              >
+                <Icon className="w-6 h-6 text-purple-700" />
+                <span className="font-semibold text-slate-800">{label}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-2xl font-bold text-slate-900 mb-5">Premium Courses</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {courses.map((course) => (
+              <Link
+                key={course.route}
+                href={course.route}
+                className="bg-white shadow-md rounded-xl p-5 hover:shadow-xl transition transform hover:-translate-y-1"
+              >
+                <Image
+                  src={course.image}
+                  alt={course.title}
+                  className="w-full h-44 object-cover rounded-lg mb-4"
+                />
+                <h4 className="text-lg font-semibold text-gray-800 text-center">
+                  {course.title}
+                </h4>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
+    </AuthenticatedLayout>
+  );
+};
+
+export default PremiumPage;

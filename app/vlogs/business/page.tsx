@@ -6,6 +6,7 @@ import { X, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import complaince from "../../../assets/complaiance.webp";
 import "../../globals.css";
+import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 
 interface AuthContextType {
   user: { uid: string; email: string } | null;
@@ -22,6 +23,7 @@ interface PDFCard {
 export default function BusinessRegulatoryPage() {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
+  const { isPremium } = usePortalMode();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -78,14 +80,18 @@ export default function BusinessRegulatoryPage() {
     { title: "Minimum Wages Act", src: "/pdf/bussiness/appendix/MINIMUM WAGES ACT, 1948.pdf", download: "MINIMUM WAGES ACT, 1948.pdf", mentor: "CS Priyanka Verma" },
     { title: "EPF & Misc Provisions", src: "/pdf/bussiness/appendix/EPF AND MISC. PROVISIONS ACT, 1952.pdf", download: "EPF AND MISC. PROVISIONS ACT, 1952.pdf", mentor: "CA Neha Gupta" },
   ];
+  const resolvedPDFs = allPDFs.map((pdf) => ({
+    ...pdf,
+    src: getPortalAssetPath(pdf.src, isPremium),
+  }));
 
   // Extract unique mentors
-  const mentors = Array.from(new Set(allPDFs.map(pdf => pdf.mentor))).sort();
+  const mentors = Array.from(new Set(resolvedPDFs.map(pdf => pdf.mentor))).sort();
 
   // Filter PDFs by selected mentor
   const filteredPDFs = selectedMentor === "all" 
-    ? allPDFs 
-    : allPDFs.filter(pdf => pdf.mentor === selectedMentor);
+    ? resolvedPDFs
+    : resolvedPDFs.filter(pdf => pdf.mentor === selectedMentor);
 
   const handlePDFClick = (pdf: PDFCard) => {
     setSelectedPDF(pdf);
@@ -147,9 +153,9 @@ export default function BusinessRegulatoryPage() {
             onChange={(e) => setSelectedMentor(e.target.value)}
             className="w-full max-w-2xl px-5 py-4 text-lg border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all outline-none"
           >
-            <option value="all">All Mentors ({allPDFs.length} notes)</option>
+            <option value="all">All Mentors ({resolvedPDFs.length} notes)</option>
             {mentors.map(mentor => {
-              const count = allPDFs.filter(p => p.mentor === mentor).length;
+              const count = resolvedPDFs.filter(p => p.mentor === mentor).length;
               return (
                 <option key={mentor} value={mentor}>
                   {mentor} ({count} notes)

@@ -9,6 +9,7 @@ import {
 import { useRouter } from "next/navigation";
 import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
+import { setStoredPortalMode } from "@/lib/portalTheme";
 
 export default function LoginPage() {
   const [userId, setUserId] = useState("");
@@ -64,6 +65,7 @@ export default function LoginPage() {
     }
 
     setIsProcessing(true);
+    setStoredPortalMode("standard");
 
     try {
       const email = await lookupEmailByMemberId(trimmedId);

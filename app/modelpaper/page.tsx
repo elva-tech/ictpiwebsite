@@ -10,6 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +34,7 @@ interface ModelPaper {
 export default function ModelPaperPage() {
   const auth = useAuth() as any;
   const router = useRouter();
+  const { isPremium } = usePortalMode();
 
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -54,6 +56,10 @@ export default function ModelPaperPage() {
     { title: "MEPSC Model Question Paper 2025 - 02", src: "/pdf/modelpaper2.pdf", downloadName: "MEPSC_Model_Paper_2025_2.pdf" },
     { title: "MCQ's of all subjects", src: "/pdf/MCQ.pdf", downloadName: "MCQ_all_subjects.pdf" },
   ];
+  const resolvedModelPapers = modelPapers.map((paper) => ({
+    ...paper,
+    src: getPortalAssetPath(paper.src, isPremium),
+  }));
 
   const isSessionLiveNow = (s: Session): boolean => {
     const now = toZonedTime(new Date(), "Asia/Kolkata");
@@ -215,7 +221,7 @@ export default function ModelPaperPage() {
                   <p className="text-blue-100 mt-1">Download or view in fullscreen</p>
                 </div>
                 <div className="p-6 md:p-8 space-y-6">
-                  {modelPapers.map((paper, i) => (
+                  {resolvedModelPapers.map((paper, i) => (
                     <div key={i} className="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
                       <h3 className="text-xl font-semibold text-gray-800 mb-4">{paper.title}</h3>
                       <div className="flex flex-col sm:flex-row gap-4">

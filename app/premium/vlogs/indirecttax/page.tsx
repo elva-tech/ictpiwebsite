@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { X, ArrowLeft } from "lucide-react";
 import Image from "next/image";
-import indirecttax from "../../../assets/directtax.webp";
-import "../../globals.css";
+import indirecttax from "../../../../assets/directtax.webp";
+import "../../../globals.css";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 
 interface AuthContextType {
@@ -129,7 +129,7 @@ export default function IndirectTaxPage() {
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => router.push("/vlogs")}
+          onClick={() => router.push("/premium/vlogs")}
           className="flex items-center text-blue-600 hover:text-blue-800 mb-6 text-sm sm:text-base font-medium transition-colors"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
