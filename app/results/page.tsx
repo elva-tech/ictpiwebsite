@@ -217,23 +217,13 @@ const ResultPage = () => {
                   </div>
                 </div>
 
-                <div className="text-center mb-10">
-                  <h2 className="text-3xl md:text-4xl font-bold text-white bg-blue-600 inline-block px-12 py-4 rounded-full shadow-lg">
-                    PRESENT STATUS
-                  </h2>
-                </div>
+                
 
                 {/* Optional banner – keep or remove */}
-                <div className="text-center mb-10">
-                  <h2 className="italic text-xl md:text-2xl font-bold text-white bg-purple-700 inline-block px-6 py-2 rounded-full shadow-lg">
-                    MOCK EXAM IN PROGRESS
-                  </h2>
-                </div>
-
+               
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
                   {[
                     { level: 1, name: "MEPSC ASSESSMENT",     status: candidate.mepsc_assesment,     link: null },
-                    { level: 2, name: "SELF TEST PRACTICE",   status: candidate.self_test_practice, link: "/tests" as const },
                     { level: 3, name: "MOCK EXAM",            status: candidate.mock_exam,           link: MOCK_EXAM_LINK },
                     { level: 4, name: "FINAL CTPR EXAM",      status: candidate.final_ctpr_exam,     link: FINAL_CTPR_LINK },
                   ].map((item, idx) => {

@@ -21,11 +21,7 @@ interface Candidate {
   batch_name: string | null;
   exam_date: string | null;
   mepsc_assesment?: string;
-  self_test_practice?: string;
-  mock_exam?: string;
-  final_ctpr_exam?: string;
-  retest_link?: string | null;
-  fellowship_link?: string | null;
+  
   new_member_link?: string | null;
 }
 
@@ -76,7 +72,7 @@ export default function MyExamSchedulePage() {
         const { data: scheduleData, error: scheduleError } = await supabase
           .from("candidate_exam_schedule")
           .select(
-            "membership_id, name, place, state, can_id, batch_id, batch_name, exam_date, mepsc_assesment, self_test_practice, mock_exam, final_ctpr_exam, retest_link, fellowship_link, new_member_link"
+            "membership_id, name, place, state, can_id, batch_id, batch_name, exam_date, mepsc_assesment, self_test_practice, mock_exam, final_ctpr_exam"
           )
           .eq("membership_id", membershipId)
           .maybeSingle();
@@ -226,21 +222,7 @@ export default function MyExamSchedulePage() {
                     </div>
                   )}
 
-                  {candidate.retest_link && (
-                    <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6 text-center">
-                      <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-                      <p className="text-xl font-bold text-red-800">MEPSC Retest Required</p>
-                      <p className="mt-2 text-gray-700">You need to retake the MEPSC Assessment.</p>
-                      <a
-                        href={candidate.retest_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-4 inline-block bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition"
-                      >
-                        Take Retest Now
-                      </a>
-                    </div>
-                  )}
+                  
                 </div>
 
                 <div className="bg-gray-50 px-8 py-4 text-center text-sm text-gray-600 border-t">
