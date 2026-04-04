@@ -12,27 +12,37 @@ const NEWS_LINES = [
   "Consultant (Chartered Tax Practitioners) Course is fully NSQF Aligned at Level 5",
 ];
 
-/** Grey band + white pill title, then white body — matches Institute News / brochure PDF rhythm */
+/** Same title + body structure as brochure PDF; outer shell is styled for depth / motion only */
 function BrochureBlock({
   id,
   title,
   children,
+  revealClass = "animate-landing-reveal landing-delay-5",
 }: {
   id?: string;
   title: string;
   children: ReactNode;
+  revealClass?: string;
 }) {
   return (
-    <section id={id} className="scroll-mt-24">
-      <div className="bg-[#9e9e9e] py-4 md:py-5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-          <div className="inline-flex items-center rounded-full bg-white px-10 py-3 shadow-md">
-            <span className="font-bold text-slate-900 text-base md:text-lg tracking-tight text-center">{title}</span>
+    <section id={id} className={`scroll-mt-24 ${revealClass}`}>
+      <div className="landing-brochure-band relative overflow-hidden py-4 md:py-5">
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-sky-400/15 via-transparent to-indigo-400/20"
+          aria-hidden
+        />
+        <div className="relative z-10 mx-auto flex max-w-7xl justify-center px-4 sm:px-6 lg:px-8">
+          <div className="inline-flex items-center rounded-full bg-white/95 px-10 py-3 text-center shadow-xl shadow-blue-950/25 ring-2 ring-sky-100/90 backdrop-blur-md">
+            <span className="text-center text-base font-bold tracking-tight text-slate-900 md:text-lg">{title}</span>
           </div>
         </div>
       </div>
-      <div className="bg-white border-b border-slate-200 py-8 md:py-11">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 font-serif text-[15px] md:text-[1.05rem] leading-[1.75] text-slate-800">
+      <div className="relative border-b border-blue-200/30 bg-gradient-to-b from-white via-sky-50/70 to-indigo-100/50 py-8 md:py-11">
+        <div
+          className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-blue-400/40 to-transparent"
+          aria-hidden
+        />
+        <div className="relative z-10 mx-auto max-w-4xl px-4 font-serif text-[15px] leading-[1.75] text-slate-800 sm:px-6 lg:px-8 md:text-[1.05rem]">
           {children}
         </div>
       </div>
@@ -45,34 +55,53 @@ export default function Home() {
   const marqueeNews = [...NEWS_LINES, ...NEWS_LINES];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 antialiased overflow-x-hidden">
-      <header className="relative bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white overflow-hidden shadow-md">
+    <div className="relative min-h-screen overflow-x-hidden text-slate-900 antialiased">
+      <div
+        className="pointer-events-none fixed inset-0 -z-20 bg-gradient-to-b from-slate-200 via-blue-100/90 to-indigo-200/80"
+        aria-hidden
+      />
+      <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
+        <div className="animate-landing-orb absolute top-[-18%] right-[-12%] h-[min(88vh,680px)] w-[min(88vw,680px)] rounded-full bg-gradient-to-br from-blue-500/35 via-indigo-500/25 to-violet-600/20 blur-3xl" />
+        <div className="animate-landing-orb-slow absolute bottom-[-20%] left-[-18%] h-[min(75vh,560px)] w-[min(82vw,560px)] rounded-full bg-gradient-to-tr from-blue-900/30 via-blue-600/20 to-indigo-400/25 blur-3xl" />
+        <div className="absolute left-1/2 top-1/3 h-72 w-72 -translate-x-1/2 rounded-full bg-gradient-to-br from-sky-300/25 to-violet-500/20 blur-3xl" />
+      </div>
+
+      <header className="animate-landing-reveal relative overflow-hidden text-white shadow-[0_10px_48px_-14px_rgba(15,23,42,0.55)]">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#020617] via-blue-950 to-indigo-950" aria-hidden />
         <div
-          className="absolute inset-0 opacity-[0.07] bg-[radial-gradient(circle_at_30%_20%,white,transparent_45%),radial-gradient(circle_at_80%_80%,#a78bfa,transparent_40%)]"
+          className="absolute inset-0 bg-gradient-to-t from-blue-950/80 via-transparent to-indigo-900/40"
           aria-hidden
         />
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex flex-1 items-center gap-5 md:gap-8 min-w-0">
+        <div
+          className="absolute inset-0 opacity-[0.14] bg-[radial-gradient(circle_at_15%_25%,#60a5fa,transparent_45%),radial-gradient(circle_at_90%_60%,#a78bfa,transparent_40%),radial-gradient(circle_at_45%_100%,#2563eb,transparent_38%)]"
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 animate-[landing-shine_14s_ease_infinite_alternate] bg-[linear-gradient(105deg,transparent_0%,rgba(255,255,255,0.08)_50%,transparent_100%)] bg-[length:200%_100%] opacity-30 mix-blend-overlay"
+          aria-hidden
+        />
+
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 md:py-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-1 items-center gap-5 md:gap-8">
             <div className="shrink-0">
               <Image
                 src="/images/ICTPL_image.jpg"
                 alt="ICTPI Logo"
                 width={200}
                 height={200}
-                className="object-contain rounded-full drop-shadow-md"
+                className="animate-landing-logo-float rounded-full object-contain "
                 priority
               />
             </div>
 
             <div className="min-w-0 flex-1">
-             
-              <h1 className="font-heading-algerian mt-1 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight tracking-wide text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.35)]">
+              <h1 className="font-heading-algerian mt-1 text-xl font-bold leading-tight tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] sm:text-2xl md:text-3xl lg:text-4xl">
                 INSTITUTE OF CHARTERED TAX PRACTITIONERS INDIA
               </h1>
-              <p className="mt-3 text-emerald-300/95 font-semibold text-sm md:text-base">
+              <p className="mt-3 text-sm font-semibold text-emerald-300/95 md:text-base">
                 [A Professional Membership Body of Enrolled Tax Practitioners of India]
               </p>
-              <p className="mt-2 text-sm md:text-[0.95rem] text-slate-200 leading-snug max-w-3xl">
+              <p className="mt-2 max-w-3xl text-sm leading-snug text-slate-200 md:text-[0.95rem]">
                 [An Industry-cum-Implementation Partner of Management &amp; Entrepreneurship and Professional Skills Council]
                 <br />
                 <span className="text-slate-300/95">
@@ -82,46 +111,46 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 lg:flex-col lg:items-end shrink-0">
+          <div className="flex shrink-0 items-center justify-end gap-3 lg:flex-col lg:items-end">
             <SocialIconLinks className="justify-end" />
           </div>
         </div>
 
-        <nav className="relative z-10 border-t border-white/10 bg-slate-950/35 backdrop-blur-sm py-3 shadow-inner">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        <nav className="relative z-10 border-t border-blue-400/20 bg-gradient-to-r from-slate-950/70 via-blue-950/50 to-indigo-950/70 py-3 shadow-[inset_0_1px_0_rgba(147,197,253,0.12)] backdrop-blur-md">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
             <Link
               href="/"
-              className="px-6 sm:px-8 py-2.5 rounded-full bg-[#e1bee7] text-slate-900 font-bold text-sm sm:text-base uppercase tracking-wide shadow-sm hover:bg-[#ce93d8] transition-colors border border-purple-200/60"
+              className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
               Home
             </Link>
             <Link
               href="#mission"
-              className="px-6 sm:px-8 py-2.5 rounded-full bg-[#e1bee7] text-slate-900 font-bold text-sm sm:text-base uppercase tracking-wide shadow-sm hover:bg-[#ce93d8] transition-colors border border-purple-200/60"
+              className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
               About
             </Link>
             <Link
               href="#institute-news"
-              className="px-6 sm:px-8 py-2.5 rounded-full bg-[#e1bee7] text-slate-900 font-bold text-sm sm:text-base uppercase tracking-wide shadow-sm hover:bg-[#ce93d8] transition-colors border border-purple-200/60"
+              className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
               News
             </Link>
             <Link
               href="/login"
-              className="px-6 sm:px-8 py-2.5 rounded-full bg-[#e1bee7] text-slate-900 font-bold text-sm sm:text-base tracking-wide shadow-sm hover:bg-[#ce93d8] transition-colors border border-purple-200/60"
+              className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
               Student
             </Link>
             <Link
               href="#recognition"
-              className="px-6 sm:px-8 py-2.5 rounded-full bg-[#e1bee7] text-slate-900 font-bold text-sm sm:text-base uppercase tracking-wide shadow-sm hover:bg-[#ce93d8] transition-colors border border-purple-200/60"
+              className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold uppercase tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
               Recognition
             </Link>
             <Link
               href="/refer"
-              className="px-6 sm:px-8 py-2.5 rounded-full bg-[#e1bee7] text-slate-900 font-bold text-sm sm:text-base tracking-wide shadow-sm hover:bg-[#ce93d8] transition-colors border border-purple-200/60"
+              className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
               Refer
             </Link>
@@ -129,27 +158,32 @@ export default function Home() {
         </nav>
       </header>
 
-      
-
-      
-
-      <section className="bg-white py-6 md:py-10 overflow-hidden border-y border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 mb-4">
-          <h2 className="text-xl font-bold text-slate-900 text-center">Gallery</h2>
+      <section className="animate-landing-reveal landing-delay-1 relative overflow-hidden border-y border-blue-200/35 bg-gradient-to-b from-white via-sky-50/80 to-indigo-100/60 py-8 md:py-12">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.4] bg-[linear-gradient(rgba(37,99,235,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.05)_1px,transparent_1px)] bg-[size:48px_48px]"
+          aria-hidden
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/[0.04] via-transparent to-indigo-600/[0.06]" aria-hidden />
+        <div className="relative z-10 mx-auto mb-6 max-w-7xl px-4">
+          <div className="flex items-center justify-center gap-4">
+            <span className="h-px w-10 bg-gradient-to-r from-transparent via-blue-400 to-indigo-500 sm:w-16" aria-hidden />
+            <h2 className="text-center text-xl font-bold text-slate-900">Gallery</h2>
+            <span className="h-px w-10 bg-gradient-to-l from-transparent via-blue-400 to-indigo-500 sm:w-16" aria-hidden />
+          </div>
         </div>
-        <div className="relative w-full overflow-hidden">
-          <div className="flex gap-4 md:gap-6 w-max animate-home-marquee-horizontal">
+        <div className="relative z-10 w-full overflow-hidden">
+          <div className="flex w-max gap-4 animate-home-marquee-horizontal md:gap-6">
             {marqueeImages.map((img, i) => (
               <div
                 key={`${img}-${i}`}
-                className="shrink-0 w-[min(85vw,520px)] md:w-[300px] rounded-xl overflow-hidden shadow-md ring-1 ring-slate-200/80"
+                className="landing-gallery-card w-[min(85vw,520px)] shrink-0 overflow-hidden rounded-2xl shadow-lg ring-1 ring-blue-200/50 md:w-[300px]"
               >
                 <Image
                   src={`/images/${img}`}
                   alt={`Institute gallery ${i + 1}`}
                   width={800}
                   height={450}
-                  className="w-full h-[200px] sm:h-[260px] md:h-[300px] object-cover"
+                  className="h-[200px] w-full object-cover sm:h-[260px] md:h-[300px]"
                   sizes="(max-width: 768px) 85vw, 600px"
                 />
               </div>
@@ -158,17 +192,18 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="institute-news" className="scroll-mt-24">
-        <div className="bg-[#9e9e9e] py-4 md:py-5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
-            <div className="inline-flex items-center rounded-full bg-white px-10 py-3 shadow-md">
-              <span className="font-bold text-slate-900 text-base md:text-lg tracking-tight">Institute News</span>
+      <section id="institute-news" className="animate-landing-reveal landing-delay-2 scroll-mt-24">
+        <div className="landing-brochure-band relative overflow-hidden py-4 md:py-5">
+          <div className="pointer-events-none absolute inset-0 bg-white/[0.08]" aria-hidden />
+          <div className="relative z-10 mx-auto flex max-w-7xl justify-center px-4 sm:px-6 lg:px-8">
+            <div className="inline-flex items-center rounded-full bg-white/95 px-10 py-3 shadow-xl shadow-blue-950/20 ring-2 ring-sky-100/90 backdrop-blur-md">
+              <span className="text-base font-bold tracking-tight text-slate-900 md:text-lg">Institute News</span>
             </div>
           </div>
         </div>
-        <div className="bg-white py-6 md:py-8 border-b border-slate-200">
-          <div className="max-w-4xl mx-auto px-4 overflow-hidden h-[180px] md:h-[220px] relative">
-            <div className="animate-home-marquee-vertical space-y-8 text-center font-bold text-slate-900 text-base md:text-lg leading-relaxed font-serif">
+        <div className="relative border-b border-blue-200/30 bg-gradient-to-b from-white via-blue-50/40 to-indigo-50/50 py-6 md:py-8">
+          <div className="relative mx-auto h-[180px] max-w-4xl overflow-hidden px-4 md:h-[220px]">
+            <div className="landing-marquee-fade-v animate-home-marquee-vertical space-y-8 text-center font-serif text-base font-bold leading-relaxed text-slate-900 md:text-lg">
               {marqueeNews.map((line, i) => (
                 <p key={i}>{line}</p>
               ))}
@@ -180,93 +215,123 @@ export default function Home() {
       {/* Vision / Mission / intro / Acknowledgement–Disclaimer–Appeal — layout per institute brochure */}
       <section
         id="mission"
-        className="scroll-mt-24 border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-slate-200/90 font-sans text-slate-800"
+        className="animate-landing-reveal landing-delay-3 scroll-mt-24 border-b border-blue-200/25 bg-gradient-to-b from-slate-50/95 via-blue-50/50 to-indigo-100/70 font-sans text-slate-800"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-          {/* Row 1: three equal headline columns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-4 lg:gap-6 mb-10 md:mb-12">
-            <p className="text-center text-[11px] sm:text-xs md:text-[0.7rem] lg:text-sm font-bold uppercase leading-snug tracking-wide text-slate-900 px-1">
-              Our Vision: Serving stakeholders is deemed service to government
-            </p>
-            <p className="text-center text-[11px] sm:text-xs md:text-[0.7rem] lg:text-sm font-bold uppercase leading-snug tracking-wide text-slate-900 px-1 md:border-x md:border-slate-300/80 md:px-3">
-              Our Vision: Serving stakeholders is deemed service to government
-            </p>
-            <p className="text-center text-[11px] sm:text-xs md:text-[0.7rem] lg:text-sm font-bold uppercase leading-snug tracking-wide text-slate-900 px-1">
-              Our Mission: To uplift anyone &amp; everyone, assure their skills of functioning
-            </p>
-          </div>
+        <div className="relative overflow-hidden">
+          <div className="pointer-events-none absolute right-0 top-0 h-80 w-80 rounded-full bg-gradient-to-bl from-blue-400/25 to-indigo-800/15 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 rounded-full bg-gradient-to-tr from-blue-900/15 via-indigo-800/20 to-violet-900/15 blur-3xl" aria-hidden />
+          <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
+            {/* Row 1: three equal headline columns */}
+            <div className="mb-10 grid grid-cols-1 gap-6 md:mb-12 md:grid-cols-3 md:gap-4 lg:gap-6">
+              <p className="rounded-2xl border border-blue-200/50 bg-white/75 px-3 py-4 text-center text-[11px] font-bold uppercase leading-snug tracking-wide text-slate-900 shadow-md shadow-blue-500/10 backdrop-blur-sm sm:text-xs md:text-[0.7rem] lg:text-sm">
+                Our Vision: Serving stakeholders is deemed service to government
+              </p>
+              <p className="rounded-2xl border border-indigo-200/50 bg-white/75 px-3 py-4 text-center text-[11px] font-bold uppercase leading-snug tracking-wide text-slate-900 shadow-md shadow-indigo-500/10 backdrop-blur-sm sm:text-xs md:border-x md:border-y-0 md:border-blue-200/60 md:px-3 md:text-[0.7rem] lg:text-sm">
+                Our Vision: Serving stakeholders is deemed service to government
+              </p>
+              <p className="rounded-2xl border border-violet-200/45 bg-white/75 px-3 py-4 text-center text-[11px] font-bold uppercase leading-snug tracking-wide text-slate-900 shadow-md shadow-violet-500/10 backdrop-blur-sm sm:text-xs md:text-[0.7rem] lg:text-sm">
+                Our Mission: To uplift anyone &amp; everyone, assure their skills of functioning
+              </p>
+            </div>
 
-          {/* Row 2: single centered body (wide margins) */}
-          <p className="mx-auto max-w-4xl text-center text-sm md:text-[15px] leading-relaxed text-slate-800 mb-12 md:mb-16 px-2">
-            Enrolled Tax Practitioners are the foundation of business activity in the Indian taxation system. The{" "}
-            <span className="font-semibold text-slate-900">Institute of Chartered Tax Practitioners India (ICTPI)</span> has
-            been formed to unite these practitioners into a professional group. Qualifications are awarded by the{" "}
-            <span className="font-semibold text-slate-900">
-              Management &amp; Entrepreneurship and Professional Skills Council (MEPSC)
-            </span>
-            , approved by the{" "}
-            <span className="font-semibold text-slate-900">
-              National Council for Vocational Education and Training (NCVET)
-            </span>{" "}
-            under the{" "}
-            <span className="font-semibold text-slate-900">Ministry of Skill Development and Entrepreneurship (MSDE)</span>
-            , Government of India.
-          </p>
+            {/* Row 2: single centered body (wide margins) */}
+            <p className="mx-auto mb-12 max-w-4xl px-2 text-center text-sm leading-relaxed text-slate-800 md:mb-16 md:text-[15px]">
+            The diversified class of Enrolled Tax Practitioners, persevered everywhere as the fundamental & foundation stones of every business activity,
+exist from the ancient streams of Indian Taxation system. They are proposed and recognised as the non-litigant propagators of supportive
+compliance under the respective statutes. The Institute of Chartered Tax Practitioners India (ICTPI) is formed to unite & transform these
+unorganised and scattered Tax Practitioners, into a premier troupe of “Chartered Tax Practitioners.” ICTPI aims to confer a uniform qualification
+& membership to protect their interest as a fraternity and to become value added professionals in nation building. ICTPI has developed a
+qualification, which will be awarded by the Management & Entrepreneurship and Professionals Skill Council (MEPSC) duly approved by the
+National Council for Vocational Education and Training (NCVET) under the aegis of Ministry of Skill Development and Entrepreneurship (MSDE),
+Government of India.
+              <span className="font-semibold text-slate-900">Institute of Chartered Tax Practitioners India (ICTPI)</span> has
+              been formed to unite these practitioners into a professional group. Qualifications are awarded by the{" "}
+              <span className="font-semibold text-slate-900">
+                Management &amp; Entrepreneurship and Professional Skills Council (MEPSC)
+              </span>
+              , approved by the{" "}
+              <span className="font-semibold text-slate-900">
+                National Council for Vocational Education and Training (NCVET)
+              </span>{" "}
+              under the{" "}
+              <span className="font-semibold text-slate-900">Ministry of Skill Development and Entrepreneurship (MSDE)</span>
+              , Government of India.
+            </p>
 
-          {/* Row 3: three columns — centred titles, left-aligned copy */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 lg:gap-10">
-            <div>
-              <h3 className="text-center font-bold text-slate-900 text-base md:text-lg mb-4">Acknowledgement</h3>
-              <div className="text-sm md:text-[15px] leading-relaxed text-left space-y-4">
-                <p>Membership is premised on the following:</p>
-                <ol className="list-decimal list-outside pl-5 space-y-3">
+            {/* Row 3: three columns — centred titles, left-aligned copy */}
+            <div className="grid grid-cols-1 gap-10 md:grid-cols-3 md:gap-8 lg:gap-10">
+              <div className="rounded-2xl border border-blue-100/80 bg-white/80 p-5 shadow-lg shadow-blue-500/10 backdrop-blur-md md:p-6">
+                <h3 className="mb-4 text-center text-base font-bold text-slate-900 md:text-lg">Acknowledgement</h3>
+                <div className="space-y-4 text-left text-sm leading-relaxed md:text-[15px]">
+                Institute of Chartered Tax Practitioners India has outlined specific
+requirements for membership eligibility. Accordingly to become a
+member, one must:
+
+
+3. Secure an enrolment licence to practice as a Tax Practitioner from the
+respective tax department(s)
+ 
+
+                  <ol className="list-outside list-decimal space-y-3 pl-5">
+                    <li>
+                    Complete the NCVET-approved Skill Qualification "Consultant:
+                    Chartered Tax Practitioner"                   
+                    </li>
+                    <li>Obtain a qualification certificate from MEPSC awarded upon
+                    successful completion of the course
+                    </li>
+                    <li>
+                    Secure an enrolment licence to practice as a Tax Practitioner from the
+                    respective tax department(s)                    </li>
+                   
+                  </ol>
+                  <p>
+                  By acknowledging these requirements, ICTPI ensures its members
+possess the necessary expertise and credentials to provide tax
+compliance services
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-indigo-100/80 bg-white/80 p-5 shadow-lg shadow-indigo-500/10 backdrop-blur-md md:border-x md:border-y md:border-blue-200/50 md:px-6 md:py-6 lg:px-8">
+                <h3 className="mb-4 text-center text-base font-bold text-slate-900 md:text-lg">Disclaimer</h3>
+                <ul className="list-outside list-disc space-y-3 pl-5 text-left text-sm leading-relaxed md:text-[15px]">
+                  <li>ICTPI is not affiliated with the Institute of Chartered Accountants of India (ICAI).</li>
                   <li>
-                    Completion of the NCVET-approved Skill Qualification &quot;Consultant: Chartered Tax Practitioner.&quot;
+                    ICTPI does not issue licences to practise as an Income-tax Practitioner, GST Practitioner, or Customs
+                    Broker.
                   </li>
-                  <li>Obtaining the qualification certificate from MEPSC.</li>
                   <li>
-                    Securing the enrolment licence to practise as a Tax Practitioner from the respective tax departments.
+                  The courses offered by ICTPI is not an essential prerequisite for
+obtaining any licenses from the respective departments/authorities; 
+The scope of the course offered by the ICTPI is to enable vocational
+training and does not automatically entitle the prospective student
+to practice or enrol as a tax practitioner except as provided in the
+respective statutes. 
                   </li>
-                </ol>
-                <p>
-                  ICTPI ensures that members possess the professional expertise necessary to serve stakeholders with
-                  competence and integrity.
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-violet-100/80 bg-white/80 p-5 shadow-lg shadow-violet-500/10 backdrop-blur-md md:p-6">
+                <h3 className="mb-4 text-center text-base font-bold text-slate-900 md:text-lg">Appeal</h3>
+                <p className="text-left text-sm leading-relaxed md:text-[15px]">
+                The Institute has set up a 2000 sq.ft. head office named "TPI BHAVAN" at
+Bengaluru. Apart from operative costs, rent ,salaries & office expenses,
+institute need corpus to fund its capital expenditure such as building,
+repairs, furniture - fixtures, equipment's, which requires additional
+support. To achieve above objectives the institute requires resources in
+terms of men and money. The Institute requests one and all to contribute
+generously for its endeavour and support for the cause of fraternity!
+(Donations to the Institute are eligible for 
                 </p>
               </div>
-            </div>
-
-            <div className="md:border-x md:border-slate-300/70 md:px-6 lg:px-8">
-              <h3 className="text-center font-bold text-slate-900 text-base md:text-lg mb-4">Disclaimer</h3>
-              <ul className="text-sm md:text-[15px] leading-relaxed text-left list-disc list-outside pl-5 space-y-3">
-                <li>ICTPI is not affiliated with the Institute of Chartered Accountants of India (ICAI).</li>
-                <li>
-                  ICTPI does not issue licences to practise as an Income-tax Practitioner, GST Practitioner, or Customs
-                  Broker.
-                </li>
-                <li>
-                  Courses offered are not an essential prerequisite for obtaining licences from the authorities; they are
-                  for vocational training and do not by themselves entitle a student to practise.
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-center font-bold text-slate-900 text-base md:text-lg mb-4">Appeal</h3>
-              <p className="text-sm md:text-[15px] leading-relaxed text-left">
-                ICTPI has established a 2000 sq. ft. head office,{" "}
-                <span className="font-semibold text-slate-900">TPI BHAVAN</span>, at Bengaluru. The Institute seeks
-                financial support and donations towards capital expenditure — including building repairs, furniture, and
-                allied needs. Donations are eligible for deduction under{" "}
-                <span className="font-semibold text-slate-900">section 80G(5)</span> of the{" "}
-                <span className="font-semibold text-slate-900">Income-tax Act, 1961</span>.
-              </p>
             </div>
           </div>
         </div>
       </section>
 
       <BrochureBlock id="recognition" title="Recognition &amp; credentials">
-        <p className="mb-8 text-center max-w-2xl mx-auto">
+        <p className="mx-auto mb-8 max-w-2xl text-center">
           National registers, MEPSC alignment, and member resources — verify qualification listings and occupational standards using the links below.
         </p>
         <div className="flex flex-wrap justify-center gap-3 not-italic">
@@ -274,30 +339,32 @@ export default function Home() {
             href="https://www.nqr.gov.in/qualifications/3521"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-[#e1bee7] px-6 py-2.5 font-semibold text-slate-900 hover:bg-[#ce93d8] transition-colors inline-flex items-center gap-2 font-sans text-sm md:text-base"
+            className="landing-recognition-btn inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-200 via-blue-100 to-indigo-200 px-6 py-2.5 font-sans text-sm font-semibold text-slate-900 shadow-md ring-1 ring-blue-300/40 md:text-base"
           >
             National Qualification Register
-            <ExternalLink className="w-4 h-4 opacity-80" aria-hidden />
+            <ExternalLink className="h-4 w-4 opacity-80" aria-hidden />
           </a>
           <a
             href="https://www.mepsc.in/occupational_standar/entrepreneurship/"
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-[#e1bee7] px-6 py-2.5 font-semibold text-slate-900 hover:bg-[#ce93d8] transition-colors inline-flex items-center gap-2 font-sans text-sm md:text-base"
+            className="landing-recognition-btn inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-200 via-blue-100 to-indigo-200 px-6 py-2.5 font-sans text-sm font-semibold text-slate-900 shadow-md ring-1 ring-blue-300/40 md:text-base"
           >
             MEPSC occupational standards
-            <ExternalLink className="w-4 h-4 opacity-80" aria-hidden />
+            <ExternalLink className="h-4 w-4 opacity-80" aria-hidden />
           </a>
           <Link
             href="/login"
-            className="rounded-full bg-[#e1bee7] px-6 py-2.5 font-semibold text-slate-900 hover:bg-[#ce93d8] transition-colors font-sans text-sm md:text-base"
+            className="landing-recognition-btn rounded-full bg-gradient-to-r from-sky-200 via-blue-100 to-indigo-200 px-6 py-2.5 font-sans text-sm font-semibold text-slate-900 shadow-md ring-1 ring-blue-300/40 md:text-base"
           >
             Student login
           </Link>
         </div>
       </BrochureBlock>
 
-      <SiteFooter />
+      <div className="animate-landing-reveal landing-delay-6">
+        <SiteFooter />
+      </div>
     </div>
   );
 }
