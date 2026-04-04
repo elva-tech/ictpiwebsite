@@ -17,6 +17,7 @@ import {
   LogOut,
   ArrowLeft,
   User2,
+  Users,
 } from "lucide-react";
 import { supabase } from "@/lib/Supabase";
 
@@ -30,6 +31,7 @@ const NAV_LINKS = [
   { href: "/modelpaper", label: "Model papers", icon: ClipboardPenLine },
   { href: "/tests", label: "Practice Tests", icon: ClipboardPenLine },
   { href: "/certificates", label: "Certificates", icon: FileCheck },
+  { href: "/members", label: "Members", icon: Users },
 ] as const;
 
 /** Map standard portal routes to premium mirrors under /premium */
@@ -151,34 +153,37 @@ export function AuthenticatedLayout({
         </aside>
 
         {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50 text-xs">
-          <Link href={homeHref} className="flex flex-col items-center py-1">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex flex-nowrap justify-start items-center gap-3 overflow-x-auto py-2 px-2 shadow-lg z-50 text-xs scrollbar-hide">
+          <Link href={homeHref} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <LayoutDashboard className="w-5 h-5 mb-1" /> Dash
           </Link>
-          <Link href={navHrefForPortal("/results", isPremium, homeHref)} className="flex flex-col items-center py-1">
+          <Link href="/members" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
+            <Users className="w-5 h-5 mb-1" /> Members
+          </Link>
+          <Link href={navHrefForPortal("/results", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardList className="w-5 h-5 mb-1" /> Results
           </Link>
-          <Link href={navHrefForPortal("/sessions", isPremium, homeHref)} className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/sessions", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardList className="w-5 h-5 mb-1" /> Sessions
           </Link>
-          <Link href="/previous" className="flex flex-col items-center py-1">
+          <Link href="/previous" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <History className="w-5 h-5 mb-1" /> Prev
           </Link>
-          <Link href="/schedule" className="flex flex-col items-center py-1">
+          <Link href="/schedule" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <GraduationCap className="w-5 h-5 mb-1" /> Exam
           </Link>
-          <Link href="/modelpaper" className="flex flex-col items-center py-1">
+          <Link href="/modelpaper" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Papers
           </Link>
-          <Link href={navHrefForPortal("/tests", isPremium, homeHref)} className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/tests", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Tests
           </Link>
-          <Link href={navHrefForPortal("/certificates", isPremium, homeHref)} className="flex flex-col items-center py-1">
+          <Link href={navHrefForPortal("/certificates", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <FileCheck className="w-5 h-5 mb-1" /> Certs
           </Link>
           <button
             onClick={handleSignOut}
-            className="flex flex-col items-center py-1"
+            className="flex flex-col items-center py-1 shrink-0 min-w-[52px]"
           >
             <LogOut className="w-5 h-5 mb-1" /> Logout
           </button>

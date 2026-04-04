@@ -57,8 +57,8 @@ export default function Home() {
               <Image
                 src="/images/ICTPL_image.jpg"
                 alt="ICTPI Logo"
-                width={100}
-                height={100}
+                width={200}
+                height={200}
                 className="object-contain rounded-full drop-shadow-md"
                 priority
               />
@@ -292,7 +292,7 @@ export default function Home() {
             href="/login"
             className="rounded-full bg-[#e1bee7] px-6 py-2.5 font-semibold text-slate-900 hover:bg-[#ce93d8] transition-colors font-sans text-sm md:text-base"
           >
-            Member login
+            Student login
           </Link>
         </div>
       </BrochureBlock>

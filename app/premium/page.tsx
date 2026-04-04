@@ -38,14 +38,12 @@ const PremiumPage = () => {
     <AuthenticatedLayout title="Premium Dashboard" maxWidth="full">
       <div className="space-y-8">
         <section className="rounded-3xl bg-gradient-to-r from-purple-700 via-violet-700 to-fuchsia-700 text-white p-8 md:p-10 shadow-xl">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">Premium Member Access</h2>
-          <p className="text-purple-100 max-w-3xl leading-relaxed">
-            You are in premium mode. The member portal keeps the same features and layout, while premium study files are loaded from `public/premium`.
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">ICPA LMS Access</h2>
+          
         </section>
 
         <section>
-          <h3 className="text-2xl font-bold text-slate-900 mb-5">Premium Quick Access</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-5">ICPA LMS Access</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {quickLinks.map(({ href, label, icon: Icon }) => (
               <Link
@@ -61,7 +59,7 @@ const PremiumPage = () => {
         </section>
 
         <section>
-          <h3 className="text-2xl font-bold text-slate-900 mb-5">Premium Courses</h3>
+          <h3 className="text-2xl font-bold text-slate-900 mb-5">ICPA LMS Courses</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {courses.map((course) => (
               <Link
