@@ -23,7 +23,7 @@ import { supabase } from "@/lib/Supabase";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/results", label: "Result And Exam Information", icon: ClipboardList },
+  { href: "/results", label: "Exam Information", icon: ClipboardList },
   { href: "/sessions", label: "Sessions", icon: ClipboardList },
   { href: "/previous", label: "Previous Sessions", icon: History },
   { href: "/vlogs", label: "B/Vlogs", icon: ClipboardList },
@@ -160,7 +160,7 @@ export function AuthenticatedLayout({
             <Users className="w-5 h-5 mb-1" /> Members
           </Link>
           <Link href={navHrefForPortal("/results", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
-            <ClipboardList className="w-5 h-5 mb-1" /> Results
+            <ClipboardList className="w-5 h-5 mb-1" /> Exam Information
           </Link>
           <Link href={navHrefForPortal("/sessions", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardList className="w-5 h-5 mb-1" /> Sessions
@@ -168,9 +168,7 @@ export function AuthenticatedLayout({
           <Link href="/previous" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <History className="w-5 h-5 mb-1" /> Prev
           </Link>
-          <Link href="/schedule" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
-            <GraduationCap className="w-5 h-5 mb-1" /> Exam
-          </Link>
+          
           <Link href="/modelpaper" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardPenLine className="w-5 h-5 mb-1" /> Papers
           </Link>

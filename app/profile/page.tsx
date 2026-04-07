@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -278,7 +278,7 @@ export default function ProfilePage() {
             <LayoutDashboard className="w-5 h-5 mr-3" /> Dashboard
           </Link>
           <Link href="/results" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
-            <ClipboardList className="w-5 h-5 mr-3" /> Result
+            <ClipboardList className="w-5 h-5 mr-3" /> Exam Information
           </Link>
           <Link href="/sessions" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
             <ClipboardList className="w-5 h-5 mr-3" /> Sessions
@@ -307,7 +307,7 @@ export default function ProfilePage() {
       {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50 text-xs">
         <Link href="/dashboard" className="flex flex-col items-center py-1"><LayoutDashboard className="w-5 h-5 mb-1" /> Dash</Link>
-        <Link href="/results" className="flex flex-col items-center py-1"><ClipboardList className="w-5 h-5 mb-1" /> Results</Link>
+        <Link href="/results" className="flex flex-col items-center py-1"><ClipboardList className="w-5 h-5 mb-1" /> Exam Informations</Link>
         <Link href="/sessions" className="flex flex-col items-center py-1"><ClipboardList className="w-5 h-5 mb-1" /> Sessions</Link>
         <Link href="/previous" className="flex flex-col items-center py-1"><History className="w-5 h-5 mb-1" /> Prev</Link>
         <Link href="/modelpaper" className="flex flex-col items-center py-1"><ClipboardPenLine className="w-5 h-5 mb-1" /> Papers</Link>
@@ -412,7 +412,7 @@ export default function ProfilePage() {
               </h2>
 
               <p className="text-sm text-gray-600 mt-1">
-                Membership ID: {membershipId ? String(membershipId).padStart(5, "0") : "—"}
+                Membership ID: {membershipId ? String(membershipId).padStart(5, "0") : "â€”"}
               </p>
 
               {uploading && (
@@ -433,14 +433,14 @@ export default function ProfilePage() {
                     Personal Information
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div><p className="text-sm text-gray-600">Full Name</p><p className="font-medium text-lg">{profile.name || "—"}</p></div>
+                    <div><p className="text-sm text-gray-600">Full Name</p><p className="font-medium text-lg">{profile.name || "â€”"}</p></div>
                     <div><p className="text-sm text-gray-600">Display Name</p><p className="font-medium text-lg">{fullName}</p></div>
-                    <div><p className="text-sm text-gray-600">Date of Birth</p><p className="font-medium text-lg">{profile.date_of_birth || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Father's Name</p><p className="font-medium text-lg">{profile.father_name || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Mother's Name</p><p className="font-medium text-lg">{profile.mother_name || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">IT PAN</p><p className="font-medium text-lg font-mono">{profile.it_pan || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Aadhaar Number</p><p className="font-medium text-lg font-mono">{profile.aadhar || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Voter ID</p><p className="font-medium text-lg font-mono">{profile.voter || "—"}</p></div>
+                    <div><p className="text-sm text-gray-600">Date of Birth</p><p className="font-medium text-lg">{profile.date_of_birth || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Father's Name</p><p className="font-medium text-lg">{profile.father_name || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Mother's Name</p><p className="font-medium text-lg">{profile.mother_name || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">IT PAN</p><p className="font-medium text-lg font-mono">{profile.it_pan || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Aadhaar Number</p><p className="font-medium text-lg font-mono">{profile.aadhar || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Voter ID</p><p className="font-medium text-lg font-mono">{profile.voter || "â€”"}</p></div>
                   </div>
                 </section>
 
@@ -451,11 +451,11 @@ export default function ProfilePage() {
                     Address & Location
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="md:col-span-2"><p className="text-sm text-gray-600">Full Address</p><p className="font-medium text-lg">{profile.address || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">District</p><p className="font-medium text-lg">{profile.district || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">State</p><p className="font-medium text-lg">{profile.state || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Place</p><p className="font-medium text-lg">{profile.place || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Pincode</p><p className="font-medium text-lg">{profile.pincode || "—"}</p></div>
+                    <div className="md:col-span-2"><p className="text-sm text-gray-600">Full Address</p><p className="font-medium text-lg">{profile.address || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">District</p><p className="font-medium text-lg">{profile.district || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">State</p><p className="font-medium text-lg">{profile.state || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Place</p><p className="font-medium text-lg">{profile.place || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Pincode</p><p className="font-medium text-lg">{profile.pincode || "â€”"}</p></div>
                   </div>
                 </section>
 
@@ -467,12 +467,12 @@ export default function ProfilePage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div><p className="text-sm text-gray-600">Membership ID</p><p className="font-medium text-lg font-mono">{String(profile.membership_id).padStart(5, "0")}</p></div>
-                    <div><p className="text-sm text-gray-600">Candidate ID</p><p className="font-medium text-lg font-mono">{profile.can_id || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Batch ID</p><p className="font-medium text-lg font-mono">{profile.batch_id || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Batch Name</p><p className="font-medium text-lg">{profile.batch_name || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Qualification Status</p><p className="font-medium text-lg font-semibold text-green-700">{profile.qualification_status || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Joined</p><p className="font-medium text-lg">{profile.joined || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">Completed</p><p className="font-medium text-lg">{profile.completed || "—"}</p></div>
+                    <div><p className="text-sm text-gray-600">Candidate ID</p><p className="font-medium text-lg font-mono">{profile.can_id || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Batch ID</p><p className="font-medium text-lg font-mono">{profile.batch_id || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Batch Name</p><p className="font-medium text-lg">{profile.batch_name || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Qualification Status</p><p className="font-medium text-lg font-semibold text-green-700">{profile.qualification_status || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Joined</p><p className="font-medium text-lg">{profile.joined || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Completed</p><p className="font-medium text-lg">{profile.completed || "â€”"}</p></div>
                   </div>
                 </section>
 
@@ -557,7 +557,7 @@ export default function ProfilePage() {
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div><p className="text-sm text-gray-600">Exam Date</p><p className="font-medium text-lg">{profile.exam_date || "—"}</p></div>
+                    <div><p className="text-sm text-gray-600">Exam Date</p><p className="font-medium text-lg">{profile.exam_date || "â€”"}</p></div>
                     <div>
                       <p className="text-sm text-gray-600">Fellowship Link</p>
                       <p className="font-medium text-lg">
@@ -565,13 +565,13 @@ export default function ProfilePage() {
                           <a href={profile.fellowship_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             View Fellowship
                           </a>
-                        ) : "—"}
+                        ) : "â€”"}
                       </p>
                     </div>
-                    <div><p className="text-sm text-gray-600">NCVET CERTIFICATE NO.</p><p className="font-medium text-lg">{profile.ncvet || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">GSTP ENROLLMENT NO.</p><p className="font-medium text-lg">{profile.gstp || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">ITP ENROLLMENT NO.</p><p className="font-medium text-lg">{profile.itp || "—"}</p></div>
-                    <div><p className="text-sm text-gray-600">SIDH CANDIDATE ID</p><p className="font-medium text-lg">{profile.sidh || "—"}</p></div>
+                    <div><p className="text-sm text-gray-600">NCVET CERTIFICATE NO.</p><p className="font-medium text-lg">{profile.ncvet || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">GSTP ENROLLMENT NO.</p><p className="font-medium text-lg">{profile.gstp || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">ITP ENROLLMENT NO.</p><p className="font-medium text-lg">{profile.itp || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">SIDH CANDIDATE ID</p><p className="font-medium text-lg">{profile.sidh || "â€”"}</p></div>
                     
                   </div>
                 </section>
@@ -600,7 +600,7 @@ export default function ProfilePage() {
 
               <p className="text-xl text-red-600 mb-6 leading-relaxed">
                 <strong>Important:</strong> These fields can be filled <strong><i>only once</i></strong>.<br />
-                Please enter accurate information — especially IDs and certificate numbers.
+                Please enter accurate information â€” especially IDs and certificate numbers.
               </p>
 
               <div className="space-y-6">

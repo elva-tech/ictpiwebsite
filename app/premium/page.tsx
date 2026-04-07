@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import Link from "next/link";
 import Image from "next/image";
@@ -24,7 +24,7 @@ const PremiumPage = () => {
   ];
 
   const quickLinks = [
-    { href: "/premium/results", label: "Results", icon: ClipboardList },
+    { href: "/premium/results", label: "Exam Information", icon: ClipboardList },
     { href: "/premium/sessions", label: "Sessions", icon: Radio },
     { href: "/previous", label: "Previous Sessions", icon: History },
     { href: "/schedule", label: "Exam Information", icon: GraduationCap },

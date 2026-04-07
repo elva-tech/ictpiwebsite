@@ -89,7 +89,7 @@ export default function Home() {
                 alt="ICTPI Logo"
                 width={200}
                 height={200}
-                className="animate-landing-logo-float rounded-full object-contain "
+                className="animate-landing-logo-float object-contain drop-shadow-2xl"
                 priority
               />
             </div>
@@ -140,7 +140,7 @@ export default function Home() {
               href="/login"
               className="landing-nav-pill rounded-full border border-blue-300/60 bg-gradient-to-r from-sky-100 via-blue-100 to-indigo-100 px-6 py-2.5 text-sm font-bold tracking-wide text-slate-900 shadow-md sm:px-8 sm:text-base"
             >
-              Student
+              Member login
             </Link>
             <Link
               href="#recognition"
@@ -228,16 +228,25 @@ export default function Home() {
           <div className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 rounded-full bg-gradient-to-tr from-blue-900/15 via-indigo-800/20 to-violet-900/15 blur-3xl" aria-hidden />
           <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-14 lg:px-8">
             {/* Row 1: three equal headline columns */}
-            <div className="mb-10 grid grid-cols-1 gap-6 md:mb-12 md:grid-cols-3 md:gap-4 lg:gap-6">
-              <p className="rounded-2xl border border-blue-200/50 bg-white/75 px-3 py-4 text-center text-[11px] font-bold uppercase leading-snug tracking-wide text-slate-900 shadow-md shadow-blue-500/10 backdrop-blur-sm sm:text-xs md:text-[0.7rem] lg:text-sm">
-                Our Vision: Serving stakeholders is deemed service to government
-              </p>
-              <p className="rounded-2xl border border-indigo-200/50 bg-white/75 px-3 py-4 text-center text-[11px] font-bold uppercase leading-snug tracking-wide text-slate-900 shadow-md shadow-indigo-500/10 backdrop-blur-sm sm:text-xs md:border-x md:border-y-0 md:border-blue-200/60 md:px-3 md:text-[0.7rem] lg:text-sm">
-                Our Vision: Serving stakeholders is deemed service to government
-              </p>
-              <p className="rounded-2xl border border-violet-200/45 bg-white/75 px-3 py-4 text-center text-[11px] font-bold uppercase leading-snug tracking-wide text-slate-900 shadow-md shadow-violet-500/10 backdrop-blur-sm sm:text-xs md:text-[0.7rem] lg:text-sm">
-                Our Mission: To uplift anyone &amp; everyone, assure their skills of functioning
-              </p>
+            <div className="mb-10 grid grid-cols-1 gap-6 md:mb-12 md:grid-cols-3 md:gap-8 lg:gap-10">
+              <div className="rounded-2xl border border-blue-100/80 bg-white/80 p-5 shadow-lg shadow-blue-500/10 backdrop-blur-md md:p-6">
+                <h3 className="mb-3 text-center text-base font-bold text-slate-900 md:text-lg">Our Vision</h3>
+                <p className="text-center text-sm leading-relaxed text-slate-800 md:text-[15px]">
+                  Serving stakeholders is deemed service to government
+                </p>
+              </div>
+              <div className="rounded-2xl border border-indigo-100/80 bg-white/80 p-5 shadow-lg shadow-indigo-500/10 backdrop-blur-md md:border-x md:border-y md:border-blue-200/50 md:px-6 md:py-6 lg:px-8">
+                <h3 className="mb-3 text-center text-base font-bold text-slate-900 md:text-lg">Our Vision</h3>
+                <p className="text-center text-sm leading-relaxed text-slate-800 md:text-[15px]">
+                  Serving stakeholders is deemed service to government
+                </p>
+              </div>
+              <div className="rounded-2xl border border-violet-100/80 bg-white/80 p-5 shadow-lg shadow-violet-500/10 backdrop-blur-md md:p-6">
+                <h3 className="mb-3 text-center text-base font-bold text-slate-900 md:text-lg">Our Mission</h3>
+                <p className="text-center text-sm leading-relaxed text-slate-800 md:text-[15px]">
+                  To uplift anyone &amp; everyone, assure their skills of functioning
+                </p>
+              </div>
             </div>
 
             {/* Row 2: single centered body (wide margins) */}

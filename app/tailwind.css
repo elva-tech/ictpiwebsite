@@ -132,7 +132,7 @@ body[data-portal-mode="premium"] .to-blue-50 {
   }
 }
 .animate-home-marquee-horizontal {
-  animation: home-marquee-horizontal 10s linear infinite;
+  animation: home-marquee-horizontal 55s linear infinite;
 }
 .animate-home-marquee-vertical {
   animation: home-marquee-vertical 22s linear infinite;
