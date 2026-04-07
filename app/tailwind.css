@@ -113,11 +113,33 @@ body[data-portal-mode="premium"] .to-blue-50 {
     transform: translateY(-50%);
   }
 }
+@keyframes landing-news-clarity {
+  0%,
+  100% {
+    opacity: 0.72;
+    color: #0f172a;
+    transform: scale(0.99);
+    font-weight: 700;
+    text-shadow: 0 0 0 rgba(220, 38, 38, 0);
+  }
+  47%,
+  53% {
+    opacity: 1;
+    color: #dc2626;
+    transform: scale(1);
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.18);
+  }
+}
 .animate-home-marquee-horizontal {
-  animation: home-marquee-horizontal 50s linear infinite;
+  animation: home-marquee-horizontal 10s linear infinite;
 }
 .animate-home-marquee-vertical {
   animation: home-marquee-vertical 22s linear infinite;
+}
+.landing-news-line {
+  will-change: opacity, color, transform;
+  animation: landing-news-clarity 22s linear infinite;
 }
 
 /* Main institute title — Algerian (system font on Windows); fallbacks elsewhere */
@@ -215,8 +237,8 @@ body[data-portal-mode="premium"] .to-blue-50 {
   box-shadow: 0 28px 56px -14px rgb(37 99 235 / 0.22);
 }
 .landing-marquee-fade-v {
-  mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 100%);
 }
 .landing-brochure-band {
   background: linear-gradient(
@@ -251,6 +273,10 @@ body[data-portal-mode="premium"] .to-blue-50 {
   .animate-home-marquee-horizontal,
   .animate-home-marquee-vertical {
     animation: none !important;
+  }
+  .landing-news-line {
+    animation: none !important;
+    filter: none !important;
   }
   .landing-nav-pill:hover,
   .landing-gallery-card:hover,

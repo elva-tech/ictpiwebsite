@@ -5,11 +5,18 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/Supabase";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
-import { Link } from "lucide-react";
+import Link from "next/link";
+import { Calendar, MapPin, BadgeCheck } from "lucide-react";
 interface Candidate {
   membership_id: number;
   name: string;
   can_id: string;
+  place?: string | null;
+  state?: string | null;
+  batch_id?: string | null;
+  batch_name?: string | null;
+  exam_date?: string | null;
+  new_member_link?: string | null;
   mepsc_assesment?: string;
   self_test_practice?: string;
   mock_exam?: string;
@@ -81,6 +88,12 @@ const ResultPage = () => {
             self_test_practice,
             mock_exam,
             final_ctpr_exam,
+            place,
+            state,
+            batch_id,
+            batch_name,
+            exam_date,
+            new_member_link,
             mepsc_certificate_url,
             self_test_certificate_url,
             mock_certificate_url,
@@ -157,7 +170,7 @@ const ResultPage = () => {
     <AuthenticatedLayout title="Results" maxWidth="lg">
           <div className="max-w-5xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold text-white bg-blue-600 py-6 rounded-t-2xl shadow-lg text-center mb-8">
-              RESULTS
+              RESULTS &amp; EXAM SCHEDULE
             </h1>
 
             {error && (
@@ -184,6 +197,54 @@ const ResultPage = () => {
                     <p className="text-sm font-semibold">CANDIDATE ID</p>
                     <p className="text-sm font-bold mt-2">{candidate.can_id || "—"}</p>
                   </div>
+                </div>
+
+              
+                <div className="mb-12 bg-white rounded-xl shadow-lg p-6 md:p-8">
+                  <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">Exam Schedule</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto text-center">
+                    <div className="flex flex-col items-center">
+                      <Calendar className="w-8 h-8 text-blue-600 mb-2" />
+                      <p className="text-sm text-gray-600">MEPSC Exam Date</p>
+                      <p className="text-lg font-semibold text-gray-900 mt-1">
+                        {candidate.exam_date
+                          ? new Date(candidate.exam_date).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "long",
+                              year: "numeric",
+                            })
+                          : "Not Scheduled"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <MapPin className="w-8 h-8 text-blue-600 mb-2" />
+                      <p className="text-sm text-gray-600">Place</p>
+                      <p className="text-lg font-semibold text-gray-900 mt-1 uppercase">{candidate.place || "—"}</p>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <BadgeCheck className="w-8 h-8 text-blue-600 mb-2" />
+                      <p className="text-sm text-gray-600">State</p>
+                      <p className="text-lg font-semibold text-gray-900 mt-1 uppercase">{candidate.state || "—"}</p>
+                    </div>
+                  </div>
+                  {(candidate.batch_name || candidate.batch_id) && (
+                    <p className="mt-6 text-center text-sm text-gray-700">
+                      Batch: <span className="font-semibold">{candidate.batch_name || candidate.batch_id}</span>
+                    </p>
+                  )}
+                  {candidate.new_member_link && (
+                    <div className="mt-6 rounded-xl border border-orange-300 bg-orange-50 p-5 text-center">
+                      <p className="font-semibold text-orange-800">Membership registration pending.</p>
+                      <a
+                        href={candidate.new_member_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-block rounded-lg bg-orange-600 px-5 py-2.5 font-medium text-white transition hover:bg-orange-700"
+                      >
+                        Complete Registration Now
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-12 bg-white rounded-xl shadow-lg p-6 md:p-8">
@@ -216,8 +277,6 @@ const ResultPage = () => {
                     )}
                   </div>
                 </div>
-
-                
 
                 {/* Optional banner – keep or remove */}
                

@@ -95,7 +95,7 @@ export default function Home() {
             </div>
 
             <div className="min-w-0 flex-1">
-              <h1 className="font-heading-algerian mt-1 text-xl font-bold leading-tight tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] sm:text-2xl md:text-3xl lg:text-4xl">
+              <h1 className="font-heading-algerian mt-1 text-xl font-bold leading-tight tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] sm:text-1xl md:text-2xl lg:text-2xl">
                 INSTITUTE OF CHARTERED TAX PRACTITIONERS INDIA
               </h1>
               <p className="mt-3 text-sm font-semibold text-emerald-300/95 md:text-base">
@@ -202,10 +202,16 @@ export default function Home() {
           </div>
         </div>
         <div className="relative border-b border-blue-200/30 bg-gradient-to-b from-white via-blue-50/40 to-indigo-50/50 py-6 md:py-8">
-          <div className="relative mx-auto h-[180px] max-w-4xl overflow-hidden px-4 md:h-[220px]">
+          <div className="relative mx-auto h-[72px] max-w-4xl overflow-hidden px-4 md:h-[82px]">
             <div className="landing-marquee-fade-v animate-home-marquee-vertical space-y-8 text-center font-serif text-base font-bold leading-relaxed text-slate-900 md:text-lg">
               {marqueeNews.map((line, i) => (
-                <p key={i}>{line}</p>
+                <p
+                  key={i}
+                  className="landing-news-line"
+                  style={{ animationDelay: `-${(i % NEWS_LINES.length) * (22 / NEWS_LINES.length)}s` }}
+                >
+                  {line}
+                </p>
               ))}
             </div>
           </div>

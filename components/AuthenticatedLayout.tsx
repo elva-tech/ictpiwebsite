@@ -23,11 +23,10 @@ import { supabase } from "@/lib/Supabase";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/results", label: "Result", icon: ClipboardList },
+  { href: "/results", label: "Result And Exam Information", icon: ClipboardList },
   { href: "/sessions", label: "Sessions", icon: ClipboardList },
   { href: "/previous", label: "Previous Sessions", icon: History },
   { href: "/vlogs", label: "B/Vlogs", icon: ClipboardList },
-  { href: "/schedule", label: "Exam Information", icon: GraduationCap },
   { href: "/modelpaper", label: "Model papers", icon: ClipboardPenLine },
   { href: "/tests", label: "Practice Tests", icon: ClipboardPenLine },
   { href: "/certificates", label: "Certificates", icon: FileCheck },
