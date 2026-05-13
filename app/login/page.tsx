@@ -1,29 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { auth } from "@/lib/firebase";
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
 import { setStoredPortalMode } from "@/lib/portalTheme";
 
-export default function LoginPage() {
+function LoginForm() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false); // unified for login + reset
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetMessage, setResetMessage] = useState("");
   const [resetError, setResetError] = useState("");
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const justRegistered = searchParams.get("registered") === "1";
 
-  // Helper: Lookup single member's email by membership ID
   const lookupEmailByMemberId = async (membershipId: string): Promise<string | null> => {
     const normalized = membershipId.trim().toUpperCase();
     if (!normalized) return null;
@@ -149,10 +151,15 @@ export default function LoginPage() {
           <AppLogo variant="card" alt="ICTPI Logo" priority />
         </div>
 
-        
         <p className="text-center text-gray-600 mb-8 text-sm">
           Sign in with your ICTPI Member ID
         </p>
+
+        {justRegistered && (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-lg mb-6 text-sm">
+            Registration request submitted. You will be notified once it is processed. You can sign in here when your member account is active.
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
@@ -187,7 +194,7 @@ export default function LoginPage() {
             {isProcessing ? "Processing..." : "Sign In"}
           </button>
 
-          <div className="text-center">
+          <div className="text-center space-y-3">
             <button
               type="button"
               onClick={() => setShowResetModal(true)}
@@ -196,11 +203,18 @@ export default function LoginPage() {
             >
               Forgot Password?
             </button>
+            <div className="border-t border-gray-100 pt-4">
+              <Link
+                href="/register"
+                className="text-[#0a1f44] font-semibold text-sm hover:underline"
+              >
+                New Member Registration
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Forgot Password Modal */}
       {showResetModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
           <div className="bg-white rounded-2xl p-7 w-full max-w-md shadow-2xl">
@@ -256,5 +270,19 @@ export default function LoginPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
+          <p className="text-gray-600">Loading…</p>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
