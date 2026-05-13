@@ -12,6 +12,9 @@ import {
   MessageSquare,
   Newspaper,
   Award,
+  CalendarClock,
+  Share2,
+  Crown,
 } from "lucide-react";
 import {
   isAdminAuthenticated,
@@ -34,6 +37,9 @@ const NAV_ITEMS = [
     label: "Certificate Approvals",
     Icon: Award,
   },
+  { href: "/admin/sessions", label: "Sessions", Icon: CalendarClock },
+  { href: "/admin/referrals", label: "Referrals", Icon: Share2 },
+  { href: "/admin/premium-list", label: "Premium List", Icon: Crown },
   { href: "/admin/change-password", label: "Reset Member Password", Icon: KeyRound },
 ] as const;
 

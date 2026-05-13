@@ -206,11 +206,7 @@ export default function AdminUsersPage() {
         try {
           const res = await fetch("/api/admin/delete-firebase-user", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-admin-password":
-                process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
           });
           const json = await res.json().catch(() => ({}));

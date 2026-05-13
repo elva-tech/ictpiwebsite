@@ -3,26 +3,14 @@ import { getAdminAuth } from "@/lib/firebaseAdmin";
 
 /**
  * POST /api/admin/delete-firebase-user
- * Body: { email: string }
- * Header: x-admin-password: <NEXT_PUBLIC_ADMIN_PASSWORD>
+ * Body: { email?: string; uid?: string }
  *
- * Looks up a Firebase Auth user by email and deletes them. Used by the admin
- * "Eliminate user" flow.
- *
- * Authorization: matches the same admin password the UI logs in with. This is
- * intentionally minimal — production should switch to a server-only secret.
+ * Looks up a Firebase Auth user by email (or uid) and deletes them. Used by
+ * the admin "Eliminate user" flow — fires automatically when an admin clicks
+ * Delete on the Users page, no password prompt.
  */
 export async function POST(req: Request) {
   try {
-    const expected =
-      process.env.ADMIN_API_SECRET ??
-      process.env.NEXT_PUBLIC_ADMIN_PASSWORD ??
-      "";
-    const provided = req.headers.get("x-admin-password") ?? "";
-    if (!expected || provided !== expected) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = (await req.json().catch(() => null)) as
       | { email?: string; uid?: string }
       | null;
