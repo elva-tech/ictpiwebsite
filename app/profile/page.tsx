@@ -23,6 +23,7 @@ import {
   BookOpen,
   FileCheck,
   Camera,
+  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import { AppLogo } from "@/components/AppLogo";
@@ -301,6 +302,9 @@ export default function ProfilePage() {
           <Link href="/certificates" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
             <FileCheck className="w-5 h-5 mr-3" /> Certificates
           </Link>
+          <Link href="/enquiry" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
+            <MessageSquare className="w-5 h-5 mr-3" /> Enquiry / Issue
+          </Link>
         </nav>
       </aside>
 
@@ -313,6 +317,7 @@ export default function ProfilePage() {
         <Link href="/modelpaper" className="flex flex-col items-center py-1"><ClipboardPenLine className="w-5 h-5 mb-1" /> Papers</Link>
         <Link href="/tests" className="flex flex-col items-center py-1"><ClipboardPenLine className="w-5 h-5 mb-1" /> Tests</Link>
         <Link href="/certificates" className="flex flex-col items-center py-1"><FileCheck className="w-5 h-5 mb-1" /> Certs</Link>
+        <Link href="/enquiry" className="flex flex-col items-center py-1"><MessageSquare className="w-5 h-5 mb-1" /> Enquiry</Link>
         <button onClick={handleSignOut} className="flex flex-col items-center py-1"><LogOut className="w-5 h-5 mb-1" /> Logout</button>
       </nav>
 

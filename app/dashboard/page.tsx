@@ -15,6 +15,7 @@ import {
   GraduationCap,
   ClipboardPenLine,
   FileCheck,
+  MessageSquare,
 } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
@@ -66,6 +67,33 @@ export default function Dashboard() {
   const [membershipId, setMembershipId] = useState<number | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  // Profile-completion gate (forces user to fill candidate_exam_schedule details on first login)
+  const [profileNeedsCompletion, setProfileNeedsCompletion] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    date_of_birth: "",
+    father_name: "",
+    mother_name: "",
+    it_pan: "",
+    aadhar: "",
+    voter: "",
+    address: "",
+    district: "",
+    state: "",
+    place: "",
+    pincode: "",
+    ncvet: "",
+    gstp: "",
+    itp: "",
+    sidh: "",
+    stp: "",
+    cb: "",
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
+
+  const isEmpty = (v: any) =>
+    v === null || v === undefined || String(v).trim() === "";
+
   const isSessionLiveNow = (s: Session): boolean => {
     const now = toZonedTime(new Date(), "Asia/Kolkata");
     const sessionDT = toZonedTime(
@@ -97,8 +125,11 @@ export default function Dashboard() {
           console.error("Error fetching memberinformation:", memberError);
         }
 
+        let mid: number | null = null;
+
         if (member) {
-          setMembershipId(Number(member.membership_id));
+          mid = Number(member.membership_id);
+          setMembershipId(mid);
           setUserEmail(member.email?.toLowerCase() || currentUserEmail);
 
           const nameFromDb = member.name?.trim();
@@ -111,6 +142,67 @@ export default function Dashboard() {
           console.warn(`No member record found for email: ${currentUserEmail}`);
           setFullName(currentUserEmail.split("@")[0] || "User");
           setUserEmail(currentUserEmail);
+        }
+
+        // 1b. Fetch candidate_exam_schedule profile; if essential fields are
+        // empty, gate the dashboard behind a one-time details-collection modal.
+        // Note: NCVET, ITP, SIDH, STP, CB are case-sensitive (quoted) column
+        // names in PostgreSQL; gstp is lowercase. Match the DB schema exactly.
+        if (mid !== null && !Number.isNaN(mid)) {
+          const { data: candidate, error: candidateError } = await supabase
+            .from("candidate_exam_schedule")
+            .select(
+              `date_of_birth, father_name, mother_name, it_pan, aadhar, voter,
+               address, district, state, place, pincode,
+               "NCVET", gstp, "ITP", "SIDH", "STP", "CB"`
+            )
+            .eq("membership_id", mid)
+            .maybeSingle();
+
+          if (candidateError) {
+            console.error(
+              "Error fetching candidate_exam_schedule:",
+              candidateError
+            );
+          }
+
+          if (candidate) {
+            const c = candidate as Record<string, any>;
+            const requiredFields = [
+              c.date_of_birth,
+              c.father_name,
+              c.mother_name,
+              c.it_pan,
+              c.aadhar,
+              c.address,
+              c.district,
+              c.pincode,
+            ];
+            const anyMissing = requiredFields.some(isEmpty);
+
+            if (anyMissing) {
+              setProfileForm({
+                date_of_birth: c.date_of_birth ?? "",
+                father_name: c.father_name ?? "",
+                mother_name: c.mother_name ?? "",
+                it_pan: c.it_pan ?? "",
+                aadhar: c.aadhar ?? "",
+                voter: c.voter ?? "",
+                address: c.address ?? "",
+                district: c.district ?? "",
+                state: c.state ?? "",
+                place: c.place ?? "",
+                pincode: c.pincode ?? "",
+                ncvet: c.NCVET ?? "",
+                gstp: c.gstp ?? "",
+                itp: c.ITP ?? "",
+                sidh: c.SIDH ?? "",
+                stp: c.STP ?? "",
+                cb: c.CB ?? "",
+              });
+              setProfileNeedsCompletion(true);
+            }
+          }
         }
 
         // 2. Fetch sessions
@@ -269,6 +361,9 @@ export default function Dashboard() {
             <Link href="/certificates" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <FileCheck className="w-5 h-5 mr-3" /> Certificates
             </Link>
+            <Link href="/enquiry" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
+              <MessageSquare className="w-5 h-5 mr-3" /> Enquiry / Issue
+            </Link>
           </nav>
         </aside>
 
@@ -300,6 +395,9 @@ export default function Dashboard() {
           </Link>
           <Link href="/certificates" className="flex flex-col items-center text-xs">
             <FileCheck className="w-5 h-5 mb-1" /> Certs
+          </Link>
+          <Link href="/enquiry" className="flex flex-col items-center text-xs">
+            <MessageSquare className="w-5 h-5 mb-1" /> Enquiry
           </Link>
           <button onClick={handleSignOut} className="flex flex-col items-center text-xs">
             <LogOut className="w-5 h-5 mb-1" /> Logout
@@ -398,6 +496,381 @@ export default function Dashboard() {
             ))}
           </main>
         </div>
+
+        {/* Profile completion gate – shown on first login until required
+            candidate_exam_schedule fields are filled. */}
+        {profileNeedsCompletion && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-gray-900">
+                  Complete Your Profile
+                </h3>
+              </div>
+
+              <p className="text-sm md:text-base text-red-600 mb-6 leading-relaxed">
+                <strong>Welcome, {fullName}!</strong> Before you can access the
+                dashboard, please provide the details below. These fields can be
+                filled <strong><i>only once</i></strong>, so please enter
+                accurate information — especially IDs and certificate numbers.
+              </p>
+
+              {profileSaveError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-5 text-sm">
+                  {profileSaveError}
+                </div>
+              )}
+
+              <div className="space-y-6">
+                <div className="border-b pb-5">
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800">
+                    Personal Identity
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Date of Birth <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={profileForm.date_of_birth}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            date_of_birth: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Father's Name <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.father_name}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            father_name: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxLength={60}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Mother's Name <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.mother_name}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            mother_name: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxLength={60}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-b pb-5">
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800">
+                    Government IDs
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        IT PAN <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.it_pan}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            it_pan: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase"
+                        placeholder="ABCDE1234F"
+                        maxLength={10}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Aadhaar Number <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={profileForm.aadhar}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            aadhar: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        placeholder="12-digit Aadhaar"
+                        maxLength={12}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Voter ID
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.voter}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            voter: e.target.value.toUpperCase(),
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase"
+                        placeholder="ABC1234567"
+                        maxLength={10}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-b pb-5">
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800">
+                    Address &amp; Location
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Full Address <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.address}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            address: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="House no., street, area"
+                        maxLength={100}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        District <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.district}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            district: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxLength={30}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.state}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            state: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxLength={50}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Place / City
+                      </label>
+                      <input
+                        type="text"
+                        value={profileForm.place}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            place: e.target.value,
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        maxLength={100}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                        Pincode <span className="text-red-600">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={profileForm.pincode}
+                        onChange={(e) =>
+                          setProfileForm({
+                            ...profileForm,
+                            pincode: e.target.value.replace(/\D/g, ""),
+                          })
+                        }
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        maxLength={6}
+                        placeholder="560001"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-semibold mb-4 text-gray-800">
+                    Certificates &amp; Licenses{" "}
+                    <span className="text-sm font-normal text-gray-500">
+                      (optional)
+                    </span>
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {[
+                      { label: "NCVET Certificate No.", key: "ncvet" },
+                      { label: "GSTP Enrollment No.", key: "gstp" },
+                      { label: "ITP Enrollment No.", key: "itp" },
+                      { label: "SIDH Candidate ID", key: "sidh" },
+                      { label: "STP Enrollment No.", key: "stp" },
+                      { label: "CB Licence No.", key: "cb" },
+                    ].map(({ label, key }) => (
+                      <div key={key}>
+                        <label className="block text-sm font-medium text-gray-800 mb-1.5">
+                          {label}
+                        </label>
+                        <input
+                          type="text"
+                          value={
+                            profileForm[
+                              key as keyof typeof profileForm
+                            ] || ""
+                          }
+                          onChange={(e) =>
+                            setProfileForm({
+                              ...profileForm,
+                              [key]: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter number"
+                          maxLength={30}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-8">
+                <button
+                  onClick={async () => {
+                    if (savingProfile) return;
+                    setProfileSaveError(null);
+
+                    const required = {
+                      "Date of Birth": profileForm.date_of_birth,
+                      "Father's Name": profileForm.father_name,
+                      "Mother's Name": profileForm.mother_name,
+                      "IT PAN": profileForm.it_pan,
+                      Aadhaar: profileForm.aadhar,
+                      Address: profileForm.address,
+                      District: profileForm.district,
+                      Pincode: profileForm.pincode,
+                    };
+                    const missing = Object.entries(required)
+                      .filter(([, v]) => isEmpty(v))
+                      .map(([label]) => label);
+
+                    if (missing.length > 0) {
+                      setProfileSaveError(
+                        `Please fill the required fields: ${missing.join(", ")}`
+                      );
+                      return;
+                    }
+
+                    if (!membershipId) {
+                      setProfileSaveError(
+                        "Membership ID unavailable. Please re-login."
+                      );
+                      return;
+                    }
+
+                    setSavingProfile(true);
+                    try {
+                      // Column names must match DB exactly. NCVET, ITP, SIDH,
+                      // STP and CB are stored as quoted uppercase identifiers
+                      // in PostgreSQL; gstp is lowercase.
+                      const updates: Record<string, any> = {
+                        date_of_birth: profileForm.date_of_birth || null,
+                        father_name: profileForm.father_name.trim() || null,
+                        mother_name: profileForm.mother_name.trim() || null,
+                        it_pan:
+                          profileForm.it_pan.trim().toUpperCase() || null,
+                        aadhar:
+                          profileForm.aadhar.replace(/\s+/g, "") || null,
+                        voter:
+                          profileForm.voter.trim().toUpperCase() || null,
+                        address: profileForm.address.trim() || null,
+                        district: profileForm.district.trim() || null,
+                        state: profileForm.state.trim() || null,
+                        place: profileForm.place.trim() || null,
+                        pincode: profileForm.pincode.trim() || null,
+                        NCVET: profileForm.ncvet.trim() || null,
+                        gstp: profileForm.gstp.trim() || null,
+                        ITP: profileForm.itp.trim() || null,
+                        SIDH: profileForm.sidh.trim() || null,
+                        STP: profileForm.stp.trim() || null,
+                        CB: profileForm.cb.trim() || null,
+                      };
+
+                      const { error } = await supabase
+                        .from("candidate_exam_schedule")
+                        .update(updates)
+                        .eq("membership_id", membershipId);
+
+                      if (error) throw error;
+
+                      setProfileNeedsCompletion(false);
+                    } catch (err: any) {
+                      console.error("Profile save failed:", err);
+                      setProfileSaveError(
+                        "Failed to save details: " +
+                          (err.message || "Unknown error")
+                      );
+                    } finally {
+                      setSavingProfile(false);
+                    }
+                  }}
+                  disabled={savingProfile}
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-60 font-medium"
+                >
+                  {savingProfile ? "Saving..." : "Save & Continue"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Session Join Modal */}
         {showModal && selectedSession && (

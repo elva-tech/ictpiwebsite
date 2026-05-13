@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   User2,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/lib/Supabase";
 
@@ -30,6 +31,7 @@ const NAV_LINKS = [
   { href: "/modelpaper", label: "Model papers", icon: ClipboardPenLine },
   { href: "/tests", label: "Practice Tests", icon: ClipboardPenLine },
   { href: "/certificates", label: "Certificates", icon: FileCheck },
+  { href: "/enquiry", label: "Enquiry / Issue", icon: MessageSquare },
   { href: "/members", label: "Members", icon: Users },
 ] as const;
 
@@ -177,6 +179,9 @@ export function AuthenticatedLayout({
           </Link>
           <Link href={navHrefForPortal("/certificates", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <FileCheck className="w-5 h-5 mb-1" /> Certs
+          </Link>
+          <Link href="/enquiry" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
+            <MessageSquare className="w-5 h-5 mb-1" /> Enquiry
           </Link>
           <button
             onClick={handleSignOut}
