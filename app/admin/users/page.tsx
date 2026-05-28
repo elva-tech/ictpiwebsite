@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
+import { AdminMemberProfileNavbar } from "@/components/AdminMemberProfileNavbar";
 import { supabase } from "@/lib/Supabase";
 import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 
@@ -76,6 +77,54 @@ function splitName(full: string | null) {
     middle: parts.slice(1, -1).join(" "),
     last: parts[parts.length - 1],
   };
+}
+
+const PROFILE_IMAGE_EXTS = ["jpg", "jpeg", "png", "webp"] as const;
+
+function AdminUserAvatar({
+  membershipId,
+  name,
+}: {
+  membershipId: number;
+  name: string | null;
+}) {
+  const [idx, setIdx] = useState(0);
+  const [failed, setFailed] = useState(false);
+  const ext = PROFILE_IMAGE_EXTS[idx] ?? PROFILE_IMAGE_EXTS[0];
+  const { data } = supabase.storage
+    .from("profileimages")
+    .getPublicUrl(`${membershipId}.${ext}`);
+
+  const initials = (() => {
+    const t = (name ?? "").trim();
+    if (!t) return String(membershipId).slice(-2);
+    const parts = t.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  })();
+
+  if (failed) {
+    return (
+      <div className="h-9 w-9 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center">
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={data.publicUrl}
+      alt={`Member ${membershipId}`}
+      className="h-9 w-9 rounded-full object-cover border border-slate-200 bg-slate-100"
+      onError={() => {
+        if (idx < PROFILE_IMAGE_EXTS.length - 1) {
+          setIdx((v) => v + 1);
+        } else {
+          setFailed(true);
+        }
+      }}
+    />
+  );
 }
 
 export default function AdminUsersPage() {
@@ -177,6 +226,25 @@ export default function AdminUsersPage() {
       // Capture the email up front — we'll need it to delete the Firebase
       // Auth account after the DB row is gone.
       const email = emailMap[r.membership_id] ?? null;
+      const membershipId = String(r.membership_id);
+
+      // Ensure all member certificate PDFs are removed from storage as part of
+      // eliminate/reset flow.
+      const certRes = await fetch("/api/admin/delete-member-certificates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ membershipId }),
+      });
+      const certJson = await certRes.json().catch(() => ({}));
+      if (!certRes.ok) {
+        throw new Error(
+          typeof certJson.error === "string"
+            ? certJson.error
+            : "Failed to delete member certificates from storage."
+        );
+      }
+      const deletedCertFiles =
+        typeof certJson.deleted === "number" ? certJson.deleted : 0;
 
       // Best-effort cleanup of related rows. Errors for missing tables are
       // ignored so the core deletion still succeeds.
@@ -253,7 +321,7 @@ export default function AdminUsersPage() {
       }
       setToast({
         type: fbStatus === "failed" ? "err" : "ok",
-        text: `Member ${memberLabel} removed from database.${suffix}`,
+        text: `Member ${memberLabel} removed from database. Deleted ${deletedCertFiles} certificate file(s).${suffix}`,
       });
       setEliminating(null);
     } catch (e: unknown) {
@@ -308,11 +376,19 @@ export default function AdminUsersPage() {
           </div>
         )}
 
+        <AdminMemberProfileNavbar
+          members={rows.map((r) => ({
+            membershipId: r.membership_id,
+            name: r.name,
+          }))}
+        />
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
                 <th className="px-3 py-3 text-left font-semibold">SR. NO</th>
+                <th className="px-3 py-3 text-left font-semibold">Profile</th>
                 <th className="px-3 py-3 text-left font-semibold">First Name</th>
                 <th className="px-3 py-3 text-left font-semibold">Middle Name</th>
                 <th className="px-3 py-3 text-left font-semibold">Last Name</th>
@@ -328,7 +404,7 @@ export default function AdminUsersPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center text-slate-500">
+                  <td colSpan={12} className="py-10 text-center text-slate-500">
                     <span className="inline-flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Loading users…
@@ -337,7 +413,7 @@ export default function AdminUsersPage() {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-10 text-center text-slate-500">
+                  <td colSpan={12} className="py-10 text-center text-slate-500">
                     No users found.
                   </td>
                 </tr>
@@ -350,6 +426,12 @@ export default function AdminUsersPage() {
                       className="border-t border-slate-100 hover:bg-slate-50"
                     >
                       <td className="px-3 py-3">{startIdx + i + 1}.</td>
+                      <td className="px-3 py-3">
+                        <AdminUserAvatar
+                          membershipId={r.membership_id}
+                          name={r.name}
+                        />
+                      </td>
                       <td className="px-3 py-3 font-medium uppercase">{n.first || "—"}</td>
                       <td className="px-3 py-3 uppercase">{n.middle}</td>
                       <td className="px-3 py-3 uppercase">{n.last}</td>

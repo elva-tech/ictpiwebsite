@@ -81,6 +81,8 @@ export function AuthenticatedLayout({
   const { isPremium } = usePortalMode();
   const [fullName, setFullName] = useState<string>("User");
   const homeHref = isPremium ? "/premium" : "/dashboard";
+  const sidebarBgClass = isPremium ? "md:bg-purple-700" : "md:bg-[#0062cc]";
+  const mobileSidebarBgClass = isPremium ? "bg-purple-700/95" : "bg-[#0062cc]/95";
 
   useEffect(() => {
     if (!auth?.user?.email) return;
@@ -138,7 +140,9 @@ export function AuthenticatedLayout({
 
       <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:sticky md:top-0 md:flex md:flex-col md:w-60 md:h-screen md:bg-[#0062cc] md:text-white md:overflow-y-auto scrollbar-hide">
+        <aside
+          className={`hidden md:sticky md:top-0 md:flex md:flex-col md:w-60 md:h-screen ${sidebarBgClass} md:text-white md:overflow-y-auto scrollbar-hide`}
+        >
           <nav className="flex-1 mt-4 space-y-3 px-3">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => (
               <Link
@@ -147,16 +151,18 @@ export function AuthenticatedLayout({
                 className="flex items-center px-5 py-2 rounded-lg hover:bg-blue-500/80 transition-colors"
               >
                 <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span>{label}</span>
+                <span>{href === "/dashboard" && !isPremium ? "ICPI" : label}</span>
               </Link>
             ))}
           </nav>
         </aside>
 
         {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex flex-nowrap justify-start items-center gap-3 overflow-x-auto py-2 px-2 shadow-lg z-50 text-xs scrollbar-hide">
+        <nav
+          className={`md:hidden fixed bottom-0 left-0 right-0 ${mobileSidebarBgClass} backdrop-blur-sm text-white flex flex-nowrap justify-start items-center gap-3 overflow-x-auto py-2 px-2 shadow-lg z-50 text-xs scrollbar-hide`}
+        >
           <Link href={homeHref} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
-            <LayoutDashboard className="w-5 h-5 mb-1" /> Dash
+            <LayoutDashboard className="w-5 h-5 mb-1" /> {isPremium ? "Dash" : "ICPI"}
           </Link>
           <Link href="/members" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <Users className="w-5 h-5 mb-1" /> Members

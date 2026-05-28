@@ -166,7 +166,7 @@ export default function Dashboard() {
     <>
       <div className="min-h-screen bg-gray-50 text-gray-800">
         {/* â”€â”€â”€â”€â”€â”€â”€ Desktop Sidebar (Minimal) â”€â”€â”€â”€â”€â”€â”€ */}
-        <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 bg-[#0062cc] text-white flex-col shadow-xl">
+        <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 bg-purple-700 text-white flex-col shadow-xl">
           <nav className="flex-1 px-4 py-8 space-y-2">
             <Link
               href="/premium"

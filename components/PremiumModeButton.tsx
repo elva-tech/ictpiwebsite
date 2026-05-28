@@ -102,12 +102,12 @@ export function PremiumModeButton({
       className={className}
       title={
         isPremium
-          ? "Switch back to standard mode"
+          ? "Switch back to ICPI mode"
           : "Switch to ICPA LMS mode"
       }
     >
       <Sparkles className="w-4 h-4" />
-      {isPremium ? "Standard Mode" : "ICPA LMS"}
+      {isPremium ? "ICPI Mode" : "ICPA LMS"}
     </button>
   );
 }

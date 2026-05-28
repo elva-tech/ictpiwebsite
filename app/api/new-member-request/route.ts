@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { normalizeMembershipId } from "@/lib/membershipId";
+import { checkMembershipIdAvailability } from "@/lib/membershipIdAvailability";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,6 +14,10 @@ function getSupabaseAdmin() {
   return createClient(url, serviceKey || anonKey!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+function isMissingColumnError(message: string) {
+  return /could not find the .* column .* in the schema cache/i.test(message);
 }
 
 export async function POST(req: Request) {
@@ -38,26 +44,18 @@ export async function POST(req: Request) {
     const address_line3 = String(body.address_line3 ?? "").trim() || null;
 
     const member_category = String(body.member_category ?? "").trim() || null;
-    const membership_number = String(body.membership_number ?? "").trim() || null;
-    const primary_applicable_license =
-      String(body.primary_applicable_license ?? "").trim() || null;
+    const membershipRaw = String(body.membership_number ?? "").trim();
+    const membership_number = normalizeMembershipId(membershipRaw);
 
-    const licensed_custom_broker_cha = Boolean(body.licensed_custom_broker_cha);
-    const cha_registration_number =
-      String(body.cha_registration_number ?? "").trim() || null;
-    const registered_investment_advisor = Boolean(
-      body.registered_investment_advisor
-    );
-    const investment_advisor_registration_number =
-      String(body.investment_advisor_registration_number ?? "").trim() || null;
-    const insolvency_practitioner = Boolean(body.insolvency_practitioner);
-    const insolvency_registration_number =
-      String(body.insolvency_registration_number ?? "").trim() || null;
-    const registered_sales_tax_vat_practitioner = Boolean(
-      body.registered_sales_tax_vat_practitioner
-    );
-    const sales_tax_registration_number =
-      String(body.sales_tax_registration_number ?? "").trim() || null;
+    const itp_enrollment_number =
+      String(body.itp_enrollment_number ?? "").trim() || null;
+    const gstp_enrollment_number =
+      String(body.gstp_enrollment_number ?? "").trim() || null;
+    const itp_gstp_combined_enrollment =
+      String(body.itp_gstp_combined_enrollment ?? "").trim() || null;
+    const stp_vat_enrollment_number =
+      String(body.stp_vat_enrollment_number ?? "").trim() || null;
+    const cb_license_number = String(body.cb_license_number ?? "").trim() || null;
 
     const terms_accepted = Boolean(body.terms_accepted);
 
@@ -82,6 +80,30 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+    if (!member_category) {
+      return NextResponse.json(
+        { error: "Member category is required." },
+        { status: 400 }
+      );
+    }
+    if (!membership_number) {
+      return NextResponse.json(
+        { error: "A valid Membership ID is required." },
+        { status: 400 }
+      );
+    }
+    if (!itp_enrollment_number) {
+      return NextResponse.json(
+        { error: "ITP Enrollment No. is required." },
+        { status: 400 }
+      );
+    }
+    if (!gstp_enrollment_number) {
+      return NextResponse.json(
+        { error: "GSTP Enrollment No. is required." },
+        { status: 400 }
+      );
+    }
     if (!terms_accepted) {
       return NextResponse.json(
         { error: "You must accept the terms and privacy policy." },
@@ -89,56 +111,67 @@ export async function POST(req: Request) {
       );
     }
 
-    // No encryption — the admin handles the password downstream. The raw value
-    // entered by the user is forwarded to the DB column as-is.
     const supabase = getSupabaseAdmin();
+    const availability = await checkMembershipIdAvailability(supabase, membership_number);
+    if (!availability.available) {
+      return NextResponse.json(
+        {
+          error: "This Membership ID is already registered.",
+          suggestions: availability.suggestions,
+        },
+        { status: 409 }
+      );
+    }
 
-    const { data, error } = await supabase
+    const basePayload = {
+      first_name: first_name.slice(0, 100),
+      middle_name: middle_name ? middle_name.slice(0, 100) : null,
+      last_name: last_name.slice(0, 100),
+      mobile_number: mobile_number.slice(0, 15),
+      email: email.slice(0, 150),
+      date_of_birth,
+      password_hash: password,
+      country: country.slice(0, 100),
+      state: state ? state.slice(0, 100) : null,
+      district: district ? district.slice(0, 100) : null,
+      city: city ? city.slice(0, 100) : null,
+      pincode: pincode ? pincode.slice(0, 10) : null,
+      address_line1,
+      address_line2,
+      address_line3,
+      member_category: member_category ? member_category.slice(0, 100) : null,
+      membership_number: membership_number.slice(0, 100),
+      terms_accepted,
+    };
+
+    const enrollmentPayload = {
+      itp_enrollment_number: itp_enrollment_number.slice(0, 100),
+      gstp_enrollment_number: gstp_enrollment_number.slice(0, 100),
+      itp_gstp_combined_enrollment: itp_gstp_combined_enrollment
+        ? itp_gstp_combined_enrollment.slice(0, 100)
+        : null,
+      stp_vat_enrollment_number: stp_vat_enrollment_number
+        ? stp_vat_enrollment_number.slice(0, 100)
+        : null,
+      cb_license_number: cb_license_number ? cb_license_number.slice(0, 100) : null,
+    };
+
+    let { data, error } = await supabase
       .from("new_member_request")
-      .insert({
-        first_name: first_name.slice(0, 100),
-        middle_name: middle_name ? middle_name.slice(0, 100) : null,
-        last_name: last_name.slice(0, 100),
-        mobile_number: mobile_number.slice(0, 15),
-        email: email.slice(0, 150),
-        date_of_birth,
-        password_hash: password,
-        country: country.slice(0, 100),
-        state: state ? state.slice(0, 100) : null,
-        district: district ? district.slice(0, 100) : null,
-        city: city ? city.slice(0, 100) : null,
-        pincode: pincode ? pincode.slice(0, 10) : null,
-        address_line1,
-        address_line2,
-        address_line3,
-        member_category: member_category ? member_category.slice(0, 100) : null,
-        membership_number: membership_number
-          ? membership_number.slice(0, 100)
-          : null,
-        primary_applicable_license: primary_applicable_license
-          ? primary_applicable_license.slice(0, 150)
-          : null,
-        licensed_custom_broker_cha,
-        cha_registration_number: cha_registration_number
-          ? cha_registration_number.slice(0, 100)
-          : null,
-        registered_investment_advisor,
-        investment_advisor_registration_number:
-          investment_advisor_registration_number
-            ? investment_advisor_registration_number.slice(0, 100)
-            : null,
-        insolvency_practitioner,
-        insolvency_registration_number: insolvency_registration_number
-          ? insolvency_registration_number.slice(0, 100)
-          : null,
-        registered_sales_tax_vat_practitioner,
-        sales_tax_registration_number: sales_tax_registration_number
-          ? sales_tax_registration_number.slice(0, 100)
-          : null,
-        terms_accepted,
-      })
+      .insert({ ...basePayload, ...enrollmentPayload })
       .select("id")
       .single();
+
+    // Compatibility fallback while DB/PostgREST cache is missing new columns.
+    if (error && isMissingColumnError(error.message ?? "")) {
+      const retry = await supabase
+        .from("new_member_request")
+        .insert(basePayload)
+        .select("id")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) {
       const msg = error.message ?? "Insert failed";

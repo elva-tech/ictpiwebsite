@@ -12,6 +12,10 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import {
+  formatCertificateIssueDate,
+  formatPracticingCertificateNo,
+} from "@/lib/membershipId";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 import { supabase } from "@/lib/Supabase";
 
@@ -97,6 +101,29 @@ interface ApprovalRow {
 const isApproved = (v: string | null | undefined) =>
   typeof v === "string" && v.trim() === "1";
 
+function practicingCertificatePath(membershipId: number) {
+  const year = new Date().getFullYear();
+  return `${year}/${membershipId}.pdf`;
+}
+
+function practicingBucketRootPath(membershipId: number) {
+  return `${membershipId}.pdf`;
+}
+
+const PRACTICING_STORAGE_TARGETS = [
+  // Primary path as requested in screenshots:
+  // bucket "certificates" -> "practicing/<year>/<membershipId>.pdf"
+  { bucket: "certificates", pathOf: (membershipId: number) => `practicing/${practicingCertificatePath(membershipId)}` },
+  // Legacy path kept for backward compatibility with older generated files.
+  {
+    bucket: "certificates",
+    pathOf: (membershipId: number) =>
+      `ictpi/practicing_member_certificate/${new Date().getFullYear()}/${membershipId}.pdf`,
+  },
+  { bucket: "certificates", pathOf: (membershipId: number) => `practicing/${new Date().getFullYear()}/${membershipId}.pdf` },
+  { bucket: "certificates", pathOf: (membershipId: number) => `practicing/${practicingBucketRootPath(membershipId)}` },
+] as const;
+
 /** Values drawn next to the template’s Certificate No. / NCVET / GSTP / … labels */
 interface CandidateCertFields {
   NCVET: string | null;
@@ -150,6 +177,32 @@ export default function Certificates() {
     kind: "success" | "info" | "error";
     text: string;
   } | null>(null);
+
+  const downloadStoredPracticingCertificate = async () => {
+    if (!membershipIdNum) return;
+    for (const target of PRACTICING_STORAGE_TARGETS) {
+      const path = target.pathOf(membershipIdNum);
+      const { data, error } = await supabase.storage
+        .from(target.bucket)
+        .download(path);
+      if (error || !data) continue;
+      const blobUrl = URL.createObjectURL(data);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Practicing-Certificate-${String(membershipIdNum).padStart(
+        5,
+        "0"
+      )}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(blobUrl);
+      return;
+    }
+    throw new Error(
+      "Stored certificate not found. Please generate it again or contact support."
+    );
+  };
 
   useEffect(() => {
     if (toast) {
@@ -305,10 +358,9 @@ export default function Certificates() {
       };
 
       const cert = candidateCertFields ?? parseCandidateCertRow(null);
-      // Certificate No. format: "<membership_id>/<year>" (e.g. 467/2025).
-      // Membership ID is kept compact (no zero-padding) and the issue year is
-      // the current calendar year on download.
-      const certificateNo = `${membershipIdNum}/${new Date().getFullYear()}`;
+      // Certificate No.: 101/<year>/<membershipId> (e.g. 101/2026/467).
+      const certificateNo = formatPracticingCertificateNo(membershipIdNum);
+      const issueDate = formatCertificateIssueDate();
 
       // Empty / unknown enrollment fields are rendered as "--" to match the
       // certificate's visual convention.
@@ -325,7 +377,7 @@ export default function Certificates() {
       // Candidate name — sits on the blank line under "This is to Certify
       // that," with a touch more headroom from the captions below.
       const NAME_FONT_SIZE = 18;
-      const NAME_Y = height * 0.6;
+      const NAME_Y = height * 0.618;
       const nameWidth = helveticaBold.widthOfTextAtSize(
         candidateName,
         NAME_FONT_SIZE
@@ -346,9 +398,20 @@ export default function Certificates() {
       // the colon, so it reads inline with the printed label.
       const CERT_NO_SIZE = 12;
       firstPage.drawText(certificateNo, {
-        x: width * 0.5,
+        x: width * 0.495,
         y: height * 0.182,
         size: CERT_NO_SIZE,
+        font: helveticaBold,
+        color: ink,
+      });
+
+      // Certificate generated date — aligned with
+      // "Certificate Generated Date:" in the mid-left area of template.
+      const DATE_SIZE = 11;
+      firstPage.drawText(issueDate, {
+        x: width * 0.382,
+        y: height * 0.360,
+        size: DATE_SIZE,
         font: helveticaBold,
         color: ink,
       });
@@ -375,48 +438,81 @@ export default function Certificates() {
 
       const pdfBytes = await pdfDoc.save();
 
-      // 1) Mark the DB row BEFORE handing the file to the user so we don't
-      // give them the certificate twice if something fails later.
-      const targetMembershipId = approval.membership_id ?? String(membershipIdNum);
-
-      const { error: updateErr } = await supabase
-        .from("certification_approval")
-        .update({ practicing_generated: "1" })
-        .eq("membership_id", targetMembershipId);
-
-      if (updateErr) {
-        // If the write fails, do NOT issue the certificate.
-        throw updateErr;
-      }
-
-      // 2) Trigger browser download.
-      // pdf-lib returns a Uint8Array. Wrap the underlying buffer in a fresh
-      // ArrayBuffer copy so it satisfies the BlobPart type cleanly.
+      // 1) Upload the generated PDF to storage so repeat downloads can use
+      // the same immutable file instead of regenerating.
       const arrayBuffer = pdfBytes.buffer.slice(
         pdfBytes.byteOffset,
         pdfBytes.byteOffset + pdfBytes.byteLength
       ) as ArrayBuffer;
       const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Practicing-Certificate-${String(membershipIdNum).padStart(
-        5,
-        "0"
-      )}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      const uploadErrors: string[] = [];
+      let uploadedCount = 0;
+      for (let i = 0; i < PRACTICING_STORAGE_TARGETS.length; i += 1) {
+        const target = PRACTICING_STORAGE_TARGETS[i];
+        const path = target.pathOf(membershipIdNum);
+        const { error: uploadErr } = await supabase.storage
+          .from(target.bucket)
+          .upload(path, blob, {
+            contentType: "application/pdf",
+            upsert: true,
+            cacheControl: "31536000",
+          });
+        if (uploadErr) {
+          const msg = uploadErr.message ?? "";
+          uploadErrors.push(`${target.bucket}/${path}: ${msg}`);
+        } else {
+          uploadedCount += 1;
+        }
+      }
+      if (uploadedCount === 0) {
+        throw new Error(
+          `Could not upload certificate to any configured path. ${uploadErrors.join(" | ")}`
+        );
+      }
 
-      // 3) Reflect new state locally.
+      // 2) Mark the DB row. If optional path columns do not exist yet,
+      // fallback to generated flag only.
+      const targetMembershipId = approval.membership_id ?? String(membershipIdNum);
+      const primaryTarget = PRACTICING_STORAGE_TARGETS[0];
+      const primaryPath = primaryTarget.pathOf(membershipIdNum);
+      const { data: pub } = supabase.storage
+        .from(primaryTarget.bucket)
+        .getPublicUrl(primaryPath);
+      let { error: updateErr } = await supabase
+        .from("certification_approval")
+        .update({
+          practicing_generated: "1",
+          // Optional columns; this update may fail in older schemas.
+          practicing_certificate_path: `${primaryTarget.bucket}/${primaryPath}`,
+          practicing_certificate_url: pub.publicUrl,
+        } as Record<string, string>)
+        .eq("membership_id", targetMembershipId);
+
+      if (updateErr) {
+        const msg = updateErr.message ?? "";
+        if (/column .* does not exist|schema cache/i.test(msg)) {
+          const retry = await supabase
+            .from("certification_approval")
+            .update({ practicing_generated: "1" })
+            .eq("membership_id", targetMembershipId);
+          updateErr = retry.error;
+        }
+      }
+      if (updateErr) {
+        throw updateErr;
+      }
+
+      // 3) Download the uploaded file.
+      await downloadStoredPracticingCertificate();
+
+      // 4) Reflect new state locally.
       setApproval((prev) =>
         prev ? { ...prev, practicing_generated: "1" } : prev
       );
 
       setToast({
         kind: "success",
-        text: "Certificate downloaded successfully.",
+        text: "Certificate generated and stored successfully.",
       });
     } catch (err: any) {
       console.error("Practicing certificate generation failed:", err);
@@ -472,11 +568,31 @@ export default function Certificates() {
       statusColor = "text-emerald-700";
       buttonContent = (
         <>
-          <CheckCircle2 className="w-5 h-5" /> Already Generated
+          <CheckCircle2 className="w-5 h-5" /> View Certificate
         </>
       );
-      buttonClass += " bg-emerald-100 text-emerald-800 cursor-not-allowed";
-      disabled = true;
+      buttonClass += " bg-emerald-600 hover:bg-emerald-700 text-white";
+      buttonAction =
+        cert.key === "practicing"
+          ? () => {
+              void (async () => {
+                try {
+                  setBusyKey("practicing");
+                  await downloadStoredPracticingCertificate();
+                } catch (err: any) {
+                  setToast({
+                    kind: "error",
+                    text:
+                      "Could not open stored certificate: " +
+                      (err?.message || "Unknown error"),
+                  });
+                } finally {
+                  setBusyKey(null);
+                }
+              })();
+            }
+          : undefined;
+      disabled = false;
     } else if (!cert.hasGenerator) {
       statusLabel = "Approved – Coming Soon";
       statusColor = "text-amber-700";
@@ -509,15 +625,7 @@ export default function Certificates() {
     }
 
     const handleClick = () => {
-      if (disabled) {
-        if (alreadyGenerated) {
-          setToast({
-            kind: "info",
-            text: `${cert.label} has already been generated for your account.`,
-          });
-        }
-        return;
-      }
+      if (disabled) return;
       buttonAction?.();
     };
 

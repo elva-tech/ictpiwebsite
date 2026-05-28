@@ -5,33 +5,45 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { AppLogo } from "@/components/AppLogo";
 import { INDIAN_STATES, districtsForState } from "@/lib/indiaRegionOptions";
+import { formatMembershipIdDisplay } from "@/lib/membershipId";
 import { Loader2 } from "lucide-react";
 
 const NAVY = "#0a1f44";
 
 const MEMBER_CATEGORIES = [
   { value: "", label: "-- Select Member Category --" },
-  { value: "Affiliate CTPr Member in Practice", label: "Affiliate CTPr Member in Practice" },
-  { value: "Associate CTPr Member in Practice", label: "Associate CTPr Member in Practice" },
-  { value: "Fellow CTPr Member in Practice", label: "Fellow CTPr Member in Practice" },
+  { value: "RPL (Recognition of Prior Learning )", label: "RPL (Recognition of Prior Learning )" },
+  { value: "PSC (Professional Skills Certification)", label: "PSC (Professional Skills Certification)" },
 ];
 
-const PRIMARY_LICENSES = [
-  { value: "", label: "-- Select Primary Applicable License --" },
-  { value: "Income Tax Practitioner (ITP)", label: "Income Tax Practitioner (ITP)" },
-  { value: "GST Practitioner (GSTP)", label: "GST Practitioner (GSTP)" },
-  { value: "Licensed Custom Broker / CHA", label: "Licensed Custom Broker / CHA" },
+const ENROLLMENT_FIELDS = [
   {
-    value: "Registered Investment Advisor / Financial Planner (SEBI/IRDA)",
-    label: "Registered Investment Advisor / Financial Planner (SEBI/IRDA)",
+    key: "itp_enrollment_number" as const,
+    label: "INCOME TAX PRACTITIONER (ITP) Enrollment No.",
+    required: true,
   },
-  { value: "Insolvency Practitioner", label: "Insolvency Practitioner" },
   {
-    value: "Registered Sales Tax / VAT Practitioner / TRPs",
-    label: "Registered Sales Tax / VAT Practitioner / TRPs",
+    key: "gstp_enrollment_number" as const,
+    label: "Goods and Services Tax Practitioner (GSTP) Enrollment No.",
+    required: true,
   },
-  { value: "Other / Multiple", label: "Other / Multiple" },
-];
+  {
+    key: "itp_gstp_combined_enrollment" as const,
+    label:
+      "INCOME TAX PRACTITIONER (ITP) Enrollment No. / Goods and Services Tax Practitioner (GSTP) Enrollment",
+    required: false,
+  },
+  {
+    key: "stp_vat_enrollment_number" as const,
+    label: "STP/VAT",
+    required: false,
+  },
+  {
+    key: "cb_license_number" as const,
+    label: "CB License No.",
+    required: false,
+  },
+] as const;
 
 const inputClass =
   "w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0a1f44]/40 focus:border-[#0a1f44]";
@@ -56,15 +68,11 @@ type FormState = {
   address_line3: string;
   member_category: string;
   membership_number: string;
-  primary_applicable_license: string;
-  licensed_custom_broker_cha: boolean;
-  cha_registration_number: string;
-  registered_investment_advisor: boolean;
-  investment_advisor_registration_number: string;
-  insolvency_practitioner: boolean;
-  insolvency_registration_number: string;
-  registered_sales_tax_vat_practitioner: boolean;
-  sales_tax_registration_number: string;
+  itp_enrollment_number: string;
+  gstp_enrollment_number: string;
+  itp_gstp_combined_enrollment: string;
+  stp_vat_enrollment_number: string;
+  cb_license_number: string;
   terms_accepted: boolean;
 };
 
@@ -87,15 +95,11 @@ const initialForm: FormState = {
   address_line3: "",
   member_category: "",
   membership_number: "",
-  primary_applicable_license: "",
-  licensed_custom_broker_cha: false,
-  cha_registration_number: "",
-  registered_investment_advisor: false,
-  investment_advisor_registration_number: "",
-  insolvency_practitioner: false,
-  insolvency_registration_number: "",
-  registered_sales_tax_vat_practitioner: false,
-  sales_tax_registration_number: "",
+  itp_enrollment_number: "",
+  gstp_enrollment_number: "",
+  itp_gstp_combined_enrollment: "",
+  stp_vat_enrollment_number: "",
+  cb_license_number: "",
   terms_accepted: false,
 };
 
@@ -103,7 +107,7 @@ const STEPS = [
   { n: 1, title: "Personal Details" },
   { n: 2, title: "Address Details" },
   { n: 3, title: "Membership Details" },
-  { n: 4, title: "Licenses Details" },
+  { n: 4, title: "Enrollment Details" },
 ] as const;
 
 export default function NewMemberRegisterPage() {
@@ -111,6 +115,10 @@ export default function NewMemberRegisterPage() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormState>(initialForm);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingMembershipId, setCheckingMembershipId] = useState(false);
+  const [membershipIdSuggestions, setMembershipIdSuggestions] = useState<string[]>(
+    []
+  );
   const [error, setError] = useState<string | null>(null);
 
   const districtOptions = useMemo(
@@ -147,17 +155,69 @@ export default function NewMemberRegisterPage() {
 
   const validateStep3 = (): string | null => {
     if (!form.member_category) return "Please select a member category.";
-    if (!form.membership_number.trim()) return "Membership number is required.";
+    if (!form.membership_number.trim()) return "Membership ID is required.";
+    if (!/^\d+$/.test(form.membership_number.trim().replace(/\s/g, ""))) {
+      return "Membership ID must contain digits only.";
+    }
     return null;
   };
 
   const validateStep4 = (): string | null => {
-    if (!form.primary_applicable_license) return "Please select a primary applicable license.";
+    const itp = form.itp_enrollment_number.trim();
+    const gstp = form.gstp_enrollment_number.trim();
+    if (!itp) {
+      return "INCOME TAX PRACTITIONER (ITP) Enrollment No. is required.";
+    }
+    if (!gstp) {
+      return "Goods and Services Tax Practitioner (GSTP) Enrollment No. is required.";
+    }
     if (!form.terms_accepted) return "You must agree to the terms and privacy policy.";
     return null;
   };
 
-  const goNext = () => {
+  const checkMembershipId = async (): Promise<boolean> => {
+    const v = validateStep3();
+    if (v) {
+      setError(v);
+      return false;
+    }
+    setCheckingMembershipId(true);
+    setMembershipIdSuggestions([]);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/check-membership-id?id=${encodeURIComponent(form.membership_number.trim())}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not verify Membership ID. Please try again.");
+        return false;
+      }
+      if (!data.available) {
+        const suggestions = (data.suggestions as string[] | undefined) ?? [];
+        setMembershipIdSuggestions(suggestions);
+        const hint =
+          suggestions.length > 0
+            ? ` Try one of these available IDs: ${suggestions.map((id) => formatMembershipIdDisplay(id)).join(", ")}.`
+            : "";
+        setError(
+          `Membership ID ${formatMembershipIdDisplay(form.membership_number)} is already registered.${hint}`
+        );
+        return false;
+      }
+      if (data.normalizedId) {
+        set("membership_number", data.normalizedId);
+      }
+      return true;
+    } catch {
+      setError("Network error while checking Membership ID. Please try again.");
+      return false;
+    } finally {
+      setCheckingMembershipId(false);
+    }
+  };
+
+  const goNext = async () => {
     setError(null);
     const v =
       step === 1
@@ -170,6 +230,10 @@ export default function NewMemberRegisterPage() {
     if (v) {
       setError(v);
       return;
+    }
+    if (step === 3) {
+      const ok = await checkMembershipId();
+      if (!ok) return;
     }
     setStep((s) => Math.min(4, s + 1));
   };
@@ -194,6 +258,9 @@ export default function NewMemberRegisterPage() {
       return;
     }
 
+    const idOk = await checkMembershipId();
+    if (!idOk) return;
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/new-member-request", {
@@ -217,24 +284,19 @@ export default function NewMemberRegisterPage() {
           address_line3: form.address_line3.trim() || null,
           member_category: form.member_category || null,
           membership_number: form.membership_number.trim() || null,
-          primary_applicable_license: form.primary_applicable_license || null,
-          licensed_custom_broker_cha: form.licensed_custom_broker_cha,
-          cha_registration_number: form.cha_registration_number.trim() || null,
-          registered_investment_advisor: form.registered_investment_advisor,
-          investment_advisor_registration_number:
-            form.investment_advisor_registration_number.trim() || null,
-          insolvency_practitioner: form.insolvency_practitioner,
-          insolvency_registration_number:
-            form.insolvency_registration_number.trim() || null,
-          registered_sales_tax_vat_practitioner:
-            form.registered_sales_tax_vat_practitioner,
-          sales_tax_registration_number:
-            form.sales_tax_registration_number.trim() || null,
+          itp_enrollment_number: form.itp_enrollment_number.trim() || null,
+          gstp_enrollment_number: form.gstp_enrollment_number.trim() || null,
+          itp_gstp_combined_enrollment:
+            form.itp_gstp_combined_enrollment.trim() || null,
+          stp_vat_enrollment_number: form.stp_vat_enrollment_number.trim() || null,
+          cb_license_number: form.cb_license_number.trim() || null,
           terms_accepted: form.terms_accepted,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        const suggestions = (data.suggestions as string[] | undefined) ?? [];
+        if (suggestions.length > 0) setMembershipIdSuggestions(suggestions);
         setError(data.error || "Registration failed. Please try again.");
         return;
       }
@@ -526,95 +588,60 @@ export default function NewMemberRegisterPage() {
             </div>
             <div>
               <label className={labelClass} style={{ color: NAVY }}>
-                Membership Number
+                Membership ID
               </label>
               <input
                 className={inputClass}
-                placeholder="Membership number"
+                placeholder="e.g. 100105"
+                inputMode="numeric"
                 value={form.membership_number}
-                onChange={(e) => set("membership_number", e.target.value)}
+                onChange={(e) => {
+                  setMembershipIdSuggestions([]);
+                  set("membership_number", e.target.value.replace(/\D/g, ""));
+                }}
               />
+              <p className="mt-1.5 text-xs text-slate-500">
+                Your requested ICTPI Membership ID. It must not already be registered.
+              </p>
+              {membershipIdSuggestions.length > 0 && (
+                <p className="mt-2 text-xs font-medium text-amber-800">
+                  Available IDs:{" "}
+                  {membershipIdSuggestions
+                    .map((id) => formatMembershipIdDisplay(id))
+                    .join(", ")}
+                </p>
+              )}
             </div>
           </div>
         )}
 
-        {/* Step 4 */}
+        {/* Step 4 — enrollment numbers (as on practicing certificate) */}
         {step === 4 && (
-          <div className="space-y-8">
-            <div>
-              <label className={labelClass} style={{ color: NAVY }}>
-                Primary Applicable Licenses
-              </label>
-              <select
-                className={inputClass}
-                value={form.primary_applicable_license}
-                onChange={(e) => set("primary_applicable_license", e.target.value)}
-              >
-                {PRIMARY_LICENSES.map((o) => (
-                  <option key={o.value || "p-empty"} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <h3 className="mb-4 text-base font-bold" style={{ color: NAVY }}>
-                Secondary Applicable Licenses -
-              </h3>
-              <div className="space-y-6">
-                {[
-                  {
-                    label:
-                      "Licensed Custom Broker/CHA",
-                    check: "licensed_custom_broker_cha" as const,
-                    reg: "cha_registration_number" as const,
-                  },
-                  {
-                    label:
-                      "Registered Investment Advisor/ Financial Planner (Registered with SEBI/IRDA)",
-                    check: "registered_investment_advisor" as const,
-                    reg: "investment_advisor_registration_number" as const,
-                  },
-                  {
-                    label: "Insolvency Practitioner",
-                    check: "insolvency_practitioner" as const,
-                    reg: "insolvency_registration_number" as const,
-                  },
-                  {
-                    label: "Registered Sales Tax/VAT Practitioner /TRPs",
-                    check: "registered_sales_tax_vat_practitioner" as const,
-                    reg: "sales_tax_registration_number" as const,
-                  },
-                ].map((row) => (
-                  <div
-                    key={row.check}
-                    className="grid gap-4 border-b border-slate-100 pb-6 md:grid-cols-2 md:items-end"
-                  >
-                    <label className="flex cursor-pointer items-start gap-3">
-                      <input
-                        type="checkbox"
-                        className="mt-1 h-4 w-4 rounded border-gray-300 text-[#0a1f44] focus:ring-[#0a1f44]"
-                        checked={form[row.check]}
-                        onChange={(e) => set(row.check, e.target.checked)}
-                      />
-                      <span className="text-sm font-semibold text-slate-800">{row.label}</span>
-                    </label>
-                    <div>
-                      <label className={labelClass} style={{ color: NAVY }}>
-                        Registration Number
-                      </label>
-                      <input
-                        className={inputClass}
-                        placeholder="Registration Number"
-                        disabled={!form[row.check]}
-                        value={form[row.reg]}
-                        onChange={(e) => set(row.reg, e.target.value)}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <div className="space-y-6">
+            <p className="text-sm text-slate-600">
+              Enter your practitioner enrollment numbers.{" "}
+              <span className="font-semibold text-slate-800">
+                ITP and GSTP enrollment numbers are required.
+              </span>
+            </p>
+            <div className="grid gap-5 md:grid-cols-2">
+              {ENROLLMENT_FIELDS.map((field) => (
+                <div
+                  key={field.key}
+                  className={field.key === "itp_gstp_combined_enrollment" ? "md:col-span-2" : ""}
+                >
+                  <label className={labelClass} style={{ color: NAVY }}>
+                    {field.label}
+                    {field.required && <span className="text-red-600"> *</span>}
+                  </label>
+                  <input
+                    className={inputClass}
+                    placeholder="Enrollment / license number"
+                    value={form[field.key]}
+                    onChange={(e) => set(field.key, e.target.value)}
+                  />
+                </div>
+              ))}
             </div>
 
             <label className="flex cursor-pointer items-center gap-3">
@@ -649,8 +676,10 @@ export default function NewMemberRegisterPage() {
               <button
                 type="button"
                 onClick={goNext}
-                className="rounded-lg bg-[#0a1f44] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#061534]"
+                disabled={checkingMembershipId || submitting}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#0a1f44] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#061534] disabled:opacity-50"
               >
+                {checkingMembershipId && <Loader2 className="h-4 w-4 animate-spin" />}
                 Next
               </button>
             ) : (

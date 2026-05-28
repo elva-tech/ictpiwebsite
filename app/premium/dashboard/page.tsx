@@ -240,7 +240,7 @@ export default function Dashboard() {
 
       <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:sticky md:top-0 md:flex md:flex-col md:w-60 md:h-screen md:bg-[#0062cc] md:text-white md:overflow-y-auto scrollbar-hide">
+        <aside className="hidden md:sticky md:top-0 md:flex md:flex-col md:w-60 md:h-screen md:bg-purple-700 md:text-white md:overflow-y-auto scrollbar-hide">
           <nav className="flex-1 mt-4 space-y-3">
             <Link href="/premium" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <LayoutDashboard className="w-5 h-5 mr-3" /> Dashboard
@@ -273,7 +273,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Mobile Bottom Nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0062cc]/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-purple-700/95 backdrop-blur-sm text-white flex justify-around items-center py-2 shadow-lg z-50">
           <Link href="/premium" className="flex flex-col items-center text-xs">
             <LayoutDashboard className="w-5 h-5 mb-1" /> Dashboard
           </Link>

@@ -234,7 +234,7 @@ export default function CertificateApprovalsPage() {
     if (
       typeof window !== "undefined" &&
       !window.confirm(
-        `Reset all "generated" flags for ${id}? The member will be able to download again.`
+        `Reset all "generated" flags for ${id}? Stored certificate files in bucket will also be deleted.`
       )
     ) {
       return;
@@ -242,6 +242,22 @@ export default function CertificateApprovalsPage() {
     setBusyKey(`reset:${id}`);
     setToast(null);
     try {
+      // 1) Remove stored certificate files for this member from storage.
+      const delRes = await fetch("/api/admin/delete-member-certificates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ membershipId: id }),
+      });
+      const delJson = await delRes.json().catch(() => ({}));
+      if (!delRes.ok) {
+        throw new Error(
+          typeof delJson.error === "string"
+            ? delJson.error
+            : "Failed to delete stored certificates."
+        );
+      }
+
+      // 2) Reset generated flags in DB.
       const payload: Partial<ApprovalRow> = {
         skill_india_generated: "0",
         ncvet_generated: "0",
@@ -259,9 +275,11 @@ export default function CertificateApprovalsPage() {
           row.membership_id === id ? { ...row, ...payload } : row
         )
       );
+      const deletedCount =
+        typeof delJson.deleted === "number" ? delJson.deleted : 0;
       setToast({
         type: "ok",
-        text: `Reset generation flags for ${id}.`,
+        text: `Reset generation flags for ${id}. Deleted ${deletedCount} stored certificate file(s).`,
       });
     } catch (e: unknown) {
       console.error(e);

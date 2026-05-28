@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
+import { normalizeMembershipId } from "@/lib/membershipId";
 import { supabase } from "@/lib/Supabase";
 import { createFirebaseUser } from "@/lib/firebaseAdminClient";
 import {
@@ -42,15 +43,11 @@ interface RequestRow {
   address_line3: string | null;
   member_category: string | null;
   membership_number: string | null;
-  primary_applicable_license: string | null;
-  licensed_custom_broker_cha: boolean | null;
-  cha_registration_number: string | null;
-  registered_investment_advisor: boolean | null;
-  investment_advisor_registration_number: string | null;
-  insolvency_practitioner: boolean | null;
-  insolvency_registration_number: string | null;
-  registered_sales_tax_vat_practitioner: boolean | null;
-  sales_tax_registration_number: string | null;
+  itp_enrollment_number: string | null;
+  gstp_enrollment_number: string | null;
+  itp_gstp_combined_enrollment: string | null;
+  stp_vat_enrollment_number: string | null;
+  cb_license_number: string | null;
   terms_accepted: boolean | null;
   created_at: string | null;
 }
@@ -59,6 +56,9 @@ const NAVY = "#1e2659";
 const PAGE_SIZES = [10, 25, 50, 100];
 
 const SELECT_COLS =
+  "id, first_name, middle_name, last_name, mobile_number, email, date_of_birth, password_hash, country, state, district, city, pincode, address_line1, address_line2, address_line3, member_category, membership_number, itp_enrollment_number, gstp_enrollment_number, itp_gstp_combined_enrollment, stp_vat_enrollment_number, cb_license_number, terms_accepted, created_at";
+
+const SELECT_COLS_LEGACY =
   "id, first_name, middle_name, last_name, mobile_number, email, date_of_birth, password_hash, country, state, district, city, pincode, address_line1, address_line2, address_line3, member_category, membership_number, primary_applicable_license, licensed_custom_broker_cha, cha_registration_number, registered_investment_advisor, investment_advisor_registration_number, insolvency_practitioner, insolvency_registration_number, registered_sales_tax_vat_practitioner, sales_tax_registration_number, terms_accepted, created_at";
 
 function fmtDateTime(iso: string | null) {
@@ -80,6 +80,38 @@ function joinAddress(r: RequestRow) {
     .map((p) => (p ?? "").trim())
     .filter(Boolean)
     .join(", ");
+}
+
+function toRequestRow(x: Record<string, unknown>): RequestRow {
+  return {
+    id: String(x.id ?? ""),
+    first_name: (x.first_name as string | null) ?? null,
+    middle_name: (x.middle_name as string | null) ?? null,
+    last_name: (x.last_name as string | null) ?? null,
+    mobile_number: (x.mobile_number as string | null) ?? null,
+    email: (x.email as string | null) ?? null,
+    date_of_birth: (x.date_of_birth as string | null) ?? null,
+    password_hash: (x.password_hash as string | null) ?? null,
+    country: (x.country as string | null) ?? null,
+    state: (x.state as string | null) ?? null,
+    district: (x.district as string | null) ?? null,
+    city: (x.city as string | null) ?? null,
+    pincode: (x.pincode as string | null) ?? null,
+    address_line1: (x.address_line1 as string | null) ?? null,
+    address_line2: (x.address_line2 as string | null) ?? null,
+    address_line3: (x.address_line3 as string | null) ?? null,
+    member_category: (x.member_category as string | null) ?? null,
+    membership_number: (x.membership_number as string | null) ?? null,
+    itp_enrollment_number: (x.itp_enrollment_number as string | null) ?? null,
+    gstp_enrollment_number: (x.gstp_enrollment_number as string | null) ?? null,
+    itp_gstp_combined_enrollment:
+      (x.itp_gstp_combined_enrollment as string | null) ?? null,
+    stp_vat_enrollment_number:
+      (x.stp_vat_enrollment_number as string | null) ?? null,
+    cb_license_number: (x.cb_license_number as string | null) ?? null,
+    terms_accepted: (x.terms_accepted as boolean | null) ?? null,
+    created_at: (x.created_at as string | null) ?? null,
+  };
 }
 
 export default function AdminNewRequestsPage() {
@@ -112,31 +144,49 @@ export default function AdminNewRequestsPage() {
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      let q = supabase
-        .from("new_member_request")
-        .select(SELECT_COLS, { count: "exact" })
-        .order("created_at", { ascending: false })
-        .range(from, to);
+      const buildQuery = (selectCols: string) => {
+        let q = supabase
+          .from("new_member_request")
+          .select(selectCols, { count: "exact" })
+          .order("created_at", { ascending: false })
+          .range(from, to);
+        const term = search.trim();
+        if (term) {
+          const like = `%${term}%`;
+          q = q.or(
+            [
+              `first_name.ilike.${like}`,
+              `last_name.ilike.${like}`,
+              `email.ilike.${like}`,
+              `mobile_number.ilike.${like}`,
+              `state.ilike.${like}`,
+              `city.ilike.${like}`,
+              `member_category.ilike.${like}`,
+            ].join(",")
+          );
+        }
+        return q;
+      };
 
-      const term = search.trim();
-      if (term) {
-        const like = `%${term}%`;
-        q = q.or(
-          [
-            `first_name.ilike.${like}`,
-            `last_name.ilike.${like}`,
-            `email.ilike.${like}`,
-            `mobile_number.ilike.${like}`,
-            `state.ilike.${like}`,
-            `city.ilike.${like}`,
-            `member_category.ilike.${like}`,
-          ].join(",")
-        );
+      let { data, count, error } = await buildQuery(SELECT_COLS);
+      if (error) {
+        const msg = error.message ?? "";
+        // Compatibility fallback for older schema that does not yet have the
+        // new enrollment columns.
+        if (/column .* does not exist|schema cache/i.test(msg)) {
+          const legacy = await buildQuery(SELECT_COLS_LEGACY);
+          data = legacy.data;
+          count = legacy.count;
+          error = legacy.error;
+        }
       }
-
-      const { data, count, error } = await q;
       if (error) throw error;
-      setRows((data as unknown as RequestRow[]) ?? []);
+
+      const rowsRaw = ((data ?? []) as unknown[]).filter(
+        (x): x is Record<string, unknown> =>
+          Boolean(x) && typeof x === "object" && !Array.isArray(x)
+      );
+      setRows(rowsRaw.map(toRequestRow));
       setTotal(count ?? 0);
     } catch (e) {
       console.error(e);
@@ -153,19 +203,6 @@ export default function AdminNewRequestsPage() {
   useEffect(() => {
     setPage(1);
   }, [pageSize, search]);
-
-  /** Fetches max(membership_id) and returns next id (default 100001). */
-  const nextMembershipId = async (): Promise<number> => {
-    const { data, error } = await supabase
-      .from("candidate_exam_schedule")
-      .select("membership_id")
-      .order("membership_id", { ascending: false })
-      .limit(1);
-    if (error) throw error;
-    const top = data?.[0]?.membership_id;
-    const n = top ? Number(top) : 0;
-    return Number.isFinite(n) && n > 0 ? n + 1 : 100001;
-  };
 
   const acceptRow = async (r: RequestRow) => {
     setBusyId(r.id);
@@ -190,12 +227,13 @@ export default function AdminNewRequestsPage() {
         if (code !== "auth/email-already-in-use") throw err;
       }
 
-      // 2) Allocate the next membership_id.
-      // candidate_exam_schedule.membership_id is integer NOT NULL.
-      // memberinformation.membership_id is varchar(20) — we send the same
-      // value as a string so the FK-style relationship stays consistent.
-      const newMembershipId = await nextMembershipId();
-      const membershipIdStr = String(newMembershipId);
+      // 2) Use the Membership ID requested at registration.
+      const normalized = normalizeMembershipId(r.membership_number ?? "");
+      if (!normalized) {
+        throw new Error("Invalid or missing Membership ID on this request.");
+      }
+      const newMembershipId = Number(normalized);
+      const membershipIdStr = normalized;
 
       // Truncate every field to the exact varchar limits defined in the
       // candidate_exam_schedule schema.
@@ -236,6 +274,15 @@ export default function AdminNewRequestsPage() {
       // 4) candidate_exam_schedule — only required columns + the optional
       //    columns we can derive from the request. The database itself fills
       //    in the workflow defaults (mepsc_assesment, next_step, etc).
+      const itp =
+        (r.itp_enrollment_number ?? "").trim() ||
+        (r.itp_gstp_combined_enrollment ?? "").trim() ||
+        null;
+      const gstp =
+        (r.gstp_enrollment_number ?? "").trim() ||
+        (r.itp_gstp_combined_enrollment ?? "").trim() ||
+        null;
+
       const candidatePayload = {
         membership_id: newMembershipId,
         name: fullName,
@@ -246,6 +293,10 @@ export default function AdminNewRequestsPage() {
         address,
         date_of_birth: dob,
         joined: today,
+        gstp: gstp ? gstp.slice(0, 100) : null,
+        ITP: itp ? itp.slice(0, 100) : null,
+        STP: (r.stp_vat_enrollment_number ?? "").trim().slice(0, 100) || null,
+        CB: (r.cb_license_number ?? "").trim().slice(0, 100) || null,
       };
       const { error: cesErr } = await supabase
         .from("candidate_exam_schedule")
@@ -526,43 +577,21 @@ function DetailsModal({
     { label: "Address Line 2", value: row.address_line2 || "—" },
     { label: "Address Line 3", value: row.address_line3 || "—" },
     { label: "Member Category", value: row.member_category || "—" },
-    { label: "Membership Number", value: row.membership_number || "—" },
+    { label: "Membership ID", value: row.membership_number || "—" },
     {
-      label: "Primary Applicable License",
-      value: row.primary_applicable_license || "—",
+      label: "ITP Enrollment No.",
+      value: row.itp_enrollment_number || "—",
     },
     {
-      label: "Licensed Customs Broker / CHA",
-      value: row.licensed_custom_broker_cha ? "Yes" : "No",
+      label: "GSTP Enrollment No.",
+      value: row.gstp_enrollment_number || "—",
     },
     {
-      label: "CHA Registration No.",
-      value: row.cha_registration_number || "—",
+      label: "ITP / GSTP Combined Enrollment",
+      value: row.itp_gstp_combined_enrollment || "—",
     },
-    {
-      label: "Registered Investment Advisor",
-      value: row.registered_investment_advisor ? "Yes" : "No",
-    },
-    {
-      label: "Investment Advisor Reg. No.",
-      value: row.investment_advisor_registration_number || "—",
-    },
-    {
-      label: "Insolvency Practitioner",
-      value: row.insolvency_practitioner ? "Yes" : "No",
-    },
-    {
-      label: "Insolvency Reg. No.",
-      value: row.insolvency_registration_number || "—",
-    },
-    {
-      label: "Registered Sales Tax / VAT Practitioner",
-      value: row.registered_sales_tax_vat_practitioner ? "Yes" : "No",
-    },
-    {
-      label: "Sales Tax Reg. No.",
-      value: row.sales_tax_registration_number || "—",
-    },
+    { label: "STP/VAT", value: row.stp_vat_enrollment_number || "—" },
+    { label: "CB License No.", value: row.cb_license_number || "—" },
     { label: "Terms Accepted", value: row.terms_accepted ? "Yes" : "No" },
     { label: "Received", value: fmtDateTime(row.created_at) },
   ];
