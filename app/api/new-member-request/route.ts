@@ -92,18 +92,6 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-    if (!itp_enrollment_number) {
-      return NextResponse.json(
-        { error: "ITP Enrollment No. is required." },
-        { status: 400 }
-      );
-    }
-    if (!gstp_enrollment_number) {
-      return NextResponse.json(
-        { error: "GSTP Enrollment No. is required." },
-        { status: 400 }
-      );
-    }
     if (!terms_accepted) {
       return NextResponse.json(
         { error: "You must accept the terms and privacy policy." },

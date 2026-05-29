@@ -29,6 +29,7 @@ import Image from "next/image";
 import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
 
+/** Mirrors `public.candidate_exam_schedule` (quoted cols preserved in DB). */
 interface CandidateProfile {
   membership_id: number;
   name: string | null;
@@ -43,13 +44,7 @@ interface CandidateProfile {
   self_test_practice: string | null;
   mock_exam: string | null;
   final_ctpr_exam: string | null;
-  fellowship_link: string | null;
   exam_date: string | null;
-  new_member_link: string | null;
-  mepsc_certificate_url: string | null;
-  mock_certificate_url: string | null;
-  final_ctpr_certificate_url: string | null;
-  self_test_certificate_url: string | null;
   date_of_birth: string | null;
   it_pan: string | null;
   aadhar: string | null;
@@ -61,12 +56,105 @@ interface CandidateProfile {
   pincode: string | null;
   joined: string | null;
   completed: string | null;
-  ncvet: string | null;
+  NCVET: string | null;
   gstp: string | null;
-  itp: string | null;
-  sidh: string | null;
-  stp: string | null;
-  cb: string | null;
+  ITP: string | null;
+  SIDH: string | null;
+  STP: string | null;
+  CB: string | null;
+}
+
+const CANDIDATE_SELECT = `
+  membership_id,
+  name,
+  place,
+  state,
+  can_id,
+  batch_id,
+  batch_name,
+  mepsc_assesment,
+  next_step,
+  qualification_status,
+  self_test_practice,
+  mock_exam,
+  final_ctpr_exam,
+  exam_date,
+  date_of_birth,
+  it_pan,
+  aadhar,
+  voter,
+  father_name,
+  mother_name,
+  address,
+  district,
+  pincode,
+  joined,
+  completed,
+  "NCVET",
+  gstp,
+  "ITP",
+  "SIDH",
+  "STP",
+  "CB"
+`;
+
+function strOrNull(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  const t = String(v).trim();
+  return t.length ? t : null;
+}
+
+function mapCandidateRow(row: Record<string, unknown>): CandidateProfile {
+  const pick = (...keys: string[]) => {
+    for (const k of keys) {
+      const v = strOrNull(row[k]);
+      if (v) return v;
+    }
+    return null;
+  };
+
+  return {
+    membership_id: Number(row.membership_id),
+    name: strOrNull(row.name),
+    place: strOrNull(row.place),
+    state: strOrNull(row.state),
+    can_id: strOrNull(row.can_id),
+    batch_id: strOrNull(row.batch_id),
+    batch_name: strOrNull(row.batch_name),
+    mepsc_assesment: strOrNull(row.mepsc_assesment),
+    next_step: strOrNull(row.next_step),
+    qualification_status: strOrNull(row.qualification_status),
+    self_test_practice: strOrNull(row.self_test_practice),
+    mock_exam: strOrNull(row.mock_exam),
+    final_ctpr_exam: strOrNull(row.final_ctpr_exam),
+    exam_date: strOrNull(row.exam_date),
+    date_of_birth: strOrNull(row.date_of_birth),
+    it_pan: strOrNull(row.it_pan),
+    aadhar: strOrNull(row.aadhar),
+    voter: strOrNull(row.voter),
+    father_name: strOrNull(row.father_name),
+    mother_name: strOrNull(row.mother_name),
+    address: strOrNull(row.address),
+    district: strOrNull(row.district),
+    pincode: strOrNull(row.pincode),
+    joined: strOrNull(row.joined),
+    completed: strOrNull(row.completed),
+    NCVET: pick("NCVET", "ncvet"),
+    gstp: strOrNull(row.gstp),
+    ITP: pick("ITP", "itp"),
+    SIDH: pick("SIDH", "sidh"),
+    STP: pick("STP", "stp"),
+    CB: pick("CB", "cb"),
+  };
+}
+
+function displayValue(v: string | null | undefined): string {
+  return v?.trim() ? v.trim() : "—";
+}
+
+function isUrl(value: string | null | undefined): boolean {
+  const t = (value ?? "").trim();
+  return /^https?:\/\//i.test(t);
 }
 
 export default function ProfilePage() {
@@ -96,12 +184,12 @@ export default function ProfilePage() {
     it_pan: "",
     aadhar: "",
     voter: "",
-    ncvet: "",
+    NCVET: "",
     gstp: "",
-    itp: "",
-    sidh: "",
-    stp: "",
-    cb: "",
+    ITP: "",
+    SIDH: "",
+    STP: "",
+    CB: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -113,12 +201,12 @@ export default function ProfilePage() {
     !profile.it_pan &&
     !profile.aadhar &&
     !profile.voter &&
-    !profile.ncvet &&
+    !profile.NCVET &&
     !profile.gstp &&
-    !profile.itp &&
-    !profile.sidh &&
-    !profile.stp &&
-    !profile.cb;
+    !profile.ITP &&
+    !profile.SIDH &&
+    !profile.STP &&
+    !profile.CB;
 
   useEffect(() => {
     if (!auth?.user?.email) {
@@ -166,7 +254,7 @@ export default function ProfilePage() {
         // 2. Fetch candidate profile using membership_id
         const { data: profileData, error: profileError } = await supabase
           .from("candidate_exam_schedule")
-          .select("*")
+          .select(CANDIDATE_SELECT)
           .eq("membership_id", mid)
           .maybeSingle();
 
@@ -177,7 +265,7 @@ export default function ProfilePage() {
         }
 
         if (profileData) {
-          setProfile(profileData as CandidateProfile);
+          setProfile(mapCandidateRow(profileData as Record<string, unknown>));
         } else {
           setError("No candidate record found for this Membership ID.");
         }
@@ -343,12 +431,12 @@ export default function ProfilePage() {
                     it_pan: profile?.it_pan || "",
                     aadhar: profile?.aadhar || "",
                     voter: profile?.voter || "",
-                    ncvet: profile?.ncvet || "",
+                    NCVET: profile?.NCVET || "",
                     gstp: profile?.gstp || "",
-                    itp: profile?.itp || "",
-                    sidh: profile?.sidh || "",
-                    stp: profile?.stp || "",
-                    cb: profile?.cb || "",
+                    ITP: profile?.ITP || "",
+                    SIDH: profile?.SIDH || "",
+                    STP: profile?.STP || "",
+                    CB: profile?.CB || "",
                   });
                   setIsEditModalOpen(true);
                 }}
@@ -417,8 +505,11 @@ export default function ProfilePage() {
               </h2>
 
               <p className="text-sm text-gray-600 mt-1">
-                Membership ID: {membershipId ? String(membershipId).padStart(5, "0") : "â€”"}
+                Membership ID: {membershipId ? String(membershipId).padStart(5, "0") : "—"}
               </p>
+              {userEmail && (
+                <p className="text-sm text-gray-500 mt-0.5">{userEmail}</p>
+              )}
 
               {uploading && (
                 <p className="mt-2 text-sm text-blue-600 animate-pulse">Uploading photo...</p>
@@ -438,14 +529,14 @@ export default function ProfilePage() {
                     Personal Information
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div><p className="text-sm text-gray-600">Full Name</p><p className="font-medium text-lg">{profile.name || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Display Name</p><p className="font-medium text-lg">{fullName}</p></div>
-                    <div><p className="text-sm text-gray-600">Date of Birth</p><p className="font-medium text-lg">{profile.date_of_birth || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Father's Name</p><p className="font-medium text-lg">{profile.father_name || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Mother's Name</p><p className="font-medium text-lg">{profile.mother_name || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">IT PAN</p><p className="font-medium text-lg font-mono">{profile.it_pan || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Aadhaar Number</p><p className="font-medium text-lg font-mono">{profile.aadhar || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Voter ID</p><p className="font-medium text-lg font-mono">{profile.voter || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Full Name</p><p className="font-medium text-lg">{displayValue(profile.name)}</p></div>
+                    <div><p className="text-sm text-gray-600">Display Name</p><p className="font-medium text-lg">{displayValue(fullName)}</p></div>
+                    <div><p className="text-sm text-gray-600">Date of Birth</p><p className="font-medium text-lg">{displayValue(profile.date_of_birth)}</p></div>
+                    <div><p className="text-sm text-gray-600">Father&apos;s Name</p><p className="font-medium text-lg">{displayValue(profile.father_name)}</p></div>
+                    <div><p className="text-sm text-gray-600">Mother&apos;s Name</p><p className="font-medium text-lg">{displayValue(profile.mother_name)}</p></div>
+                    <div><p className="text-sm text-gray-600">IT PAN</p><p className="font-medium text-lg font-mono">{displayValue(profile.it_pan)}</p></div>
+                    <div><p className="text-sm text-gray-600">Aadhaar Number</p><p className="font-medium text-lg font-mono">{displayValue(profile.aadhar)}</p></div>
+                    <div><p className="text-sm text-gray-600">Voter ID</p><p className="font-medium text-lg font-mono">{displayValue(profile.voter)}</p></div>
                   </div>
                 </section>
 
@@ -456,11 +547,11 @@ export default function ProfilePage() {
                     Address & Location
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="md:col-span-2"><p className="text-sm text-gray-600">Full Address</p><p className="font-medium text-lg">{profile.address || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">District</p><p className="font-medium text-lg">{profile.district || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">State</p><p className="font-medium text-lg">{profile.state || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Place</p><p className="font-medium text-lg">{profile.place || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Pincode</p><p className="font-medium text-lg">{profile.pincode || "â€”"}</p></div>
+                    <div className="md:col-span-2"><p className="text-sm text-gray-600">Full Address</p><p className="font-medium text-lg">{displayValue(profile.address)}</p></div>
+                    <div><p className="text-sm text-gray-600">District</p><p className="font-medium text-lg">{displayValue(profile.district)}</p></div>
+                    <div><p className="text-sm text-gray-600">State</p><p className="font-medium text-lg">{displayValue(profile.state)}</p></div>
+                    <div><p className="text-sm text-gray-600">Place</p><p className="font-medium text-lg">{displayValue(profile.place)}</p></div>
+                    <div><p className="text-sm text-gray-600">Pincode</p><p className="font-medium text-lg">{displayValue(profile.pincode)}</p></div>
                   </div>
                 </section>
 
@@ -472,12 +563,13 @@ export default function ProfilePage() {
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div><p className="text-sm text-gray-600">Membership ID</p><p className="font-medium text-lg font-mono">{String(profile.membership_id).padStart(5, "0")}</p></div>
-                    <div><p className="text-sm text-gray-600">Candidate ID</p><p className="font-medium text-lg font-mono">{profile.can_id || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Batch ID</p><p className="font-medium text-lg font-mono">{profile.batch_id || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Batch Name</p><p className="font-medium text-lg">{profile.batch_name || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Qualification Status</p><p className="font-medium text-lg font-semibold text-green-700">{profile.qualification_status || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Joined</p><p className="font-medium text-lg">{profile.joined || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">Completed</p><p className="font-medium text-lg">{profile.completed || "â€”"}</p></div>
+                    <div><p className="text-sm text-gray-600">Candidate ID</p><p className="font-medium text-lg font-mono">{displayValue(profile.can_id)}</p></div>
+                    <div><p className="text-sm text-gray-600">Batch ID</p><p className="font-medium text-lg font-mono">{displayValue(profile.batch_id)}</p></div>
+                    <div><p className="text-sm text-gray-600">Batch Name</p><p className="font-medium text-lg">{displayValue(profile.batch_name)}</p></div>
+                    <div><p className="text-sm text-gray-600">Qualification Status</p><p className="font-medium text-lg font-semibold text-green-700">{displayValue(profile.qualification_status)}</p></div>
+                    <div><p className="text-sm text-gray-600">Next Step</p><p className="font-medium text-lg">{displayValue(profile.next_step)}</p></div>
+                    <div><p className="text-sm text-gray-600">Joined</p><p className="font-medium text-lg">{displayValue(profile.joined)}</p></div>
+                    <div><p className="text-sm text-gray-600">Completed</p><p className="font-medium text-lg">{displayValue(profile.completed)}</p></div>
                   </div>
                 </section>
 
@@ -490,14 +582,11 @@ export default function ProfilePage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
-                      { key: "mepsc_assesment", label: "MEPSC Assessment", urlKey: "mepsc_certificate_url" },
-                      { key: "self_test_practice", label: "Self Test / Practice", urlKey: "self_test_certificate_url" },
-                      { key: "mock_exam", label: "Mock Exam", urlKey: "mock_certificate_url" },
-                      { key: "final_ctpr_exam", label: "Final CTPR Exam", urlKey: "final_ctpr_certificate_url" },
+                      { key: "mepsc_assesment" as const, label: "MEPSC Assessment" },
+                      { key: "mock_exam" as const, label: "Mock Exam" },
+                      { key: "final_ctpr_exam" as const, label: "Final CTPR Exam" },
                     ].map((item) => {
-                      const status = profile[item.key as keyof CandidateProfile] as string | null;
-                      const url = profile[item.urlKey as keyof CandidateProfile] as string | null;
-
+                      const status = profile[item.key];
                       const isPass = status && /pass|complete|completed/i.test(status);
                       const isFail = status && /fail/i.test(status);
 
@@ -507,52 +596,62 @@ export default function ProfilePage() {
                           className="border rounded-xl p-6 hover:shadow-md transition-all bg-gray-50/60"
                         >
                           <h3 className="font-semibold mb-4 text-lg">{item.label}</h3>
-
-                          <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Status:</span>
-                              {status ? (
-                                <div className="flex items-center gap-2">
-                                  {isPass ? <CheckCircle2 className="w-5 h-5 text-green-600" /> :
-                                   isFail ? <XCircle className="w-5 h-5 text-red-600" /> :
-                                   <Calendar className="w-5 h-5 text-amber-600" />}
-                                  <span className={`font-medium ${isPass ? "text-green-700" : isFail ? "text-red-700" : "text-gray-800"}`}>
-                                    {status}
-                                  </span>
-                                </div>
-                              ) : (
-                                <span className="text-gray-600">Not attempted</span>
-                              )}
-                            </div>
-
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Certificate:</span>
-                              {url ? (
-                                <a
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline"
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Status:</span>
+                            {status ? (
+                              <div className="flex items-center gap-2">
+                                {isPass ? (
+                                  <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                ) : isFail ? (
+                                  <XCircle className="w-5 h-5 text-red-600" />
+                                ) : (
+                                  <Calendar className="w-5 h-5 text-amber-600" />
+                                )}
+                                <span
+                                  className={`font-medium ${
+                                    isPass
+                                      ? "text-green-700"
+                                      : isFail
+                                        ? "text-red-700"
+                                        : "text-gray-800"
+                                  }`}
                                 >
-                                  <FileText className="w-4 h-4" />
-                                  View / Download
-                                </a>
-                              ) : (
-                                <span className="text-gray-600">Not available</span>
-                              )}
-                            </div>
+                                  {status}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-600">—</span>
+                            )}
                           </div>
                         </div>
                       );
                     })}
+                    <div className="border rounded-xl p-6 hover:shadow-md transition-all bg-gray-50/60 md:col-span-2">
+                      <h3 className="font-semibold mb-4 text-lg">Self Test / Practice</h3>
+                      {isUrl(profile.self_test_practice) ? (
+                        <a
+                          href={profile.self_test_practice!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                        >
+                          <FileText className="w-4 h-4" />
+                          Open practice tests
+                        </a>
+                      ) : (
+                        <p className="font-medium text-lg">
+                          {displayValue(profile.self_test_practice)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </section>
 
-                {/* Additional Information & Links */}
+                {/* Certificates & enrollment (candidate_exam_schedule) */}
                 <section className="bg-white rounded-xl shadow-lg p-6 md:p-8">
                   <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
                     <BookOpen className="w-6 h-6 text-blue-600" />
-                    Additional Information & Links
+                    Certificates & Enrollment
                   </h2>
 
                   {!canEditDetails && (
@@ -562,22 +661,13 @@ export default function ProfilePage() {
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div><p className="text-sm text-gray-600">Exam Date</p><p className="font-medium text-lg">{profile.exam_date || "â€”"}</p></div>
-                    <div>
-                      <p className="text-sm text-gray-600">Fellowship Link</p>
-                      <p className="font-medium text-lg">
-                        {profile.fellowship_link ? (
-                          <a href={profile.fellowship_link} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                            View Fellowship
-                          </a>
-                        ) : "â€”"}
-                      </p>
-                    </div>
-                    <div><p className="text-sm text-gray-600">NCVET CERTIFICATE NO.</p><p className="font-medium text-lg">{profile.ncvet || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">GSTP ENROLLMENT NO.</p><p className="font-medium text-lg">{profile.gstp || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">ITP ENROLLMENT NO.</p><p className="font-medium text-lg">{profile.itp || "â€”"}</p></div>
-                    <div><p className="text-sm text-gray-600">SIDH CANDIDATE ID</p><p className="font-medium text-lg">{profile.sidh || "â€”"}</p></div>
-                    
+                    <div><p className="text-sm text-gray-600">Exam Date</p><p className="font-medium text-lg">{displayValue(profile.exam_date)}</p></div>
+                    <div><p className="text-sm text-gray-600">NCVET Certificate No.</p><p className="font-medium text-lg">{displayValue(profile.NCVET)}</p></div>
+                    <div><p className="text-sm text-gray-600">GSTP Enrollment No.</p><p className="font-medium text-lg">{displayValue(profile.gstp)}</p></div>
+                    <div><p className="text-sm text-gray-600">ITP Enrollment No.</p><p className="font-medium text-lg">{displayValue(profile.ITP)}</p></div>
+                    <div><p className="text-sm text-gray-600">SIDH Candidate ID</p><p className="font-medium text-lg">{displayValue(profile.SIDH)}</p></div>
+                    <div><p className="text-sm text-gray-600">STP Enrollment No.</p><p className="font-medium text-lg">{displayValue(profile.STP)}</p></div>
+                    <div><p className="text-sm text-gray-600">CB Licence No.</p><p className="font-medium text-lg">{displayValue(profile.CB)}</p></div>
                   </div>
                 </section>
               </>
@@ -605,7 +695,7 @@ export default function ProfilePage() {
 
               <p className="text-xl text-red-600 mb-6 leading-relaxed">
                 <strong>Important:</strong> These fields can be filled <strong><i>only once</i></strong>.<br />
-                Please enter accurate information â€” especially IDs and certificate numbers.
+                Please enter accurate information — especially IDs and certificate numbers.
               </p>
 
               <div className="space-y-6">
@@ -689,10 +779,12 @@ export default function ProfilePage() {
                   <h4 className="text-lg font-semibold mb-4 text-gray-800">Certificates & Licenses</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {[
-                      { label: "GSTP Enrollment No.", key: "gstp" },
-                      { label: "ITP Enrollment No", key: "itp" },
-                      { label: "STP Enrollment No ", key: "stp" },
-                      { label: "CB Licence No", key: "cb" },
+                      { label: "NCVET Certificate No.", key: "NCVET" as const },
+                      { label: "GSTP Enrollment No.", key: "gstp" as const },
+                      { label: "ITP Enrollment No.", key: "ITP" as const },
+                      { label: "SIDH Candidate ID", key: "SIDH" as const },
+                      { label: "STP Enrollment No.", key: "STP" as const },
+                      { label: "CB Licence No.", key: "CB" as const },
                     ].map(({ label, key }) => (
                       <div key={key}>
                         <label className="block text-sm font-medium text-gray-800 mb-1.5">{label}</label>
@@ -732,11 +824,12 @@ export default function ProfilePage() {
                         it_pan: profileForm.it_pan.trim().toUpperCase() || null,
                         aadhar: profileForm.aadhar.trim() || null,
                         voter: profileForm.voter.trim().toUpperCase() || null,
-                        ncvet: profileForm.ncvet.trim() || null,
+                        NCVET: profileForm.NCVET.trim() || null,
                         gstp: profileForm.gstp.trim() || null,
-                        itp: profileForm.itp.trim() || null,
-                        stp: profileForm.stp.trim() || null,
-                        cb: profileForm.cb.trim() || null,
+                        ITP: profileForm.ITP.trim() || null,
+                        SIDH: profileForm.SIDH.trim() || null,
+                        STP: profileForm.STP.trim() || null,
+                        CB: profileForm.CB.trim() || null,
                       };
 
                       const { error } = await supabase
@@ -746,7 +839,9 @@ export default function ProfilePage() {
 
                       if (error) throw error;
 
-                      setProfile((prev) => (prev ? { ...prev, ...updates } : null));
+                      setProfile((prev) =>
+                        prev ? mapCandidateRow({ ...prev, ...updates }) : null
+                      );
                       alert("Details saved successfully!");
                       setIsEditModalOpen(false);
                     } catch (err: any) {

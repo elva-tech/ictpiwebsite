@@ -5,26 +5,21 @@ import { AdminShell } from "@/components/AdminShell";
 import { supabase } from "@/lib/Supabase";
 import {
   User,
-  FileText,
-  BadgeCheck,
-  UserX2,
+  Users,
+  Inbox,
+  MessageSquareWarning,
   Award,
   GraduationCap,
   Stamp,
   ShieldCheck,
+  BadgeCheck,
 } from "lucide-react";
 
 interface Stats {
-  todayUser: number | null;
-  todayUdin: number | null;
-  todayVerifiedUdin: number | null;
-  todayRevokedUdin: number | null;
-  totalUser: number | null;
-  totalUdin: number | null;
-  totalVerifiedUdin: number | null;
-  totalRevokedUdin: number | null;
-  // Certificate generation counts (rows in certification_approval with the
-  // corresponding *_generated column equal to '1').
+  todayUsers: number | null;
+  totalUsers: number | null;
+  totalRequests: number | null;
+  totalIssues: number | null;
   certSkillIndia: number | null;
   certNcvet: number | null;
   certMembership: number | null;
@@ -33,14 +28,10 @@ interface Stats {
 }
 
 const emptyStats: Stats = {
-  todayUser: null,
-  todayUdin: null,
-  todayVerifiedUdin: null,
-  todayRevokedUdin: null,
-  totalUser: null,
-  totalUdin: null,
-  totalVerifiedUdin: null,
-  totalRevokedUdin: null,
+  todayUsers: null,
+  totalUsers: null,
+  totalRequests: null,
+  totalIssues: null,
   certSkillIndia: null,
   certNcvet: null,
   certMembership: null,
@@ -88,6 +79,21 @@ function StatCard({
   );
 }
 
+type CountResult = { count: number | null; error: { message: string } | null };
+
+async function countQuery(q: unknown): Promise<number | null> {
+  try {
+    const r = (await q) as CountResult;
+    if (r.error) {
+      console.warn("Dashboard count:", r.error.message);
+      return null;
+    }
+    return r.count ?? 0;
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<Stats>(emptyStats);
   const [loading, setLoading] = useState(true);
@@ -101,124 +107,79 @@ export default function AdminDashboardPage() {
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const todayIso = todayStart.toISOString();
-
-        // ---- Users (memberinformation + new_member_request) ----
-        const [memberTotal, requestToday, requestTotal] = await Promise.all([
-          supabase
-            .from("memberinformation")
-            .select("*", { count: "exact", head: true }),
-          supabase
-            .from("new_member_request")
-            .select("*", { count: "exact", head: true })
-            .gte("created_at", todayIso),
-          supabase
-            .from("new_member_request")
-            .select("*", { count: "exact", head: true }),
-        ]);
-
-        // ---- UDIN-related counts. If a `udin` table does not exist these
-        // ---- queries simply return null counts (errors are swallowed).
-        const safe = async (
-          q: Promise<{
-            count: number | null;
-            error: { message: string } | null;
-          }>
-        ) => {
-          try {
-            const r = await q;
-            if (r.error) return null;
-            return r.count ?? 0;
-          } catch {
-            return null;
-          }
-        };
-
-        // ---- Certificate generation counts ----
-        // certification_approval has 4 *_generated varchar(1) columns. A value
-        // of "1" means that certificate has already been generated for that
-        // member. Each query asks Postgres to return only the count.
-        const certGenCol = (col: string) =>
-          safe(
-            supabase
-              .from("certification_approval")
-              .select("*", { count: "exact", head: true })
-              .eq(col, "1") as unknown as Promise<{
-              count: number | null;
-              error: { message: string } | null;
-            }>
-          );
+        const todayDate = todayIso.slice(0, 10);
 
         const [
-          udinTotal,
-          udinToday,
-          udinVerifiedTotal,
-          udinVerifiedToday,
-          udinRevokedTotal,
-          udinRevokedToday,
+          totalUsers,
+          todayUsersJoined,
+          todayUsersCreated,
+          totalRequests,
+          totalIssues,
           certSkillIndia,
           certNcvet,
           certMembership,
           certPracticing,
-        ] =
-          await Promise.all([
-            safe(
-              supabase.from("udin").select("*", { count: "exact", head: true }) as unknown as Promise<{
-                count: number | null;
-                error: { message: string } | null;
-              }>
-            ),
-            safe(
-              supabase
-                .from("udin")
-                .select("*", { count: "exact", head: true })
-                .gte("created_at", todayIso) as unknown as Promise<{
-                count: number | null;
-                error: { message: string } | null;
-              }>
-            ),
-            safe(
-              supabase
-                .from("udin")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "verified") as unknown as Promise<{
-                count: number | null;
-                error: { message: string } | null;
-              }>
-            ),
-            safe(
-              supabase
-                .from("udin")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "verified")
-                .gte("created_at", todayIso) as unknown as Promise<{
-                count: number | null;
-                error: { message: string } | null;
-              }>
-            ),
-            safe(
-              supabase
-                .from("udin")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "revoked") as unknown as Promise<{
-                count: number | null;
-                error: { message: string } | null;
-              }>
-            ),
-            safe(
-              supabase
-                .from("udin")
-                .select("*", { count: "exact", head: true })
-                .eq("status", "revoked")
-                .gte("created_at", todayIso) as unknown as Promise<{
-                count: number | null;
-                error: { message: string } | null;
-              }>
-            ),
-            certGenCol("skill_india_generated"),
-            certGenCol("ncvet_generated"),
-            certGenCol("membership_cert_generated"),
-            certGenCol("practicing_generated"),
-          ]);
+        ] = await Promise.all([
+          countQuery(
+            supabase.from("memberinformation").select("*", { count: "exact", head: true })
+          ),
+          countQuery(
+            supabase
+              .from("candidate_exam_schedule")
+              .select("*", { count: "exact", head: true })
+              .eq("joined", todayDate)
+          ),
+          countQuery(
+            supabase
+              .from("memberinformation")
+              .select("*", { count: "exact", head: true })
+              .gte("created_at", todayIso)
+          ),
+          countQuery(
+            supabase.from("new_member_request").select("*", { count: "exact", head: true })
+          ),
+          countQuery(supabase.from("enquiry").select("*", { count: "exact", head: true })),
+          countQuery(
+            supabase
+              .from("certification_approval")
+              .select("*", { count: "exact", head: true })
+              .eq("skill_india_generated", "1")
+          ),
+          countQuery(
+            supabase
+              .from("certification_approval")
+              .select("*", { count: "exact", head: true })
+              .eq("ncvet_generated", "1")
+          ),
+          countQuery(
+            supabase
+              .from("certification_approval")
+              .select("*", { count: "exact", head: true })
+              .eq("membership_cert_generated", "1")
+          ),
+          countQuery(
+            supabase
+              .from("certification_approval")
+              .select("*", { count: "exact", head: true })
+              .eq("practicing_generated", "1")
+          ),
+        ]);
+
+        const todayUsers =
+          todayUsersJoined !== null
+            ? todayUsersJoined
+            : todayUsersCreated !== null
+              ? todayUsersCreated
+              : null;
+
+        const resolvedTotalUsers =
+          totalUsers !== null
+            ? totalUsers
+            : await countQuery(
+                supabase
+                  .from("candidate_exam_schedule")
+                  .select("*", { count: "exact", head: true })
+              );
 
         const certTotal =
           certSkillIndia !== null ||
@@ -232,14 +193,10 @@ export default function AdminDashboardPage() {
             : null;
 
         setStats({
-          todayUser: requestToday.count ?? 0,
-          todayUdin: udinToday,
-          todayVerifiedUdin: udinVerifiedToday,
-          todayRevokedUdin: udinRevokedToday,
-          totalUser: memberTotal.count ?? requestTotal.count ?? 0,
-          totalUdin: udinTotal,
-          totalVerifiedUdin: udinVerifiedTotal,
-          totalRevokedUdin: udinRevokedTotal,
+          todayUsers,
+          totalUsers: resolvedTotalUsers,
+          totalRequests,
+          totalIssues,
           certSkillIndia,
           certNcvet,
           certMembership,
@@ -265,54 +222,32 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      <h2 className="text-base md:text-lg font-bold text-[#1e2659] mb-3">
+        Overview
+      </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard
-          title="Today's User"
-          value={loading ? null : stats.todayUser}
+          title="Today's Users"
+          value={loading ? null : stats.todayUsers}
           Icon={User}
           color="blue"
         />
         <StatCard
-          title="Today's UDIN"
-          value={loading ? null : stats.todayUdin}
-          Icon={FileText}
+          title="Total Users"
+          value={loading ? null : stats.totalUsers}
+          Icon={Users}
+          color="indigo"
+        />
+        <StatCard
+          title="Total Requests"
+          value={loading ? null : stats.totalRequests}
+          Icon={Inbox}
           color="orange"
         />
         <StatCard
-          title="Today's Verified UDIN"
-          value={loading ? null : stats.todayVerifiedUdin}
-          Icon={BadgeCheck}
-          color="green"
-        />
-        <StatCard
-          title="Today's Revoked UDIN"
-          value={loading ? null : stats.todayRevokedUdin}
-          Icon={UserX2}
-          color="red"
-        />
-
-        <StatCard
-          title="Total User"
-          value={loading ? null : stats.totalUser}
-          Icon={User}
-          color="blue"
-        />
-        <StatCard
-          title="Total UDIN"
-          value={loading ? null : stats.totalUdin}
-          Icon={FileText}
-          color="orange"
-        />
-        <StatCard
-          title="Total Verified UDIN"
-          value={loading ? null : stats.totalVerifiedUdin}
-          Icon={BadgeCheck}
-          color="green"
-        />
-        <StatCard
-          title="Total Revoked UDIN"
-          value={loading ? null : stats.totalRevokedUdin}
-          Icon={UserX2}
+          title="Total Issues"
+          value={loading ? null : stats.totalIssues}
+          Icon={MessageSquareWarning}
           color="red"
         />
       </div>

@@ -20,12 +20,12 @@ const ENROLLMENT_FIELDS = [
   {
     key: "itp_enrollment_number" as const,
     label: "INCOME TAX PRACTITIONER (ITP) Enrollment No.",
-    required: true,
+    required: false,
   },
   {
     key: "gstp_enrollment_number" as const,
     label: "Goods and Services Tax Practitioner (GSTP) Enrollment No.",
-    required: true,
+    required: false,
   },
   {
     key: "itp_gstp_combined_enrollment" as const,
@@ -163,14 +163,6 @@ export default function NewMemberRegisterPage() {
   };
 
   const validateStep4 = (): string | null => {
-    const itp = form.itp_enrollment_number.trim();
-    const gstp = form.gstp_enrollment_number.trim();
-    if (!itp) {
-      return "INCOME TAX PRACTITIONER (ITP) Enrollment No. is required.";
-    }
-    if (!gstp) {
-      return "Goods and Services Tax Practitioner (GSTP) Enrollment No. is required.";
-    }
     if (!form.terms_accepted) return "You must agree to the terms and privacy policy.";
     return null;
   };
@@ -619,10 +611,9 @@ export default function NewMemberRegisterPage() {
         {step === 4 && (
           <div className="space-y-6">
             <p className="text-sm text-slate-600">
-              Enter your practitioner enrollment numbers.{" "}
-              <span className="font-semibold text-slate-800">
-                ITP and GSTP enrollment numbers are required.
-              </span>
+              You may enter enrollment and license details now or later. When you
+              generate your practicing certificate, at least one of ITP or GSTP
+              enrollment number must be on your record.
             </p>
             <div className="grid gap-5 md:grid-cols-2">
               {ENROLLMENT_FIELDS.map((field) => (

@@ -318,6 +318,18 @@ export default function Certificates() {
       return;
     }
 
+    const certForCheck = candidateCertFields ?? parseCandidateCertRow(null);
+    const itpVal = (certForCheck.ITP ?? "").trim();
+    const gstpVal = (certForCheck.gstp ?? "").trim();
+    if (!itpVal && !gstpVal) {
+      setToast({
+        kind: "error",
+        text:
+          "At least one of ITP or GSTP enrollment number is required to generate your certificate. Please add it in your profile or during registration.",
+      });
+      return;
+    }
+
     setBusyKey("practicing");
     try {
       // Lazy-load pdf-lib to keep the page bundle small.
@@ -362,11 +374,10 @@ export default function Certificates() {
       const certificateNo = formatPracticingCertificateNo(membershipIdNum);
       const issueDate = formatCertificateIssueDate();
 
-      // Empty / unknown enrollment fields are rendered as "--" to match the
-      // certificate's visual convention.
+      // Empty / unknown enrollment fields render as "---" on the certificate.
       const fallback = (v: string | null | undefined) => {
         const t = (v ?? "").trim();
-        return t.length ? t : "--";
+        return t.length ? t : "---";
       };
 
       // ----- Field placement (PDF origin = bottom-left) -----
@@ -417,7 +428,7 @@ export default function Certificates() {
       });
 
       // Two-column enrollment grid — bold, sitting on the same baseline as
-      // each printed label. Empty values render as "--".
+      // each printed label. Empty values render as "---".
       const DETAIL_SIZE = 9;
       const rowGap = height * 0.020;
       const detailBaselineNudge = -3.2;
