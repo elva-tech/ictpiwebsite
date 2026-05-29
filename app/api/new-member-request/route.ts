@@ -133,8 +133,12 @@ export async function POST(req: Request) {
     };
 
     const enrollmentPayload = {
-      itp_enrollment_number: itp_enrollment_number.slice(0, 100),
-      gstp_enrollment_number: gstp_enrollment_number.slice(0, 100),
+      itp_enrollment_number: itp_enrollment_number
+        ? itp_enrollment_number.slice(0, 100)
+        : null,
+      gstp_enrollment_number: gstp_enrollment_number
+        ? gstp_enrollment_number.slice(0, 100)
+        : null,
       itp_gstp_combined_enrollment: itp_gstp_combined_enrollment
         ? itp_gstp_combined_enrollment.slice(0, 100)
         : null,
