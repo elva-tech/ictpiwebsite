@@ -1,54 +1,90 @@
 // app/page.tsx
 "use client";
-import Image, { type StaticImageData } from 'next/image';
-import Link from 'next/link';
-import udpinImage from '../assets/udpin.jpeg';
-import instituteLogo from '../assets/ICTPL_image.ico';
+import Image, { type StaticImageData } from "next/image";
+import Link from "next/link";
+import instituteLogo from "@/assets/images/ICTPL_image.jpg";
+import ncvetKaushal from "@/assets/images/ncvet-kaushal.png";
+import ncvetLogo from "@/assets/images/ncvet.png";
+import mepscLogo from "@/assets/images/mepsc.png";
+import patentLogo from "@/assets/images/patent.png";
+import msmeLogo from "@/assets/images/msme.png";
+import udinLogo from "@/assets/udpin.jpeg";
 
 type RecognitionLink = {
+  key: string;
   label: string;
   href: string;
-  icon?: string;
-  imageSrc?: string | StaticImageData;
-  imageAlt?: string;
+  imageSrc: string | StaticImageData;
+  imageAlt: string;
 };
 
 export default function Home() {
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Member Login', href: '/login' },
-    { label: 'Admin Login', href: 'https://results-vdct.vercel.app/' },
     { label: 'Refer', href: '/refer' },
   ];
 
   const recognitionLinks: RecognitionLink[] = [
     {
-      label: 'National Qualification Register',
-      href: 'https://www.nqr.gov.in/qualifications/3521',
-      icon: '🏆',
+      key: "ncvet-kaushal",
+      label: "NCVETs Approval",
+      imageSrc: ncvetKaushal,
+      imageAlt: "NCVET Kaushal Verse approval",
+      href: "https://kaushalverse.ncvet.gov.in/homepage/qualification-details?id=O8aR6hCxW3L7K0r62Ox5dg%3D%3D",
     },
     {
-      label: 'Occupational Standard',
-      href: 'https://www.mepsc.in/occupational_standar/entrepreneurship/',
-      icon: '📋',
+      key: "nqr",
+      label: "NQR (NCVET)",
+      imageSrc: ncvetLogo,
+      imageAlt: "National Qualifications Register",
+      href: "https://www.nqr.gov.in/qualifications/3521",
     },
     {
-      label: 'RPL for Seniors',
-      href: 'https://www.ictpi.in/rpl',
-      icon: '🔄',
+      key: "mepsc",
+      label: "MEPSC Occupational Standards",
+      imageSrc: mepscLogo,
+      imageAlt: "MEPSC",
+      href: "https://www.mepsc.in/occupational_standar/entrepreneurship/",
     },
     {
-      label: 'ICTPI UDIN',
-      href: 'https://ictpi.verifyudin.in/',
-      imageSrc: udpinImage,
-      imageAlt: 'ICTPI UDIN',
+      key: "dpiit",
+      label: "Department of Promotion of Industry and Internal Trade",
+      imageSrc: patentLogo,
+      imageAlt: "DPIIT — trademark search",
+      href: "https://tmrsearch.ipindia.gov.in/estatus",
     },
     {
-      label: 'Register of Members',
-      href: 'https://www.ictpi.in/register-of-members',
-      icon: '📜',
+      key: "msme",
+      label: "MSME Udyam",
+      imageSrc: msmeLogo,
+      imageAlt: "MSME Udyam registration",
+      href: "https://www.udyamregistration.gov.in/default.aspx",
+    },
+    {
+      key: "ictpi-members",
+      label: "ICTPI",
+      imageSrc: instituteLogo,
+      imageAlt: "Institute of Chartered Tax Practitioners India",
+      href: "https://www.ictpi.in/register-of-members",
+    },
+    {
+      key: "ictpi-udin",
+      label: "ICTPI UDIN Report",
+      imageSrc: udinLogo,
+      imageAlt: "ICTPI UDIN verification",
+      href: "https://ictpi.verifyudin.in/",
+    },
+    {
+      key: "rpl",
+      label: "RPL for Seniors",
+      imageSrc: instituteLogo,
+      imageAlt: "RPL for Seniors — ICTPI",
+      href: "https://www.ictpi.in/rpl",
     },
   ];
+
+  const recognitionMarquee = [...recognitionLinks, ...recognitionLinks];
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans antialiased">
@@ -89,45 +125,31 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Recognition Bar */}
+      {/* Recognition — single row, scrolls right to left */}
       <div className="bg-gradient-to-r from-indigo-950 via-indigo-900 to-black text-white border-b border-amber-500/30 shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <h3 className="text-center text-xl md:text-2xl font-bold mb-4 tracking-wide text-amber-300">
-            RECOGNITION
-          </h3>
-          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-            {recognitionLinks.map((item) => (
-              item.imageSrc ? (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative h-16 w-44 overflow-hidden rounded-xl border border-amber-400/40 transition-all duration-300 hover:border-amber-300 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-indigo-950"
-                  aria-label={`Visit ${item.label}`}
-                >
-                  <Image
-                    src={item.imageSrc}
-                    alt={item.imageAlt ?? item.label}
-                    fill
-                    className="object-contain"
-                  />
-                </a>
-              ) : (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-xl border border-amber-400/30 hover:border-amber-400 hover:bg-white/20 transition-all duration-300 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-indigo-950"
-                  aria-label={`Visit ${item.label}`}
-                >
-                  <span className="text-2xl">{item.icon}</span>
-                  <span className="font-medium text-sm sm:text-base text-amber-100 group-hover:text-amber-300 transition-colors">
-                    {item.label}
-                  </span>
-                </a>
-              )
+        <h3 className="text-center text-xl md:text-2xl font-bold pt-5 pb-4 tracking-wide text-amber-300">
+          RECOGNITION
+        </h3>
+        <div className="relative w-full overflow-hidden pb-5">
+          <div className="flex w-max gap-5 md:gap-8 animate-home-marquee-horizontal">
+            {recognitionMarquee.map((item, index) => (
+              <a
+                key={`${item.key}-${index}`}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative shrink-0 h-16 w-40 sm:h-20 sm:w-48 overflow-hidden rounded-xl border border-amber-400/40 bg-white/95 transition-all duration-300 hover:border-amber-300 hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                aria-label={`Visit ${item.label}`}
+                title={item.label}
+              >
+                <Image
+                  src={item.imageSrc}
+                  alt={item.imageAlt}
+                  fill
+                  className="object-contain p-2"
+                  sizes="(max-width: 640px) 160px, 192px"
+                />
+              </a>
             ))}
           </div>
         </div>

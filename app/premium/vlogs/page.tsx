@@ -12,6 +12,8 @@ import {
   Upload,
 } from "lucide-react";
 import { supabase } from "@/lib/Supabase";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 
@@ -81,17 +83,13 @@ export default function StudyMaterialsPage() {
     const fetchUserName = async () => {
       setLoadingUser(true);
       try {
-        const { data, error } = await supabase
-          .from("memberinformation")
-          .select("name")
-          .eq("email", currentEmail)
-          .maybeSingle();
+        const { data: payload } = await loadMemberProfileByEmail(
+          currentEmail,
+          supabase,
+          getStoredMembershipId()
+        );
 
-        if (error) {
-          console.error("Error fetching name:", error);
-        }
-
-        const nameFromDb = data?.name?.trim();
+        const nameFromDb = payload?.member?.name?.trim();
         setFullName(
           nameFromDb && nameFromDb.length > 0
             ? nameFromDb

@@ -28,125 +28,14 @@ import {
 import Image from "next/image";
 import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
-
-/** Mirrors `public.candidate_exam_schedule` (quoted cols preserved in DB). */
-interface CandidateProfile {
-  membership_id: number;
-  name: string | null;
-  place: string | null;
-  state: string | null;
-  can_id: string | null;
-  batch_id: string | null;
-  batch_name: string | null;
-  mepsc_assesment: string | null;
-  next_step: string | null;
-  qualification_status: string | null;
-  self_test_practice: string | null;
-  mock_exam: string | null;
-  final_ctpr_exam: string | null;
-  exam_date: string | null;
-  date_of_birth: string | null;
-  it_pan: string | null;
-  aadhar: string | null;
-  voter: string | null;
-  father_name: string | null;
-  mother_name: string | null;
-  address: string | null;
-  district: string | null;
-  pincode: string | null;
-  joined: string | null;
-  completed: string | null;
-  NCVET: string | null;
-  gstp: string | null;
-  ITP: string | null;
-  SIDH: string | null;
-  STP: string | null;
-  CB: string | null;
-}
-
-const CANDIDATE_SELECT = `
-  membership_id,
-  name,
-  place,
-  state,
-  can_id,
-  batch_id,
-  batch_name,
-  mepsc_assesment,
-  next_step,
-  qualification_status,
-  self_test_practice,
-  mock_exam,
-  final_ctpr_exam,
-  exam_date,
-  date_of_birth,
-  it_pan,
-  aadhar,
-  voter,
-  father_name,
-  mother_name,
-  address,
-  district,
-  pincode,
-  joined,
-  completed,
-  "NCVET",
-  gstp,
-  "ITP",
-  "SIDH",
-  "STP",
-  "CB"
-`;
-
-function strOrNull(v: unknown): string | null {
-  if (v === null || v === undefined) return null;
-  const t = String(v).trim();
-  return t.length ? t : null;
-}
-
-function mapCandidateRow(row: Record<string, unknown>): CandidateProfile {
-  const pick = (...keys: string[]) => {
-    for (const k of keys) {
-      const v = strOrNull(row[k]);
-      if (v) return v;
-    }
-    return null;
-  };
-
-  return {
-    membership_id: Number(row.membership_id),
-    name: strOrNull(row.name),
-    place: strOrNull(row.place),
-    state: strOrNull(row.state),
-    can_id: strOrNull(row.can_id),
-    batch_id: strOrNull(row.batch_id),
-    batch_name: strOrNull(row.batch_name),
-    mepsc_assesment: strOrNull(row.mepsc_assesment),
-    next_step: strOrNull(row.next_step),
-    qualification_status: strOrNull(row.qualification_status),
-    self_test_practice: strOrNull(row.self_test_practice),
-    mock_exam: strOrNull(row.mock_exam),
-    final_ctpr_exam: strOrNull(row.final_ctpr_exam),
-    exam_date: strOrNull(row.exam_date),
-    date_of_birth: strOrNull(row.date_of_birth),
-    it_pan: strOrNull(row.it_pan),
-    aadhar: strOrNull(row.aadhar),
-    voter: strOrNull(row.voter),
-    father_name: strOrNull(row.father_name),
-    mother_name: strOrNull(row.mother_name),
-    address: strOrNull(row.address),
-    district: strOrNull(row.district),
-    pincode: strOrNull(row.pincode),
-    joined: strOrNull(row.joined),
-    completed: strOrNull(row.completed),
-    NCVET: pick("NCVET", "ncvet"),
-    gstp: strOrNull(row.gstp),
-    ITP: pick("ITP", "itp"),
-    SIDH: pick("SIDH", "sidh"),
-    STP: pick("STP", "stp"),
-    CB: pick("CB", "cb"),
-  };
-}
+import {
+  type CandidateProfile,
+  emptyCandidateProfile,
+  loadMemberProfileByEmail,
+  mapCandidateRow,
+  membershipIdLookupValues,
+} from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 function displayValue(v: string | null | undefined): string {
   return v?.trim() ? v.trim() : "—";
@@ -164,6 +53,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<CandidateProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [profileNotice, setProfileNotice] = useState<string | null>(null);
 
   // User data from memberinformation
   const [fullName, setFullName] = useState<string>("User");
@@ -222,55 +112,57 @@ export default function ProfilePage() {
       setError(null);
 
       try {
-        // 1. Fetch membership_id and name from memberinformation
-        const { data: memberData, error: memberError } = await supabase
-          .from("memberinformation")
-          .select("membership_id, name")
-          .eq("email", currentEmail)
-          .maybeSingle();
+        setProfileNotice(null);
 
-        if (memberError) {
-          console.error("Error fetching memberinformation:", memberError);
-          setError("Failed to load user record.");
+        const { data: payload, error: loadError } = await loadMemberProfileByEmail(
+          currentEmail,
+          supabase,
+          getStoredMembershipId()
+        );
+
+        if (loadError || !payload?.member?.membership_id) {
+          console.error("Profile load failed:", loadError ?? "no member row");
+          setError(
+            loadError ??
+              "No membership record found for your account. Use the same email as your ICTPI registration."
+          );
           return;
         }
 
-        if (!memberData || !memberData.membership_id) {
-          setError("No membership record found for your account.");
+        const memberData = payload.member;
+        const idCandidates = membershipIdLookupValues(memberData.membership_id);
+        const mid = idCandidates[0] ?? null;
+        if (mid === null) {
+          setError("Your membership ID could not be read. Please contact support.");
           return;
         }
 
-        const mid = Number(memberData.membership_id);
         setMembershipId(mid);
 
-        // Set name (prefer DB value, fallback to email prefix)
         const nameFromDb = memberData.name?.trim();
-        const display = nameFromDb && nameFromDb.length > 0
-          ? nameFromDb
-          : currentEmail.split("@")[0] || "User";
+        const display =
+          nameFromDb && nameFromDb.length > 0
+            ? nameFromDb
+            : currentEmail.split("@")[0] || "User";
 
         setFullName(display);
 
-        // 2. Fetch candidate profile using membership_id
-        const { data: profileData, error: profileError } = await supabase
-          .from("candidate_exam_schedule")
-          .select(CANDIDATE_SELECT)
-          .eq("membership_id", mid)
-          .maybeSingle();
+        const candidateProfile = payload.candidate;
 
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          setError("Failed to load profile data.");
-          return;
-        }
-
-        if (profileData) {
-          setProfile(mapCandidateRow(profileData as Record<string, unknown>));
+        if (candidateProfile) {
+          setProfile({
+            ...candidateProfile,
+            name: candidateProfile.name || display,
+            membership_id: mid,
+          });
         } else {
-          setError("No candidate record found for this Membership ID.");
+          setProfile(emptyCandidateProfile(mid, display));
+          setProfileNotice(
+            "Your exam schedule record was not found or could not be loaded. You can add your details below, or contact ICTPI support if information is missing."
+          );
         }
 
-        // 3. Load profile picture
+        // Profile picture — try numeric and zero-padded filenames
         const fileName = `${mid}.jpg`;
         const { data: urlData } = supabase.storage
           .from("profileimages")
@@ -515,6 +407,12 @@ export default function ProfilePage() {
                 <p className="mt-2 text-sm text-blue-600 animate-pulse">Uploading photo...</p>
               )}
             </div>
+
+            {profileNotice && !error && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                {profileNotice}
+              </div>
+            )}
 
             {error ? (
               <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center text-red-700 text-lg">
@@ -832,15 +730,39 @@ export default function ProfilePage() {
                         CB: profileForm.CB.trim() || null,
                       };
 
-                      const { error } = await supabase
+                      const saveName = (profile?.name || fullName || "Member").slice(
+                        0,
+                        180
+                      );
+
+                      const { data: updatedRows, error: updateErr } = await supabase
                         .from("candidate_exam_schedule")
                         .update(updates)
-                        .eq("membership_id", membershipId);
+                        .eq("membership_id", membershipId)
+                        .select("membership_id");
 
-                      if (error) throw error;
+                      if (updateErr) throw updateErr;
+
+                      if (!updatedRows?.length) {
+                        const { error: insertErr } = await supabase
+                          .from("candidate_exam_schedule")
+                          .insert({
+                            membership_id: membershipId,
+                            name: saveName,
+                            ...updates,
+                          });
+                        if (insertErr) throw insertErr;
+                        setProfileNotice(null);
+                      }
 
                       setProfile((prev) =>
-                        prev ? mapCandidateRow({ ...prev, ...updates }) : null
+                        prev
+                          ? mapCandidateRow({
+                              ...prev,
+                              ...updates,
+                              name: saveName,
+                            })
+                          : null
                       );
                       alert("Details saved successfully!");
                       setIsEditModalOpen(false);

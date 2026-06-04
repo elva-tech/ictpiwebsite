@@ -23,6 +23,8 @@ import {
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 /* â”€â”€â”€â”€â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€ */
 interface Session {
@@ -91,17 +93,13 @@ export default function Dashboard() {
     const fetchUserName = async () => {
       setLoadingUser(true);
       try {
-        const { data, error } = await supabase
-          .from("memberinformation")
-          .select("name")
-          .eq("email", currentEmail)
-          .maybeSingle();
+        const { data: payload } = await loadMemberProfileByEmail(
+          currentEmail,
+          supabase,
+          getStoredMembershipId()
+        );
 
-        if (error) {
-          console.error("Error fetching name:", error);
-        }
-
-        const nameFromDb = data?.name?.trim();
+        const nameFromDb = payload?.member?.name?.trim();
         setFullName(
           nameFromDb && nameFromDb.length > 0
             ? nameFromDb

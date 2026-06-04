@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { supabase } from "@/lib/Supabase";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 import { Loader2, Send } from "lucide-react";
 
 const QUERY_MAX = 100;
@@ -31,14 +33,15 @@ export default function EnquiryPage() {
       setLoadingMember(true);
       setMessage(null);
       try {
-        const { data, error } = await supabase
-          .from("memberinformation")
-          .select("membership_id")
-          .eq("email", email)
-          .maybeSingle();
+        const { data: payload, error: loadErr } = await loadMemberProfileByEmail(
+          email,
+          supabase,
+          getStoredMembershipId()
+        );
 
-        if (error) throw error;
-        if (!data?.membership_id) {
+        if (loadErr && !payload?.member) throw new Error(loadErr);
+        const rawId = payload?.member?.membership_id;
+        if (rawId == null || String(rawId).trim() === "") {
           setMembershipId(null);
           setMessage({
             type: "err",
@@ -46,7 +49,7 @@ export default function EnquiryPage() {
           });
           return;
         }
-        setMembershipId(membershipIdForDb(data.membership_id));
+        setMembershipId(membershipIdForDb(rawId));
       } catch (e) {
         console.error(e);
         setMessage({

@@ -11,6 +11,8 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -83,17 +85,13 @@ export default function ModelPaperPage() {
       setLoadingUser(true);
 
       try {
-        // 1. Fetch user info
-        const { data: member, error: memberError } = await supabase
-          .from("memberinformation")
-          .select("name, email")
-          .eq("email", currentEmail)
-          .maybeSingle();
+        const { data: payload } = await loadMemberProfileByEmail(
+          currentEmail,
+          supabase,
+          getStoredMembershipId()
+        );
 
-        if (memberError) {
-          console.error("Error fetching memberinformation:", memberError);
-        }
-
+        const member = payload?.member;
         if (member) {
           const nameFromDb = member.name?.trim();
           setFullName(
@@ -101,7 +99,7 @@ export default function ModelPaperPage() {
               ? nameFromDb
               : currentEmail.split("@")[0] || "User"
           );
-          setUserEmail(member.email?.toLowerCase() || currentEmail);
+          setUserEmail((member.email ?? currentEmail).toLowerCase().trim());
         } else {
           setFullName(currentEmail.split("@")[0] || "User");
           setUserEmail(currentEmail);

@@ -10,6 +10,8 @@ import { createClient } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -132,18 +134,13 @@ export default function MockTestsPage() {
       setLoadingUser(true);
 
       try {
-        // Fetch user name
-        const { data: member, error: memberError } = await supabase
-          .from("memberinformation")
-          .select("name")
-          .eq("email", currentEmail)
-          .maybeSingle();
+        const { data: payload } = await loadMemberProfileByEmail(
+          currentEmail,
+          supabase,
+          getStoredMembershipId()
+        );
 
-        if (memberError) {
-          console.error("Error fetching name:", memberError);
-        }
-
-        const nameFromDb = member?.name?.trim();
+        const nameFromDb = payload?.member?.name?.trim();
         setFullName(
           nameFromDb && nameFromDb.length > 0
             ? nameFromDb

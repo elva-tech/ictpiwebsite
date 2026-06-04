@@ -14,10 +14,14 @@ import Image from "next/image";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import {
   formatCertificateIssueDate,
+  formatMembershipIdDisplay,
   formatPracticingCertificateNo,
 } from "@/lib/membershipId";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 import { supabase } from "@/lib/Supabase";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { PRACTICING_CERT_TEMPLATE_URL } from "@/lib/certificateTemplate";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 /**
  * Logical certificate keys used in the UI. Each maps to:
@@ -219,36 +223,37 @@ export default function Certificates() {
       setLoading(true);
       setErrorMsg(null);
       try {
-        // 1) Resolve membership_id from email
-        const { data: member, error: memberErr } = await supabase
-          .from("memberinformation")
-          .select("membership_id, name")
-          .eq("email", email)
-          .maybeSingle();
-
-        if (memberErr) throw memberErr;
-        if (!member?.membership_id) {
-          setErrorMsg("No membership record was found for your account.");
-          return;
+        const { data: payload, error: loadErr } = await loadMemberProfileByEmail(
+          email,
+          supabase,
+          getStoredMembershipId()
+        );
+        if (loadErr || !payload?.member?.membership_id) {
+          throw new Error(
+            loadErr ?? "No membership record was found for your account."
+          );
         }
 
-        const midNum = Number(member.membership_id);
+        const member = payload.member;
+        const candidateProfile = payload.candidate;
+
+        const midNum = candidateProfile?.membership_id
+          ? Number(candidateProfile.membership_id)
+          : Number(String(member.membership_id).replace(/\D/g, ""));
+        if (!Number.isFinite(midNum)) {
+          setErrorMsg("Invalid membership ID on your account.");
+          return;
+        }
         setMembershipIdNum(midNum);
 
-        // 2) Fetch candidate display name + certificate line items (quoted cols)
-        const { data: candidate } = await supabase
-          .from("candidate_exam_schedule")
-          .select(
-            `name, "NCVET", gstp, "ITP", "SIDH", "STP", "CB"`
-          )
-          .eq("membership_id", midNum)
-          .maybeSingle();
-
         const resolvedName =
-          candidate?.name?.trim() || member.name?.trim() || "";
+          candidateProfile?.name?.trim() || member.name?.trim() || "";
         setCandidateName(resolvedName);
         setCandidateCertFields(
-          parseCandidateCertRow(candidate as Record<string, unknown> | null)
+          parseCandidateCertRow(
+            (candidateProfile as unknown as Record<string, unknown> | null) ??
+              null
+          )
         );
 
         // 3) Fetch the approval row.
@@ -291,8 +296,8 @@ export default function Certificates() {
 
   /**
    * Generates the Practicing Member Certificate PDF.
-   * Loads the template from /cert/practicing-certificate.pdf, draws the
-   * candidate's name onto the first page, marks the DB flag, and triggers a
+   * Loads the blank template from app/cert via API, draws the
+   * candidate's name and membership ID onto the first page, marks the DB flag, and triggers a
    * browser download.
    */
   const generatePracticingCertificate = async () => {
@@ -335,9 +340,14 @@ export default function Certificates() {
       // Lazy-load pdf-lib to keep the page bundle small.
       const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
 
-      const res = await fetch("/cert/practicing-certificate.pdf");
-      if (!res.ok)
-        throw new Error("Certificate template could not be loaded.");
+      // First-time generation always starts from app/cert template (not storage).
+      const res = await fetch(PRACTICING_CERT_TEMPLATE_URL);
+      if (!res.ok) {
+        const errJson = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(
+          errJson.error ?? "Certificate template could not be loaded from app/cert."
+        );
+      }
       const templateBytes = await res.arrayBuffer();
 
       const pdfDoc = await PDFDocument.load(templateBytes);
@@ -401,6 +411,18 @@ export default function Certificates() {
         color: ink,
       });
 
+      // Membership ID — inline after the printed "having Membership Number" label.
+      const membershipIdText = formatMembershipIdDisplay(membershipIdNum);
+      const MEMBERSHIP_FONT_SIZE = 16;
+      const MEMBERSHIP_Y = height * 0.568;
+      firstPage.drawText(membershipIdText, {
+        x: width * 0.537,
+        y: MEMBERSHIP_Y,
+        size: MEMBERSHIP_FONT_SIZE,
+        font: helveticaBold,
+        color: ink,
+      });
+
       // ----- Bottom block: Certificate No. + 6 enrollment fields -----
       // The printed labels sit roughly in the lower fifth of the page.
       // X positions are the right side of each label (where the colon ends).
@@ -420,7 +442,7 @@ export default function Certificates() {
       // "Certificate Generated Date:" in the mid-left area of template.
       const DATE_SIZE = 11;
       firstPage.drawText(issueDate, {
-        x: width * 0.382,
+        x: width * 0.302,
         y: height * 0.360,
         size: DATE_SIZE,
         font: helveticaBold,
@@ -445,7 +467,7 @@ export default function Certificates() {
       drawIf(fallback(cert.STP), rightValX, row1Y - rowGap, DETAIL_SIZE, helveticaBold, rightMaxW);
 
       drawIf(fallback(cert.ITP), leftValX, row1Y - 2 * rowGap, DETAIL_SIZE, helveticaBold, leftMaxW);
-      drawIf(fallback(cert.CB), rightValX, row1Y - 2 * rowGap, DETAIL_SIZE, helveticaBold, rightMaxW);
+      drawIf(fallback(cert.CB), 1.015*rightValX, row1Y - 2 * rowGap, DETAIL_SIZE, helveticaBold, rightMaxW);
 
       const pdfBytes = await pdfDoc.save();
 

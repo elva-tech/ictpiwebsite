@@ -1,3 +1,8 @@
+/** Trim member ID as entered (no forced casing). */
+export function sanitizeMemberIdInput(raw: string): string {
+  return String(raw ?? "").trim();
+}
+
 /** Normalize user input to a positive integer membership id string (no leading zeros). */
 export function normalizeMembershipId(raw: string): string | null {
   const digits = String(raw ?? "").replace(/\D/g, "");

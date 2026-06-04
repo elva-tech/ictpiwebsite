@@ -4,6 +4,11 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/Supabase";
+import {
+  loadMemberProfileByEmail,
+  membershipIdLookupValues,
+} from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { Link } from "lucide-react";
 interface Candidate {
@@ -42,25 +47,31 @@ const ResultPage = () => {
       setError(null);
 
       try {
-        // 1. Fetch membership_id and name from memberinformation
-        const { data: member, error: memberError } = await supabase
-          .from("memberinformation")
-          .select("membership_id, name")
-          .eq("email", currentEmail)
-          .maybeSingle();
+        const { data: payload, error: memberError } =
+          await loadMemberProfileByEmail(
+            currentEmail,
+            supabase,
+            getStoredMembershipId()
+          );
 
-        if (memberError) {
-          console.error("Error fetching memberinformation:", memberError);
-          setError("Failed to load user record.");
+        const member = payload?.member;
+        if (memberError && !member) {
+          console.error("Member load failed:", memberError);
+          setError(memberError || "Failed to load user record.");
           return;
         }
 
-        if (!member || !member.membership_id) {
+        if (!member?.membership_id) {
           setError("No membership record found for your account.");
           return;
         }
 
-        const mid = Number(member.membership_id);
+        const ids = membershipIdLookupValues(member.membership_id);
+        const mid = ids[0];
+        if (mid == null) {
+          setError("Invalid membership ID on record.");
+          return;
+        }
 
         // Set name (prefer DB → fallback to email prefix)
         const nameFromDb = member.name?.trim();

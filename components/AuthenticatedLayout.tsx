@@ -21,6 +21,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/lib/Supabase";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -89,12 +91,13 @@ export function AuthenticatedLayout({
     const email = auth.user.email.toLowerCase().trim();
     const fetchUser = async () => {
       try {
-        const { data } = await supabase
-          .from("memberinformation")
-          .select("name")
-          .eq("email", email)
-          .maybeSingle();
-        if (data?.name?.trim()) setFullName(data.name.trim());
+        const { data: payload } = await loadMemberProfileByEmail(
+          email,
+          supabase,
+          getStoredMembershipId()
+        );
+        const nameFromDb = payload?.member?.name?.trim();
+        if (nameFromDb) setFullName(nameFromDb);
         else setFullName(email.split("@")[0] || "User");
       } catch {
         setFullName(email.split("@")[0] || "User");

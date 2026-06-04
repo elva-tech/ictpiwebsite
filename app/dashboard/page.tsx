@@ -21,6 +21,14 @@ import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
 import { PremiumModeButton } from "@/components/PremiumModeButton";
+import {
+  loadMemberProfileByEmail,
+  membershipIdLookupValues,
+} from "@/lib/candidateExamSchedule";
+import {
+  getStoredMembershipId,
+  getStoredMemberEmail,
+} from "@/lib/memberSession";
 
 // Assets
 import accountancy from "../../assets/Accountancy.webp";
@@ -108,29 +116,36 @@ export default function Dashboard() {
   useEffect(() => {
     if (!auth?.user) return;
 
-    const currentUserEmail = auth.user.email?.toLowerCase()?.trim() || "";
+    const firebaseEmail = auth.user.email?.toLowerCase()?.trim() || "";
+    const currentUserEmail =
+      getStoredMemberEmail()?.toLowerCase().trim() || firebaseEmail;
 
     const fetchUserAndSessions = async () => {
       setLoadingUser(true);
 
       try {
-        // 1. Fetch user info from memberinformation
-        const { data: member, error: memberError } = await supabase
-          .from("memberinformation")
-          .select("membership_id, name, email")
-          .eq("email", currentUserEmail)
-          .maybeSingle();
+        const storedMemberId = getStoredMembershipId();
+        const { data: memberPayload, error: memberLoadError } =
+          await loadMemberProfileByEmail(
+            currentUserEmail,
+            supabase,
+            storedMemberId
+          );
 
-        if (memberError) {
-          console.error("Error fetching memberinformation:", memberError);
+        if (memberLoadError && !memberPayload?.member) {
+          console.warn("Member profile:", memberLoadError);
         }
 
         let mid: number | null = null;
+        const member = memberPayload?.member;
 
-        if (member) {
-          mid = Number(member.membership_id);
-          setMembershipId(mid);
-          setUserEmail(member.email?.toLowerCase() || currentUserEmail);
+        if (member?.membership_id != null) {
+          const ids = membershipIdLookupValues(member.membership_id);
+          mid = ids[0] ?? null;
+          if (mid != null) setMembershipId(mid);
+          setUserEmail(
+            (member.email ?? currentUserEmail).toLowerCase().trim()
+          );
 
           const nameFromDb = member.name?.trim();
           setFullName(
@@ -144,64 +159,43 @@ export default function Dashboard() {
           setUserEmail(currentUserEmail);
         }
 
-        // 1b. Fetch candidate_exam_schedule profile; if essential fields are
-        // empty, gate the dashboard behind a one-time details-collection modal.
-        // Note: NCVET, ITP, SIDH, STP, CB are case-sensitive (quoted) column
-        // names in PostgreSQL; gstp is lowercase. Match the DB schema exactly.
-        if (mid !== null && !Number.isNaN(mid)) {
-          const { data: candidate, error: candidateError } = await supabase
-            .from("candidate_exam_schedule")
-            .select(
-              `date_of_birth, father_name, mother_name, it_pan, aadhar, voter,
-               address, district, state, place, pincode,
-               "NCVET", gstp, "ITP", "SIDH", "STP", "CB"`
-            )
-            .eq("membership_id", mid)
-            .maybeSingle();
+        const candidate = memberPayload?.candidate;
 
-          if (candidateError) {
-            console.error(
-              "Error fetching candidate_exam_schedule:",
-              candidateError
-            );
-          }
+        if (mid !== null && !Number.isNaN(mid) && candidate) {
+          const c = candidate;
+          const requiredFields = [
+            c.date_of_birth,
+            c.father_name,
+            c.mother_name,
+            c.it_pan,
+            c.aadhar,
+            c.address,
+            c.district,
+            c.pincode,
+          ];
+          const anyMissing = requiredFields.some(isEmpty);
 
-          if (candidate) {
-            const c = candidate as Record<string, any>;
-            const requiredFields = [
-              c.date_of_birth,
-              c.father_name,
-              c.mother_name,
-              c.it_pan,
-              c.aadhar,
-              c.address,
-              c.district,
-              c.pincode,
-            ];
-            const anyMissing = requiredFields.some(isEmpty);
-
-            if (anyMissing) {
-              setProfileForm({
-                date_of_birth: c.date_of_birth ?? "",
-                father_name: c.father_name ?? "",
-                mother_name: c.mother_name ?? "",
-                it_pan: c.it_pan ?? "",
-                aadhar: c.aadhar ?? "",
-                voter: c.voter ?? "",
-                address: c.address ?? "",
-                district: c.district ?? "",
-                state: c.state ?? "",
-                place: c.place ?? "",
-                pincode: c.pincode ?? "",
-                ncvet: c.NCVET ?? "",
-                gstp: c.gstp ?? "",
-                itp: c.ITP ?? "",
-                sidh: c.SIDH ?? "",
-                stp: c.STP ?? "",
-                cb: c.CB ?? "",
-              });
-              setProfileNeedsCompletion(true);
-            }
+          if (anyMissing) {
+            setProfileForm({
+              date_of_birth: c.date_of_birth ?? "",
+              father_name: c.father_name ?? "",
+              mother_name: c.mother_name ?? "",
+              it_pan: c.it_pan ?? "",
+              aadhar: c.aadhar ?? "",
+              voter: c.voter ?? "",
+              address: c.address ?? "",
+              district: c.district ?? "",
+              state: c.state ?? "",
+              place: c.place ?? "",
+              pincode: c.pincode ?? "",
+              ncvet: c.NCVET ?? "",
+              gstp: c.gstp ?? "",
+              itp: c.ITP ?? "",
+              sidh: c.SIDH ?? "",
+              stp: c.STP ?? "",
+              cb: c.CB ?? "",
+            });
+            setProfileNeedsCompletion(true);
           }
         }
 

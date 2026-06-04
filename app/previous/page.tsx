@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { PlayCircle, History } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { getStoredMembershipId } from "@/lib/memberSession";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,18 +116,15 @@ export default function PreviousSessions() {
     const fetchUserName = async () => {
       setLoadingUser(true);
       try {
-        const { data, error } = await supabase
-          .from("memberinformation")
-          .select("name")
-          .eq("email", userEmail)
-          .maybeSingle();
+        const { data: payload } = await loadMemberProfileByEmail(
+          userEmail,
+          supabase,
+          getStoredMembershipId()
+        );
 
-        if (error) {
-          console.error("Error fetching user name:", error);
-        }
-
-        if (data?.name?.trim()) {
-          setFullName(data.name.trim());
+        const nameFromDb = payload?.member?.name?.trim();
+        if (nameFromDb) {
+          setFullName(nameFromDb);
         } else {
           setFullName(userEmail.split("@")[0] || "User");
         }

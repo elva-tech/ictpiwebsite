@@ -11,6 +11,9 @@ import Link from "next/link";
 import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
 import { setStoredPortalMode } from "@/lib/portalTheme";
+import { persistMemberSession } from "@/lib/memberSession";
+import { membershipIdStringVariants } from "@/lib/candidateExamSchedule";
+import { sanitizeMemberIdInput } from "@/lib/membershipId";
 
 function LoginForm() {
   const [userId, setUserId] = useState("");
@@ -26,37 +29,65 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const justRegistered = searchParams.get("registered") === "1";
 
-  const lookupEmailByMemberId = async (membershipId: string): Promise<string | null> => {
-    const normalized = membershipId.trim().toUpperCase();
-    if (!normalized) return null;
+  const lookupEmailByMemberId = async (
+    membershipId: string
+  ): Promise<{ email: string; membershipId: string } | null> => {
+    const trimmed = sanitizeMemberIdInput(membershipId);
+    if (!trimmed) return null;
 
     try {
+      const res = await fetch(
+        `/api/member-profile?membershipId=${encodeURIComponent(trimmed)}`
+      );
+      const json = (await res.json().catch(() => ({}))) as {
+        member?: { email?: string | null; membership_id?: string | number };
+        error?: string;
+      };
+      if (res.ok && json.member?.email) {
+        const email = String(json.member.email).trim().toLowerCase();
+        if (email.includes("@")) {
+          return {
+            email,
+            membershipId: String(json.member.membership_id).trim(),
+          };
+        }
+      }
+    } catch (err) {
+      console.warn("Login API lookup failed, trying client:", err);
+    }
+
+    const variants = membershipIdStringVariants(trimmed);
+
+    for (const vid of variants) {
       const { data, error } = await supabase
         .from("memberinformation")
-        .select("email")
-        .eq("membership_id", normalized)
-        .maybeSingle();
+        .select("email, membership_id")
+        .eq("membership_id", vid)
+        .limit(1);
 
       if (error) {
         console.error("Supabase lookup error:", error);
-        return null;
+        continue;
       }
-
-      if (!data?.email) return null;
-
-      const email = String(data.email).trim().toLowerCase();
-      return email.includes("@") ? email : null;
-    } catch (err) {
-      console.error("Lookup failed:", err);
-      return null;
+      const row = data?.[0];
+      if (!row?.email) continue;
+      const email = String(row.email).trim().toLowerCase();
+      if (email.includes("@")) {
+        return {
+          email,
+          membershipId: String(row.membership_id).trim(),
+        };
+      }
     }
+
+    return null;
   };
 
   const handleLogin = async () => {
     setError("");
     if (isProcessing) return;
 
-    const trimmedId = userId.trim();
+    const trimmedId = sanitizeMemberIdInput(userId);
     if (!trimmedId) {
       setError("Please enter your Member ID");
       return;
@@ -70,13 +101,14 @@ function LoginForm() {
     setStoredPortalMode("standard");
 
     try {
-      const email = await lookupEmailByMemberId(trimmedId);
-      if (!email) {
+      const lookup = await lookupEmailByMemberId(trimmedId);
+      if (!lookup) {
         setError("Invalid Member ID – please use your ICTPI provided ID");
         return;
       }
 
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, lookup.email, password);
+      persistMemberSession(lookup.membershipId, lookup.email);
 
       setUserId("");
       setPassword("");
@@ -103,7 +135,7 @@ function LoginForm() {
     setResetError("");
     setResetMessage("");
 
-    const trimmedId = userId.trim();
+    const trimmedId = sanitizeMemberIdInput(userId);
     if (!trimmedId) {
       setResetError("Please enter your Member ID first");
       return;
@@ -112,13 +144,13 @@ function LoginForm() {
     setIsProcessing(true);
 
     try {
-      const email = await lookupEmailByMemberId(trimmedId);
-      if (!email) {
+      const lookup = await lookupEmailByMemberId(trimmedId);
+      if (!lookup?.email) {
         setResetError("No registered email found for this Member ID");
         return;
       }
 
-      await sendPasswordResetEmail(auth, email, {
+      await sendPasswordResetEmail(auth, lookup.email, {
         url: `${window.location.origin}/reset-password`,
       });
 
@@ -172,9 +204,11 @@ function LoginForm() {
             type="text"
             placeholder="Member ID"
             value={userId}
-            onChange={(e) => setUserId(e.target.value.toUpperCase())}
+            onChange={(e) => setUserId(sanitizeMemberIdInput(e.target.value))}
             disabled={isProcessing}
-            className="w-full px-4 py-3 border border-blue-200 rounded-lg bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800 disabled:opacity-60 uppercase tracking-wide"
+            className="w-full px-4 py-3 border border-blue-200 rounded-lg bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800 disabled:opacity-60"
+            inputMode="numeric"
+            autoComplete="username"
           />
 
           <input
@@ -230,9 +264,11 @@ function LoginForm() {
               type="text"
               placeholder="Member ID"
               value={userId}
-              onChange={(e) => setUserId(e.target.value.toUpperCase())}
+              onChange={(e) => setUserId(sanitizeMemberIdInput(e.target.value))}
               disabled={isProcessing}
-              className="w-full px-4 py-3 border border-blue-200 rounded-lg bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-5 uppercase tracking-wide"
+              className="w-full px-4 py-3 border border-blue-200 rounded-lg bg-blue-50/60 focus:outline-none focus:ring-2 focus:ring-blue-400 mb-5"
+              inputMode="numeric"
+              autoComplete="username"
             />
 
             {resetError && (

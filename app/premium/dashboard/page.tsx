@@ -20,6 +20,14 @@ import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
 import { PremiumModeButton } from "@/components/PremiumModeButton";
+import {
+  loadMemberProfileByEmail,
+  membershipIdLookupValues,
+} from "@/lib/candidateExamSchedule";
+import {
+  getStoredMembershipId,
+  getStoredMemberEmail,
+} from "@/lib/memberSession";
 
 // Assets
 import accountancy from "../../../assets/Accountancy.webp";
@@ -80,26 +88,33 @@ export default function Dashboard() {
   useEffect(() => {
     if (!auth?.user) return;
 
-    const currentUserEmail = auth.user.email?.toLowerCase()?.trim() || "";
+    const firebaseEmail = auth.user.email?.toLowerCase()?.trim() || "";
+    const currentUserEmail =
+      getStoredMemberEmail()?.toLowerCase().trim() || firebaseEmail;
 
     const fetchUserAndSessions = async () => {
       setLoadingUser(true);
 
       try {
-        // 1. Fetch user info from memberinformation
-        const { data: member, error: memberError } = await supabase
-          .from("memberinformation")
-          .select("membership_id, name, email")
-          .eq("email", currentUserEmail)
-          .maybeSingle();
+        const { data: memberPayload, error: memberLoadError } =
+          await loadMemberProfileByEmail(
+            currentUserEmail,
+            supabase,
+            getStoredMembershipId()
+          );
 
-        if (memberError) {
-          console.error("Error fetching memberinformation:", memberError);
+        if (memberLoadError && !memberPayload?.member) {
+          console.warn("Member profile:", memberLoadError);
         }
 
-        if (member) {
-          setMembershipId(Number(member.membership_id));
-          setUserEmail(member.email?.toLowerCase() || currentUserEmail);
+        const member = memberPayload?.member;
+        if (member?.membership_id != null) {
+          const ids = membershipIdLookupValues(member.membership_id);
+          const mid = ids[0];
+          if (mid != null) setMembershipId(mid);
+          setUserEmail(
+            (member.email ?? currentUserEmail).toLowerCase().trim()
+          );
 
           const nameFromDb = member.name?.trim();
           setFullName(
