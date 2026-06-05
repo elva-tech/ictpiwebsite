@@ -279,22 +279,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Banner */}
-        <section className="text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-indigo-950 mb-10 tracking-tight">
-            Banners and Editorials
-          </h2>
-          <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl">
-            <Image
-              src="/images/editorial.png"
-              alt="Editorial Banner from ICTPI"
-              width={1200}
-              height={600}
-              className="w-full h-auto"
-              priority
-            />
-          </div>
-        </section>
+       
       </main>
 
       {/* Footer */}
