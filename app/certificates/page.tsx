@@ -296,7 +296,7 @@ export default function Certificates() {
 
   /**
    * Generates the Practicing Member Certificate PDF.
-   * Loads the blank template from app/cert via API, draws the
+   * Loads the blank template from public/cert (copied from app/cert at build), draws the
    * candidate's name and membership ID onto the first page, marks the DB flag, and triggers a
    * browser download.
    */
@@ -340,12 +340,11 @@ export default function Certificates() {
       // Lazy-load pdf-lib to keep the page bundle small.
       const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
 
-      // First-time generation always starts from app/cert template (not storage).
+      // First-time generation uses the static template (not a stored certificate).
       const res = await fetch(PRACTICING_CERT_TEMPLATE_URL);
       if (!res.ok) {
-        const errJson = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(
-          errJson.error ?? "Certificate template could not be loaded from app/cert."
+          "Certificate template could not be loaded. Ensure app/cert/practicing-certificate.pdf exists."
         );
       }
       const templateBytes = await res.arrayBuffer();
