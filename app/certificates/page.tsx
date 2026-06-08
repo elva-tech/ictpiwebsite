@@ -379,7 +379,7 @@ export default function Certificates() {
       };
 
       const cert = candidateCertFields ?? parseCandidateCertRow(null);
-      // Certificate No.: 101/<year>/<membershipId> (e.g. 101/2026/467).
+      // Certificate No.: <last4>/<year>/<membershipId> (e.g. 1799/2026/101799).
       const certificateNo = formatPracticingCertificateNo(membershipIdNum);
       const issueDate = formatCertificateIssueDate();
 
@@ -426,8 +426,7 @@ export default function Certificates() {
       // The printed labels sit roughly in the lower fifth of the page.
       // X positions are the right side of each label (where the colon ends).
 
-      // "Certificate No.: <id>/<year>" — value drawn left-aligned right after
-      // the colon, so it reads inline with the printed label.
+      // Certificate No.: <last4>/<year>/<membershipId>
       const CERT_NO_SIZE = 12;
       firstPage.drawText(certificateNo, {
         x: width * 0.495,
