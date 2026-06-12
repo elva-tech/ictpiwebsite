@@ -412,16 +412,10 @@ export interface MemberProfilePayload {
 }
 
 async function loadMemberProfileFromApi(
-  email: string,
-  membershipId: string | number | null
+  membershipId: string | number
 ): Promise<MemberProfilePayload | null> {
   const qs = new URLSearchParams();
-  const normEmail = email.toLowerCase().trim();
-  if (normEmail) qs.set("email", normEmail);
-  if (membershipId != null && String(membershipId).trim() !== "") {
-    qs.set("membershipId", String(membershipId).trim());
-  }
-  if ([...qs.keys()].length === 0) return null;
+  qs.set("membershipId", String(membershipId).trim());
 
   try {
     const res = await fetch(`/api/member-profile?${qs.toString()}`);
@@ -450,39 +444,21 @@ async function loadMemberProfileFromApi(
   return null;
 }
 
-async function loadMemberProfileClient(
+async function loadMemberProfileClientByMembershipId(
   supabaseClient: SupabaseClient,
-  email: string,
-  membershipIdHint: string | number | null
+  membershipId: string | number
 ): Promise<{ data: MemberProfilePayload | null; error: string | null }> {
-  let member: MemberInformationRow | null = null;
-  let memberErr: string | null = null;
-
-  if (membershipIdHint != null && String(membershipIdHint).trim() !== "") {
-    const byId = await fetchMemberByMembershipId(
-      supabaseClient,
-      membershipIdHint
-    );
-    member = byId.member;
-    memberErr = byId.error;
-  }
-
-  if (!member) {
-    const byEmail = await fetchMemberByEmail(
-      supabaseClient,
-      email,
-      membershipIdHint
-    );
-    member = byEmail.member;
-    if (byEmail.error) memberErr = byEmail.error;
-  }
+  const { member, error: memberErr } = await fetchMemberByMembershipId(
+    supabaseClient,
+    membershipId
+  );
 
   if (!member?.membership_id) {
     return {
       data: null,
       error:
         memberErr ??
-        "No membership record found for your account. Sign in with your Member ID, or contact support if your email in the database differs from your login email.",
+        "No membership record found for this Member ID in memberinformation.",
     };
   }
 
@@ -501,34 +477,65 @@ async function loadMemberProfileClient(
   };
 }
 
-/** Load member + candidate (server API first — bypasses RLS; then client fallback). */
+/**
+ * Load member from `memberinformation` and profile from `candidate_exam_schedule`
+ * using membership_id only.
+ */
+export async function loadMemberProfileByMembershipId(
+  supabaseClient: SupabaseClient,
+  membershipId: string | number | null | undefined
+): Promise<{ data: MemberProfilePayload | null; error: string | null }> {
+  const id =
+    membershipId != null && String(membershipId).trim() !== ""
+      ? String(membershipId).trim()
+      : null;
+
+  if (!id) {
+    return {
+      data: null,
+      error: "Missing Member ID. Please sign in again with your Member ID.",
+    };
+  }
+
+  const byIdApi = await loadMemberProfileFromApi(id);
+  if (byIdApi?.member) {
+    return { data: byIdApi, error: null };
+  }
+
+  return loadMemberProfileClientByMembershipId(supabaseClient, id);
+}
+
+/** @deprecated Prefer loadMemberProfileByMembershipId with session-stored Member ID. */
 export async function loadMemberProfileByEmail(
   email: string,
   supabaseClient: SupabaseClient,
   membershipIdHint?: string | number | null
 ): Promise<{ data: MemberProfilePayload | null; error: string | null }> {
-  const norm = email.toLowerCase().trim();
   const hint =
     membershipIdHint != null && String(membershipIdHint).trim() !== ""
-      ? String(membershipIdHint).trim()
+      ? membershipIdHint
       : null;
 
-  if (!norm && hint == null) {
+  if (hint != null) {
+    return loadMemberProfileByMembershipId(supabaseClient, hint);
+  }
+
+  const norm = email.toLowerCase().trim();
+  if (!norm) {
     return { data: null, error: "Missing email or Member ID" };
   }
 
-  // Same path as login: membership ID first when available (avoids email mismatch / RLS on email).
-  if (hint) {
-    const byIdApi = await loadMemberProfileFromApi("", hint);
-    if (byIdApi?.member) {
-      return { data: byIdApi, error: null };
-    }
+  const { member, error: memberErr } = await fetchMemberByEmail(
+    supabaseClient,
+    norm,
+    null
+  );
+  if (!member?.membership_id) {
+    return {
+      data: null,
+      error: memberErr ?? "No membership record found for this email.",
+    };
   }
 
-  const byEmailApi = await loadMemberProfileFromApi(norm, hint);
-  if (byEmailApi?.member) {
-    return { data: byEmailApi, error: null };
-  }
-
-  return loadMemberProfileClient(supabaseClient, norm, hint);
+  return loadMemberProfileByMembershipId(supabaseClient, member.membership_id);
 }

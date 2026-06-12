@@ -21,12 +21,13 @@ import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
 import { PremiumModeButton } from "@/components/PremiumModeButton";
 import {
-  loadMemberProfileByEmail,
+  loadMemberProfileByMembershipId,
   membershipIdLookupValues,
 } from "@/lib/candidateExamSchedule";
 import {
   getStoredMembershipId,
   getStoredMemberEmail,
+  getStoredMemberName,
 } from "@/lib/memberSession";
 
 // Assets
@@ -97,8 +98,7 @@ export default function Dashboard() {
 
       try {
         const { data: memberPayload, error: memberLoadError } =
-          await loadMemberProfileByEmail(
-            currentUserEmail,
+          await loadMemberProfileByMembershipId(
             supabase,
             getStoredMembershipId()
           );
@@ -116,7 +116,8 @@ export default function Dashboard() {
             (member.email ?? currentUserEmail).toLowerCase().trim()
           );
 
-          const nameFromDb = member.name?.trim();
+          const nameFromDb =
+            member.name?.trim() || getStoredMemberName()?.trim();
           setFullName(
             nameFromDb && nameFromDb.length > 0
               ? nameFromDb

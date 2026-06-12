@@ -19,7 +19,7 @@ import {
 } from "@/lib/membershipId";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
 import { supabase } from "@/lib/Supabase";
-import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { PRACTICING_CERT_TEMPLATE_URL } from "@/lib/certificateTemplate";
 import { getStoredMembershipId } from "@/lib/memberSession";
 
@@ -223,11 +223,8 @@ export default function Certificates() {
       setLoading(true);
       setErrorMsg(null);
       try {
-        const { data: payload, error: loadErr } = await loadMemberProfileByEmail(
-          email,
-          supabase,
-          getStoredMembershipId()
-        );
+        const { data: payload, error: loadErr } =
+          await loadMemberProfileByMembershipId(supabase, getStoredMembershipId());
         if (loadErr || !payload?.member?.membership_id) {
           throw new Error(
             loadErr ?? "No membership record was found for your account."

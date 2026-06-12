@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
-import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
 
 /* â”€â”€â”€â”€â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€ */
@@ -93,8 +93,7 @@ export default function Dashboard() {
     const fetchUserName = async () => {
       setLoadingUser(true);
       try {
-        const { data: payload } = await loadMemberProfileByEmail(
-          currentEmail,
+        const { data: payload } = await loadMemberProfileByMembershipId(
           supabase,
           getStoredMembershipId()
         );

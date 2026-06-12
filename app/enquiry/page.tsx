@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { supabase } from "@/lib/Supabase";
-import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
 import { Loader2, Send } from "lucide-react";
 
@@ -33,11 +33,8 @@ export default function EnquiryPage() {
       setLoadingMember(true);
       setMessage(null);
       try {
-        const { data: payload, error: loadErr } = await loadMemberProfileByEmail(
-          email,
-          supabase,
-          getStoredMembershipId()
-        );
+        const { data: payload, error: loadErr } =
+          await loadMemberProfileByMembershipId(supabase, getStoredMembershipId());
 
         if (loadErr && !payload?.member) throw new Error(loadErr);
         const rawId = payload?.member?.membership_id;

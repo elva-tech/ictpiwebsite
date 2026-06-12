@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { PlayCircle, History } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
-import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
 
 const supabase = createClient(
@@ -116,8 +116,7 @@ export default function PreviousSessions() {
     const fetchUserName = async () => {
       setLoadingUser(true);
       try {
-        const { data: payload } = await loadMemberProfileByEmail(
-          userEmail,
+        const { data: payload } = await loadMemberProfileByMembershipId(
           supabase,
           getStoredMembershipId()
         );

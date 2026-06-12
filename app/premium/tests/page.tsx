@@ -10,7 +10,7 @@ import { createClient } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
-import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
 
 const supabase = createClient(
@@ -134,8 +134,7 @@ export default function MockTestsPage() {
       setLoadingUser(true);
 
       try {
-        const { data: payload } = await loadMemberProfileByEmail(
-          currentEmail,
+        const { data: payload } = await loadMemberProfileByMembershipId(
           supabase,
           getStoredMembershipId()
         );

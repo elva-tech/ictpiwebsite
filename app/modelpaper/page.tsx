@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
-import { loadMemberProfileByEmail } from "@/lib/candidateExamSchedule";
+import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
 
 const supabase = createClient(
@@ -85,8 +85,7 @@ export default function ModelPaperPage() {
       setLoadingUser(true);
 
       try {
-        const { data: payload } = await loadMemberProfileByEmail(
-          currentEmail,
+        const { data: payload } = await loadMemberProfileByMembershipId(
           supabase,
           getStoredMembershipId()
         );

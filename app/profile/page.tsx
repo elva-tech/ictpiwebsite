@@ -31,7 +31,7 @@ import { supabase } from "@/lib/Supabase";
 import {
   type CandidateProfile,
   emptyCandidateProfile,
-  loadMemberProfileByEmail,
+  loadMemberProfileByMembershipId,
   mapCandidateRow,
   membershipIdLookupValues,
 } from "@/lib/candidateExamSchedule";
@@ -114,17 +114,14 @@ export default function ProfilePage() {
       try {
         setProfileNotice(null);
 
-        const { data: payload, error: loadError } = await loadMemberProfileByEmail(
-          currentEmail,
-          supabase,
-          getStoredMembershipId()
-        );
+        const { data: payload, error: loadError } =
+          await loadMemberProfileByMembershipId(supabase, getStoredMembershipId());
 
         if (loadError || !payload?.member?.membership_id) {
           console.error("Profile load failed:", loadError ?? "no member row");
           setError(
             loadError ??
-              "No membership record found for your account. Use the same email as your ICTPI registration."
+              "No membership record found. Please sign in again with your Member ID."
           );
           return;
         }

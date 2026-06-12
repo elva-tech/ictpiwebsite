@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/Supabase";
 import {
-  loadMemberProfileByEmail,
+  loadMemberProfileByMembershipId,
   membershipIdLookupValues,
 } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
@@ -48,11 +48,7 @@ const ResultPage = () => {
 
       try {
         const { data: payload, error: memberError } =
-          await loadMemberProfileByEmail(
-            currentEmail,
-            supabase,
-            getStoredMembershipId()
-          );
+          await loadMemberProfileByMembershipId(supabase, getStoredMembershipId());
 
         const member = payload?.member;
         if (memberError && !member) {

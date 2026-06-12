@@ -51,7 +51,11 @@ function resolveMembershipId(
 }
 
 /**
- * GET /api/member-profile?email=...&membershipId=467
+ * GET /api/member-profile?membershipId=467
+ * Optional: &email=... (fallback only if membership id lookup fails)
+ *
+ * memberinformation → membership_id, email, name
+ * candidate_exam_schedule → profile by membership_id
  */
 export async function GET(req: Request) {
   try {
@@ -72,14 +76,15 @@ export async function GET(req: Request) {
     let member: MemberInformationRow | null = null;
     let lookupError: string | null = null;
 
-    if (email) {
-      const result = await fetchMemberByEmail(supabase, email, membershipIdParam);
+    // memberinformation: resolve by membership_id first (login + profile flow).
+    if (membershipIdParam) {
+      const result = await fetchMemberByMembershipId(supabase, membershipIdParam);
       member = result.member;
       lookupError = result.error;
     }
 
-    if (!member && membershipIdParam) {
-      const result = await fetchMemberByMembershipId(supabase, membershipIdParam);
+    if (!member && email) {
+      const result = await fetchMemberByEmail(supabase, email, membershipIdParam);
       member = result.member;
       if (result.error) lookupError = result.error;
     }

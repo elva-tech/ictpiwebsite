@@ -29,9 +29,13 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const justRegistered = searchParams.get("registered") === "1";
 
-  const lookupEmailByMemberId = async (
+  const lookupMemberByMemberId = async (
     membershipId: string
-  ): Promise<{ email: string; membershipId: string } | null> => {
+  ): Promise<{
+    email: string;
+    membershipId: string;
+    name: string | null;
+  } | null> => {
     const trimmed = sanitizeMemberIdInput(membershipId);
     if (!trimmed) return null;
 
@@ -40,7 +44,11 @@ function LoginForm() {
         `/api/member-profile?membershipId=${encodeURIComponent(trimmed)}`
       );
       const json = (await res.json().catch(() => ({}))) as {
-        member?: { email?: string | null; membership_id?: string | number };
+        member?: {
+          email?: string | null;
+          membership_id?: string | number;
+          name?: string | null;
+        };
         error?: string;
       };
       if (res.ok && json.member?.email) {
@@ -49,6 +57,7 @@ function LoginForm() {
           return {
             email,
             membershipId: String(json.member.membership_id).trim(),
+            name: json.member.name?.trim() || null,
           };
         }
       }
@@ -61,7 +70,7 @@ function LoginForm() {
     for (const vid of variants) {
       const { data, error } = await supabase
         .from("memberinformation")
-        .select("email, membership_id")
+        .select("membership_id, email, name")
         .eq("membership_id", vid)
         .limit(1);
 
@@ -76,6 +85,7 @@ function LoginForm() {
         return {
           email,
           membershipId: String(row.membership_id).trim(),
+          name: row.name?.trim() || null,
         };
       }
     }
@@ -101,14 +111,14 @@ function LoginForm() {
     setStoredPortalMode("standard");
 
     try {
-      const lookup = await lookupEmailByMemberId(trimmedId);
+      const lookup = await lookupMemberByMemberId(trimmedId);
       if (!lookup) {
         setError("Invalid Member ID – please use your ICTPI provided ID");
         return;
       }
 
       await signInWithEmailAndPassword(auth, lookup.email, password);
-      persistMemberSession(lookup.membershipId, lookup.email);
+      persistMemberSession(lookup.membershipId, lookup.email, lookup.name);
 
       setUserId("");
       setPassword("");
@@ -144,7 +154,7 @@ function LoginForm() {
     setIsProcessing(true);
 
     try {
-      const lookup = await lookupEmailByMemberId(trimmedId);
+      const lookup = await lookupMemberByMemberId(trimmedId);
       if (!lookup?.email) {
         setResetError("No registered email found for this Member ID");
         return;
