@@ -16,7 +16,6 @@ import {
   Link2,
   Lock,
   History,
-  GraduationCap,
   ClipboardPenLine,
   FileCheck,
 } from "lucide-react";
@@ -195,12 +194,6 @@ export default function Dashboard() {
             >
               <ClipboardList className="w-5 h-5" /> B/Vlogs
             </Link>
-            <Link
-              href="/schedule"
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-600 transition"
-            >
-              <GraduationCap className="w-5 h-5" /> Exam Information
-            </Link>
             <Link href="/modelpaper" className="flex items-center px-5 py-2 hover:bg-blue-500 transition">
               <ClipboardPenLine className="w-5 h-5 mr-3" /> Model papers
             </Link>
@@ -234,10 +227,6 @@ export default function Dashboard() {
           <Link href="/vlogs" className="flex flex-col items-center text-xs text-gray-600">
             <ClipboardList className="w-6 h-6" />
             <span className="mt-1">B/Vlogs</span>
-          </Link>
-          <Link href="/schedule" className="flex flex-col items-center text-xs text-gray-600">
-            <GraduationCap className="w-6 h-6" />
-            <span className="mt-1">Exam</span>
           </Link>
           <Link href="/modelpaper" className="flex flex-col items-center text-xs text-gray-600">
             <ClipboardPenLine className="w-6 h-6" />

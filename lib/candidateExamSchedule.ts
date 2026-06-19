@@ -353,6 +353,40 @@ export async function fetchMemberByMembershipId(
   return { member: null, error: lastError };
 }
 
+/** Keep `memberinformation.name` in sync when admin edits candidate name. */
+export async function updateMemberInformationName(
+  supabase: SupabaseClient,
+  membershipIdRaw: unknown,
+  name: string | null
+): Promise<{ updated: boolean; error: string | null }> {
+  const variants = membershipIdStringVariants(membershipIdRaw);
+  if (variants.length === 0) {
+    return { updated: false, error: "Invalid membership ID" };
+  }
+
+  const nameForDb = name?.trim() ? name.trim().slice(0, 100) : null;
+  let lastError: string | null = null;
+
+  for (const vid of variants) {
+    const { data, error } = await supabase
+      .from("memberinformation")
+      .update({ name: nameForDb })
+      .eq("membership_id", vid)
+      .select("membership_id")
+      .limit(1);
+
+    if (error) {
+      lastError = formatSupabaseError(error);
+      continue;
+    }
+    if (data && data.length > 0) {
+      return { updated: true, error: null };
+    }
+  }
+
+  return { updated: false, error: lastError };
+}
+
 /** Case-insensitive email lookup; optional membership id hint if email column mismatches. */
 export async function fetchMemberByEmail(
   supabase: SupabaseClient,

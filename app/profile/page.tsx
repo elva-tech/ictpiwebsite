@@ -14,7 +14,6 @@ import {
   XCircle,
   Calendar,
   FileText,
-  GraduationCap,
   ClipboardPenLine,
   History,
   User,
@@ -266,9 +265,6 @@ export default function ProfilePage() {
           </Link>
           <Link href="/vlogs" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
             <ClipboardList className="w-5 h-5 mr-3" /> B/Vlogs
-          </Link>
-          <Link href="/schedule" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
-            <GraduationCap className="w-5 h-5 mr-3" /> Exam Information
           </Link>
           <Link href="/modelpaper" className="flex items-center px-4 py-3 rounded-lg hover:bg-blue-700/80 transition-colors">
             <ClipboardPenLine className="w-5 h-5 mr-3" /> Model papers

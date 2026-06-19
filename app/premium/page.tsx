@@ -9,7 +9,6 @@ import appliedfinance from "../../assets/fourthimage.webp";
 import {
   ClipboardList,
   History,
-  GraduationCap,
   ClipboardPenLine,
   FileCheck,
   Radio,
@@ -27,7 +26,6 @@ const PremiumPage = () => {
     { href: "/premium/results", label: "Exam Information", icon: ClipboardList },
     { href: "/premium/sessions", label: "Sessions", icon: Radio },
     { href: "/previous", label: "Previous Sessions", icon: History },
-    { href: "/schedule", label: "Exam Information", icon: GraduationCap },
     { href: "/modelpaper", label: "Model Papers", icon: ClipboardPenLine },
     { href: "/premium/tests", label: "Practice Tests", icon: ClipboardPenLine },
     { href: "/premium/certificates", label: "Certificates", icon: FileCheck },
@@ -35,7 +33,7 @@ const PremiumPage = () => {
   ];
 
   return (
-    <AuthenticatedLayout title="Premium Dashboard" maxWidth="full">
+    <AuthenticatedLayout title="Dashboard" maxWidth="full">
       <div className="space-y-8">
         <section className="rounded-3xl bg-gradient-to-r from-purple-700 via-violet-700 to-fuchsia-700 text-white p-8 md:p-10 shadow-xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">ICPA LMS Access</h2>

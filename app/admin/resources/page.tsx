@@ -256,9 +256,11 @@ export default function AdminResourcesPage() {
               Resources
             </h2>
             <p className="text-sm text-slate-500 mb-4">
-              Upload PDFs and HTML tests to the{" "}
-              <span className="font-mono">notes</span> bucket. Files appear on
-              member course pages when the filename matches the app listing.
+              Upload PDFs and HTML files to the{" "}
+              <span className="font-mono">notes</span> bucket. Course uploads
+              appear on member course pages; faculty blog uploads under{" "}
+              <span className="font-mono">blogs/</span> appear on the Vlogs &
+              Materials page (titled by filename).
             </p>
 
             {toast && (
@@ -398,12 +400,18 @@ export default function AdminResourcesPage() {
             <p className="font-semibold mb-1">Filename tips</p>
             <ul className="list-disc ml-4 space-y-1 text-amber-800">
               <li>
-                Use the <strong>exact</strong> filename shown in course pages
-                (spaces, apostrophes, typos like <code>bussiness</code>).
+                Files are shown to members using the <strong>file name</strong>{" "}
+                (without .pdf) as the title.
               </li>
               <li>
-                Applied Finance chapters use <code>chapter 1</code> …{" "}
-                <code>chapter 12</code> (with a space).
+                Applied Finance chapters use folders{" "}
+                <code>chapter 1</code> … <code>chapter 12</code> (with a space).
+              </li>
+              <li>
+                Faculty blogs / vlogs use{" "}
+                <code>blogs/CTPr Sreedhara Parthasarathy</code>,{" "}
+                <code>blogs/BR.N. Subramanian</code>, and{" "}
+                <code>blogs/CTPr Dr Kalyanasundaram Baskaran</code>.
               </li>
               <li>
                 Set <code>SUPABASE_SERVICE_ROLE_KEY</code> in{" "}

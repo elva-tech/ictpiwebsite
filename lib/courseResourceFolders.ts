@@ -58,6 +58,16 @@ export const RESOURCE_AREAS: ResourceArea[] = [
     subfolders: [],
   },
   {
+    id: "blogs",
+    label: "Blogs / Vlogs (Faculty)",
+    prefix: "blogs",
+    subfolders: [
+      "CTPr Sreedhara Parthasarathy",
+      "BR.N. Subramanian",
+      "CTPr Dr Kalyanasundaram Baskaran",
+    ],
+  },
+  {
     id: "root",
     label: "Root (faculty PDFs)",
     prefix: "",

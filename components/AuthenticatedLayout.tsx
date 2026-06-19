@@ -11,13 +11,11 @@ import {
   LayoutDashboard,
   ClipboardList,
   History,
-  GraduationCap,
   ClipboardPenLine,
   FileCheck,
   LogOut,
   ArrowLeft,
   User2,
-  Users,
   MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/lib/Supabase";
@@ -34,7 +32,6 @@ const NAV_LINKS = [
   { href: "/tests", label: "Practice Tests", icon: ClipboardPenLine },
   { href: "/certificates", label: "Certificates", icon: FileCheck },
   { href: "/enquiry", label: "Enquiry / Issue", icon: MessageSquare },
-  { href: "/members", label: "Members", icon: Users },
 ] as const;
 
 /** Map standard portal routes to premium mirrors under /premium */
@@ -154,7 +151,7 @@ export function AuthenticatedLayout({
                 className="flex items-center px-5 py-2 rounded-lg hover:bg-blue-500/80 transition-colors"
               >
                 <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                <span>{href === "/dashboard" && !isPremium ? "ICPI" : label}</span>
+                <span>{label}</span>
               </Link>
             ))}
           </nav>
@@ -165,10 +162,7 @@ export function AuthenticatedLayout({
           className={`md:hidden fixed bottom-0 left-0 right-0 ${mobileSidebarBgClass} backdrop-blur-sm text-white flex flex-nowrap justify-start items-center gap-3 overflow-x-auto py-2 px-2 shadow-lg z-50 text-xs scrollbar-hide`}
         >
           <Link href={homeHref} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
-            <LayoutDashboard className="w-5 h-5 mb-1" /> {isPremium ? "Dash" : "ICPI"}
-          </Link>
-          <Link href="/members" className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
-            <Users className="w-5 h-5 mb-1" /> Members
+            <LayoutDashboard className="w-5 h-5 mb-1" /> {isPremium ? "Dash" : "Dashboard"}
           </Link>
           <Link href={navHrefForPortal("/results", isPremium, homeHref)} className="flex flex-col items-center py-1 shrink-0 min-w-[52px]">
             <ClipboardList className="w-5 h-5 mb-1" /> Exam Information

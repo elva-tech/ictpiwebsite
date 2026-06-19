@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import { AdminMemberProfileNavbar } from "@/components/AdminMemberProfileNavbar";
 import { supabase } from "@/lib/Supabase";
+import { updateMemberInformationName } from "@/lib/candidateExamSchedule";
 import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 
 /**
@@ -749,6 +750,24 @@ function EditCandidateModal({
         .eq("membership_id", row.membership_id);
 
       if (updateErr) throw updateErr;
+
+      const syncedName = form.name?.toString().trim() || null;
+      const { updated: miUpdated, error: miErr } =
+        await updateMemberInformationName(
+          supabase,
+          row.membership_id,
+          syncedName
+        );
+      if (miErr) {
+        throw new Error(
+          `Candidate saved but memberinformation name sync failed: ${miErr}`
+        );
+      }
+      if (!miUpdated) {
+        console.warn(
+          `No memberinformation row updated for membership_id ${row.membership_id}`
+        );
+      }
 
       onSaved({ ...form });
     } catch (e: unknown) {
