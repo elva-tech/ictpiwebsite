@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getNotesStorageUrl, isNotesBucketPath } from "@/lib/notesStorage";
 
 export type PortalMode = "standard" | "premium";
 
@@ -20,11 +21,20 @@ export function setStoredPortalMode(mode: PortalMode) {
 }
 
 export function getPortalAssetPath(path: string, isPremium: boolean) {
+  if (isNotesBucketPath(path)) {
+    return getNotesStorageUrl(path);
+  }
+
   if (!isPremium || !path.startsWith("/") || path.startsWith("/premium/")) {
     return path;
   }
 
-  return `/premium${path}`;
+  const premiumPath = `/premium${path}`;
+  if (isNotesBucketPath(premiumPath)) {
+    return getNotesStorageUrl(premiumPath);
+  }
+
+  return premiumPath;
 }
 
 export function usePortalMode() {

@@ -15,6 +15,7 @@ import {
   CalendarClock,
   Share2,
   Crown,
+  FolderOpen,
 } from "lucide-react";
 import {
   isAdminAuthenticated,
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { href: "/admin/new-requests", label: "New Member Requests", Icon: UserPlus },
   { href: "/admin/enquiries", label: "Enquiries", Icon: MessageSquare },
   { href: "/admin/news", label: "News", Icon: Newspaper },
+  { href: "/admin/resources", label: "Resources", Icon: FolderOpen },
   {
     href: "/admin/certificate-approvals",
     label: "Certificate Approvals",

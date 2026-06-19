@@ -71,7 +71,7 @@ export default function BusinessRegulatoryPage() {
       { title: "Chapter-09 Startups and it's registrations", src: "/pdf/bussiness/advising/Startups and it's registrations.pdf", download: "Startups and it's registrations.pdf" },
       { title: "Chapter-10 Business Collaborations", src: "/pdf/bussiness/advising/Business Collaborations.pdf", download: "Business Collaborations.pdf" },
       { title: "Chapter-11 Setting up of Business outside India and Issues (2)", src: "/pdf/bussiness/advising/Setting up of Business outside India and Issues (2).pdf", download: "Setting up of Business outside India and Issues (2).pdf" },
-      { title: "Chapter-12 Conversion of Business Entities", src: "/pdf/bussiness/advising/Conversion of  Business Entities.pdf", download: "Conversion of Business Entities.pdf" },
+      { title: "Chapter-12 Conversion of Business Entities", src: "/pdf/bussiness/advising/Conversion of Business Entities.pdf", download: "Conversion of Business Entities.pdf" },
     ],
     "Business Maintenance": [
       { title: "Chapter-14 Maintenance of Registers and Records", src: "/pdf/bussiness/bussinessmaintaince/Maintenance of Registers and Records.pdf", download: "Maintenance of Registers and Records.pdf" },

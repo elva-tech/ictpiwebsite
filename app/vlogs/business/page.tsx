@@ -63,7 +63,7 @@ export default function BusinessRegulatoryPage() {
     { title: "Formation of LLP", src: "/pdf/bussiness/advising/Fomation of LLP.pdf", download: "Fomation of LLP.pdf", mentor: "CA Neha Gupta" },
     { title: "Startups and Registration", src: "/pdf/bussiness/advising/Startups and it's registrations.pdf", download: "Startups and it's registrations.pdf", mentor: "Adv. Rohan Malhotra" },
     { title: "Business Collaborations", src: "/pdf/bussiness/advising/Business Collaborations.pdf", download: "Business Collaborations.pdf", mentor: "CS Priyanka Verma" },
-    { title: "Conversion of Business Entities", src: "/pdf/bussiness/advising/Conversion of  Business Entities.pdf", download: "Conversion of Business Entities.pdf", mentor: "CA Neha Gupta" },
+    { title: "Conversion of Business Entities", src: "/pdf/bussiness/advising/Conversion of Business Entities.pdf", download: "Conversion of Business Entities.pdf", mentor: "CA Neha Gupta" },
     { title: "Maintenance of Registers and Records", src: "/pdf/bussiness/bussinessmaintaince/Maintenance of Registers and Records.pdf", download: "Maintenance of Registers and Records.pdf", mentor: "Adv. Rohan Malhotra" },
     { title: "Labour Law Compliances", src: "/pdf/bussiness/bussinessmaintaince/Compliance's under labour Laws.pdf", download: "Compliance's under labour Laws.pdf", mentor: "CS Priyanka Verma" },
     { title: "Environmental Law Compliances", src: "/pdf/bussiness/bussinessmaintaince/Compliance's relating to environmental laws.pdf", download: "Compliance's relating to environmental laws.pdf", mentor: "CA Neha Gupta" },
