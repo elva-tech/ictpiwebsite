@@ -18,16 +18,17 @@ function membershipIdForDb(raw: string | number): string {
 }
 
 export default function EnquiryPage() {
-  const auth = useAuth() as any;
+  const auth = useAuth() as { user?: { email?: string }; loading?: boolean };
   const [membershipId, setMembershipId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [loadingMember, setLoadingMember] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(
+    null
+  );
 
   useEffect(() => {
     if (!auth?.user?.email) return;
-    const email = auth.user.email.toLowerCase().trim();
 
     const load = async () => {
       setLoadingMember(true);
@@ -46,7 +47,8 @@ export default function EnquiryPage() {
           });
           return;
         }
-        setMembershipId(membershipIdForDb(rawId));
+        const mid = membershipIdForDb(rawId);
+        setMembershipId(mid);
       } catch (e) {
         console.error(e);
         setMessage({

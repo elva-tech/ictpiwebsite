@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/Supabase";
+import { uploadMemberProfileImage } from "@/lib/profileImageStorage";
 import { Camera, Loader2 } from "lucide-react";
 
 type MemberItem = {
@@ -55,19 +56,14 @@ export function AdminMemberProfileNavbar({ members }: { members: MemberItem[] })
       return;
     }
 
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-    const safeExt = IMAGE_EXTENSIONS.includes(ext) ? ext : "jpg";
-    const objectName = `${membershipId}.${safeExt}`;
-
     setBusyMembershipId(membershipId);
     setError(null);
     try {
-      const { error: uploadErr } = await supabase.storage
-        .from("profileimages")
-        .upload(objectName, file, { upsert: true, cacheControl: "3600" });
-      if (uploadErr) throw uploadErr;
-
-      setExtById((prev) => ({ ...prev, [membershipId]: safeExt }));
+      const { ext: uploadedExt } = await uploadMemberProfileImage(
+        membershipId,
+        file
+      );
+      setExtById((prev) => ({ ...prev, [membershipId]: uploadedExt }));
       setVersionById((prev) => ({ ...prev, [membershipId]: Date.now() }));
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Upload failed.";

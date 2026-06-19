@@ -1,5 +1,6 @@
 ﻿"use client";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
+import { EnquiryRemarksNotices } from "@/components/EnquiryRemarksNotices";
 import Link from "next/link";
 import Image from "next/image";
 import accountancy from "../../assets/Accountancy.webp";
@@ -35,6 +36,8 @@ const PremiumPage = () => {
   return (
     <AuthenticatedLayout title="Dashboard" maxWidth="full">
       <div className="space-y-8">
+        <EnquiryRemarksNotices />
+
         <section className="rounded-3xl bg-gradient-to-r from-purple-700 via-violet-700 to-fuchsia-700 text-white p-8 md:p-10 shadow-xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">ICPA LMS Access</h2>
           

@@ -24,7 +24,6 @@ import {
   Camera,
   MessageSquare,
 } from "lucide-react";
-import Image from "next/image";
 import { AppLogo } from "@/components/AppLogo";
 import { supabase } from "@/lib/Supabase";
 import {
@@ -35,6 +34,8 @@ import {
   membershipIdLookupValues,
 } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
+import { MemberProfileAvatar } from "@/components/MemberProfileAvatar";
+import { uploadMemberProfileImage } from "@/lib/profileImageStorage";
 
 function displayValue(v: string | null | undefined): string {
   return v?.trim() ? v.trim() : "—";
@@ -60,7 +61,8 @@ export default function ProfilePage() {
   const [userEmail, setUserEmail] = useState<string>("");
 
   // Profile picture & upload states
-  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [profileImageVersion, setProfileImageVersion] = useState(0);
+  const [profileImageExt, setProfileImageExt] = useState("jpg");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -158,15 +160,6 @@ export default function ProfilePage() {
           );
         }
 
-        // Profile picture — try numeric and zero-padded filenames
-        const fileName = `${mid}.jpg`;
-        const { data: urlData } = supabase.storage
-          .from("profileimages")
-          .getPublicUrl(fileName);
-
-        if (urlData.publicUrl) {
-          setProfileImageUrl(`${urlData.publicUrl}?t=${Date.now()}`);
-        }
       } catch (err) {
         console.error("Load error:", err);
         setError("Network error. Please check your connection.");
@@ -200,26 +193,15 @@ export default function ProfilePage() {
     setUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const fileName = `${membershipId}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("profileimages")
-        .upload(fileName, file, { cacheControl: "3600" });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("profileimages")
-        .getPublicUrl(fileName);
-
-      if (urlData.publicUrl) {
-        setProfileImageUrl(`${urlData.publicUrl}?t=${Date.now()}`);
-        alert("Profile picture updated successfully!");
-      }
-    } catch (err: any) {
+      const { ext, publicUrl } = await uploadMemberProfileImage(membershipId, file);
+      setProfileImageExt(ext);
+      setProfileImageVersion(Date.now());
+      void publicUrl;
+      alert("Profile picture updated successfully!");
+    } catch (err: unknown) {
       console.error("Upload failed:", err);
-      alert("Failed to upload image: " + (err.message || "Unknown error"));
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      alert("Failed to upload image: " + msg);
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -347,22 +329,12 @@ export default function ProfilePage() {
             {/* Profile Picture & Basic Info */}
             <div className="text-center">
               <div className="relative inline-block group mx-auto">
-                <div
-                  className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-blue-100 bg-gray-100 flex items-center justify-center shadow-md mx-auto"
-                >
-                  {profileImageUrl ? (
-                    <Image
-                      src={profileImageUrl}
-                      alt="Profile picture"
-                      width={160}
-                      height={160}
-                      className="object-cover w-full h-full"
-                      unoptimized
-                    />
-                  ) : (
-                    <User className="w-20 h-20 md:w-24 md:h-24 text-gray-400" />
-                  )}
-                </div>
+                <MemberProfileAvatar
+                  membershipId={membershipId}
+                  version={profileImageVersion}
+                  preferredExt={profileImageExt}
+                  onResolvedExt={setProfileImageExt}
+                />
 
                 <label
                   htmlFor="profile-upload"
@@ -399,6 +371,9 @@ export default function ProfilePage() {
               {uploading && (
                 <p className="mt-2 text-sm text-blue-600 animate-pulse">Uploading photo...</p>
               )}
+              <p className="mt-2 text-xs text-gray-500">
+                You can change your profile photo anytime.
+              </p>
             </div>
 
             {profileNotice && !error && (

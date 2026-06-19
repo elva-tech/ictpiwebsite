@@ -19,6 +19,7 @@ import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
 import { PremiumModeButton } from "@/components/PremiumModeButton";
+import { EnquiryRemarksNotices } from "@/components/EnquiryRemarksNotices";
 import {
   loadMemberProfileByMembershipId,
   membershipIdLookupValues,
@@ -384,6 +385,13 @@ export default function Dashboard() {
                 )}
               </button>
             </div>
+          )}
+
+          {membershipId != null && (
+            <EnquiryRemarksNotices
+              membershipId={membershipId}
+              className="px-4 md:px-8 pt-4"
+            />
           )}
 
           {/* Course Cards */}

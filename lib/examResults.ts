@@ -52,7 +52,7 @@ const FAILED_STYLE: ExamStatusDisplay = {
 
 const NOT_STARTED_STYLE: ExamStatusDisplay = {
   kind: "not_started",
-  text: "COMMENCING SOON 📚",
+  text: "YET TO START 📚",
   color: "bg-gradient-to-br from-purple-600 to-indigo-600",
   glow: "shadow-purple-500/50",
 };
@@ -63,6 +63,28 @@ const IN_PROGRESS_STYLE: ExamStatusDisplay = {
   color: "bg-gradient-to-br from-blue-500 to-cyan-600",
   glow: "shadow-blue-500/60",
 };
+
+/** Allowed values when admin sets exam result fields. */
+export const EXAM_RESULT_STATUS_OPTIONS = [
+  "PENDING",
+  "PASSED",
+  "YET TO START",
+] as const;
+
+export type ExamResultStatus = (typeof EXAM_RESULT_STATUS_OPTIONS)[number];
+
+export function normalizeExamResultStatus(
+  value?: string | null
+): ExamResultStatus | "" {
+  if (!value?.trim()) return "";
+  const v = value.trim().toUpperCase();
+  if (v === "PENDING") return "PENDING";
+  if (v === "PASSED" || v === "COMPLETED" || v.includes("PASSED")) {
+    return "PASSED";
+  }
+  if (v === "YET TO START" || v === "NOT STARTED") return "YET TO START";
+  return "";
+}
 
 export function isPracticeUrl(value?: string | null): boolean {
   if (!value?.trim()) return false;
@@ -83,7 +105,7 @@ export function classifyExamField(
 
   const v = raw.toUpperCase();
 
-  if (v === "COMPLETED" || v.includes("PASSED")) return "completed";
+  if (v === "COMPLETED" || v === "PASSED" || v.includes("PASSED")) return "completed";
   if (v === "SCHEDULED") return "scheduled";
   if (v === "PENDING") return "pending";
   if (v === "FAILED") return "failed";
@@ -102,6 +124,16 @@ export function getExamStatusDisplay(
   options?: { isPractice?: boolean; isMock?: boolean }
 ): ExamStatusDisplay {
   const kind = classifyExamField(value, options);
+  const raw = value?.trim().toUpperCase() ?? "";
+
+  if (raw === "PASSED") {
+    return {
+      kind: "completed",
+      text: "PASSED ✅",
+      color: COMPLETED_STYLE.color,
+      glow: COMPLETED_STYLE.glow,
+    };
+  }
 
   switch (kind) {
     case "completed":
@@ -109,7 +141,10 @@ export function getExamStatusDisplay(
     case "scheduled":
       return SCHEDULED_STYLE;
     case "pending":
-      return PENDING_STYLE;
+      return {
+        ...PENDING_STYLE,
+        text: raw === "PENDING" ? "PENDING ⚠️" : PENDING_STYLE.text,
+      };
     case "failed":
       return FAILED_STYLE;
     case "in_progress":

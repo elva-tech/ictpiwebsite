@@ -3,24 +3,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import { supabase } from "@/lib/Supabase";
-import { Loader2, Search, Trash2 } from "lucide-react";
+import { Loader2, Search, Trash2, CheckCircle2, Save } from "lucide-react";
+import {
+  mapEnquiryRow,
+  type EnquiryRecord,
+  ENQUIRY_REMARKS_MAX,
+  enquiryRowKey,
+  isEnquiryResolved,
+} from "@/lib/enquiry";
 
 /**
  * Admin → Enquiries
  *
- * Lists every row in the `enquiry` table (membership_id, query) and enriches
- * each row with the member's name + email from `memberinformation` for the
- * current page.
+ * Lists rows in the `enquiry` table. Admins can mark a query as resolved
+ * (`resolved` = 1) for internal tracking and add remarks members see on their dashboard.
  */
 
-interface EnquiryRow {
-  // The DB may or may not expose a stable id column; we include it if present
-  // so we can delete an individual row, otherwise we delete by composite key.
-  id?: number | string | null;
-  membership_id: string | null;
-  query: string | null;
-  created_at?: string | null;
-}
+interface EnquiryRow extends EnquiryRecord {}
 
 interface MemberLite {
   membership_id: number | string;
@@ -54,15 +53,15 @@ export default function AdminEnquiriesPage() {
     null
   );
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [resolvingKey, setResolvingKey] = useState<string | null>(null);
+  const [savingRemarksKey, setSavingRemarksKey] = useState<string | null>(null);
+  const [remarksDraft, setRemarksDraft] = useState<Record<string, string>>({});
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = useMemo(() => (page - 1) * pageSize, [page, pageSize]);
 
   /** Stable key for rows that don't have an `id` column. */
-  const rowKey = (r: EnquiryRow, idx: number) =>
-    r.id != null
-      ? `id:${r.id}`
-      : `mq:${r.membership_id ?? "_"}|${(r.query ?? "").slice(0, 60)}|${idx}`;
+  const rowKey = (r: EnquiryRow, idx: number) => enquiryRowKey(r, idx);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,6 +84,7 @@ export default function AdminEnquiriesPage() {
           [
             `membership_id.ilike.${like}`,
             `query.ilike.${like}`,
+            `remarks.ilike.${like}`,
           ].join(",")
         );
       }
@@ -92,15 +92,16 @@ export default function AdminEnquiriesPage() {
       const { data, count, error } = await q;
       if (error) throw error;
 
-      const list = ((data as unknown as EnquiryRow[]) ?? []).map((r) => ({
-        id: (r as { id?: number | string | null }).id ?? null,
-        membership_id: r.membership_id ?? null,
-        query: r.query ?? null,
-        created_at:
-          (r as { created_at?: string | null }).created_at ?? null,
-      }));
+      const list = ((data as unknown as EnquiryRow[]) ?? []).map((r) =>
+        mapEnquiryRow(r)
+      );
 
       setRows(list);
+      setRemarksDraft(
+        Object.fromEntries(
+          list.map((row, i) => [rowKey(row, i), row.remarks ?? ""])
+        )
+      );
       setTotal(count ?? 0);
 
       // Resolve member name/email for the visible page.
@@ -163,6 +164,78 @@ export default function AdminEnquiriesPage() {
   useEffect(() => {
     setPage(1);
   }, [pageSize, search]);
+
+  const updateEnquiryRow = (
+    r: EnquiryRow,
+    payload: Record<string, unknown>
+  ) => {
+    let update = supabase.from("enquiry").update(payload);
+    if (r.id != null) {
+      update = update.eq("id", r.id);
+    } else {
+      update = update
+        .eq("membership_id", r.membership_id ?? "")
+        .eq("query", r.query ?? "");
+    }
+    return update;
+  };
+
+  const saveRemarks = async (r: EnquiryRow, key: string) => {
+    setSavingRemarksKey(key);
+    setToast(null);
+    try {
+      const remarks =
+        (remarksDraft[key] ?? "").trim().slice(0, ENQUIRY_REMARKS_MAX) || null;
+      const { error } = await updateEnquiryRow(r, { remarks });
+      if (error) throw error;
+
+      setRows((prev) =>
+        prev.map((row, i) =>
+          rowKey(row, i) === key ? { ...row, remarks } : row
+        )
+      );
+      setRemarksDraft((prev) => ({ ...prev, [key]: remarks ?? "" }));
+      setToast({
+        type: "ok",
+        text: remarks
+          ? "Remarks saved. The member will see a one-time message on their dashboard."
+          : "Remarks cleared.",
+      });
+    } catch (e: unknown) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : "Could not save remarks.";
+      setToast({ type: "err", text: msg });
+    } finally {
+      setSavingRemarksKey(null);
+    }
+  };
+
+  const markResolved = async (r: EnquiryRow, key: string) => {
+    if (isEnquiryResolved(r.resolved)) return;
+
+    setResolvingKey(key);
+    setToast(null);
+    try {
+      const { error } = await updateEnquiryRow(r, { resolved: 1 });
+      if (error) throw error;
+
+      setRows((prev) =>
+        prev.map((row, i) =>
+          rowKey(row, i) === key ? { ...row, resolved: 1 } : row
+        )
+      );
+      setToast({
+        type: "ok",
+        text: "Marked as resolved.",
+      });
+    } catch (e: unknown) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : "Could not mark as resolved.";
+      setToast({ type: "err", text: msg });
+    } finally {
+      setResolvingKey(null);
+    }
+  };
 
   const deleteRow = async (r: EnquiryRow, key: string) => {
     setDeletingKey(key);
@@ -246,6 +319,10 @@ export default function AdminEnquiriesPage() {
                 <th className="px-3 py-3 text-left font-semibold">Name</th>
                 <th className="px-3 py-3 text-left font-semibold">Email</th>
                 <th className="px-3 py-3 text-left font-semibold">Query</th>
+                <th className="px-3 py-3 text-left font-semibold min-w-[220px]">
+                  Remarks
+                </th>
+                <th className="px-3 py-3 text-left font-semibold">Status</th>
                 <th className="px-3 py-3 text-left font-semibold">Received</th>
                 <th className="px-3 py-3 text-left font-semibold">Actions</th>
               </tr>
@@ -253,7 +330,7 @@ export default function AdminEnquiriesPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                  <td colSpan={9} className="py-10 text-center text-slate-500">
                     <span className="inline-flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Loading enquiries…
@@ -262,7 +339,7 @@ export default function AdminEnquiriesPage() {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                  <td colSpan={9} className="py-10 text-center text-slate-500">
                     No enquiries yet.
                   </td>
                 </tr>
@@ -290,24 +367,86 @@ export default function AdminEnquiriesPage() {
                       >
                         {r.query || "—"}
                       </td>
+                      <td className="px-3 py-3 min-w-[220px]">
+                        <textarea
+                          value={remarksDraft[key] ?? ""}
+                          onChange={(e) =>
+                            setRemarksDraft((prev) => ({
+                              ...prev,
+                              [key]: e.target.value.slice(0, ENQUIRY_REMARKS_MAX),
+                            }))
+                          }
+                          rows={2}
+                          placeholder="Admin-only note for the member…"
+                          className="w-full min-w-[200px] rounded-lg border border-slate-200 px-2.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#1e2659]/30 resize-y"
+                        />
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <span className="text-[10px] text-slate-400">
+                            {(remarksDraft[key] ?? "").length} / {ENQUIRY_REMARKS_MAX}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={savingRemarksKey === key}
+                            onClick={() => saveRemarks(r, key)}
+                            className="inline-flex items-center gap-1 rounded-md bg-[#1e2659] px-2 py-1 text-[11px] font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                          >
+                            {savingRemarksKey === key ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Save className="h-3 w-3" />
+                            )}
+                            Save
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        {isEnquiryResolved(r.resolved) ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Resolved
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-900">
+                            Pending
+                          </span>
+                        )}
+                      </td>
                       <td className="px-3 py-3 text-xs text-slate-500 whitespace-nowrap">
                         {r.created_at ? fmtDateTime(r.created_at) : "—"}
                       </td>
                       <td className="px-3 py-3">
-                        <button
-                          type="button"
-                          disabled={deletingKey === key}
-                          onClick={() => deleteRow(r, key)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-50"
-                          title="Delete this enquiry"
-                        >
-                          {deletingKey === key ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3.5 w-3.5" />
+                        <div className="flex flex-wrap gap-2">
+                          {!isEnquiryResolved(r.resolved) && (
+                            <button
+                              type="button"
+                              disabled={resolvingKey === key}
+                              onClick={() => markResolved(r, key)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
+                              title="Mark this enquiry as resolved"
+                            >
+                              {resolvingKey === key ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              )}
+                              Resolved
+                            </button>
                           )}
-                          Delete
-                        </button>
+                          <button
+                            type="button"
+                            disabled={deletingKey === key}
+                            onClick={() => deleteRow(r, key)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-50"
+                            title="Delete this enquiry"
+                          >
+                            {deletingKey === key ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -5,6 +5,10 @@ import { AdminShell } from "@/components/AdminShell";
 import { AdminMemberProfileNavbar } from "@/components/AdminMemberProfileNavbar";
 import { supabase } from "@/lib/Supabase";
 import { updateMemberInformationName } from "@/lib/candidateExamSchedule";
+import {
+  EXAM_RESULT_STATUS_OPTIONS,
+  normalizeExamResultStatus,
+} from "@/lib/examResults";
 import { Loader2, Pencil, Search, Trash2, X } from "lucide-react";
 
 /**
@@ -972,13 +976,11 @@ function EditCandidateModal({
             </Field>
           </Section>
 
-          <Section title="Exam Workflow">
+          <Section title="Exam Workflow (Results)">
             <Field label="MEPSC Assessment">
-              <input
-                className={inputClass}
-                value={form.mepsc_assesment ?? ""}
-                onChange={(e) => set("mepsc_assesment", e.target.value)}
-                maxLength={50}
+              <ResultStatusSelect
+                value={form.mepsc_assesment}
+                onChange={(v) => set("mepsc_assesment", v)}
               />
             </Field>
             <Field label="Next Step">
@@ -990,27 +992,21 @@ function EditCandidateModal({
               />
             </Field>
             <Field label="Self Test / Practice">
-              <input
-                className={inputClass}
-                value={form.self_test_practice ?? ""}
-                onChange={(e) => set("self_test_practice", e.target.value)}
-                maxLength={50}
+              <ResultStatusSelect
+                value={form.self_test_practice}
+                onChange={(v) => set("self_test_practice", v)}
               />
             </Field>
             <Field label="Mock Exam">
-              <input
-                className={inputClass}
-                value={form.mock_exam ?? ""}
-                onChange={(e) => set("mock_exam", e.target.value)}
-                maxLength={50}
+              <ResultStatusSelect
+                value={form.mock_exam}
+                onChange={(v) => set("mock_exam", v)}
               />
             </Field>
             <Field label="Final CTPR Exam">
-              <input
-                className={inputClass}
-                value={form.final_ctpr_exam ?? ""}
-                onChange={(e) => set("final_ctpr_exam", e.target.value)}
-                maxLength={50}
+              <ResultStatusSelect
+                value={form.final_ctpr_exam}
+                onChange={(v) => set("final_ctpr_exam", v)}
               />
             </Field>
             <Field label="Exam Date">
@@ -1125,6 +1121,32 @@ function Field({
       </label>
       {children}
     </div>
+  );
+}
+
+function ResultStatusSelect({
+  value,
+  onChange,
+}: {
+  value: string | null;
+  onChange: (value: string | null) => void;
+}) {
+  const normalized = normalizeExamResultStatus(value);
+  const selectValue = normalized || "";
+
+  return (
+    <select
+      className={inputClass}
+      value={selectValue}
+      onChange={(e) => onChange(e.target.value || null)}
+    >
+      <option value="">— Select —</option>
+      {EXAM_RESULT_STATUS_OPTIONS.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
   );
 }
 
