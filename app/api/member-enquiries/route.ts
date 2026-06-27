@@ -65,10 +65,13 @@ export async function GET(req: Request) {
 
     const supabase = getSupabaseAdmin();
 
-    let { data, error } = await supabase
+    let data: Record<string, unknown>[] | null = null;
+    const { data: primaryData, error } = await supabase
       .from("enquiry")
       .select("id, membership_id, query, remarks, resolved, created_at")
       .in("membership_id", variants);
+
+    data = (primaryData as Record<string, unknown>[] | null) ?? null;
 
     if (error) {
       const fallback = await supabase
@@ -83,7 +86,7 @@ export async function GET(req: Request) {
         );
       }
 
-      data = fallback.data;
+      data = (fallback.data as Record<string, unknown>[] | null) ?? null;
     }
 
     const enquiries = sortEnquiries(
