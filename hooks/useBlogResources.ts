@@ -13,7 +13,8 @@ export function useBlogResources(isPremium: boolean) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/blog-resources");
+      const premiumQuery = isPremium ? "?premium=1" : "";
+      const res = await fetch(`/api/blog-resources${premiumQuery}`);
       const json = (await res.json().catch(() => ({}))) as {
         sections?: Record<
           string,

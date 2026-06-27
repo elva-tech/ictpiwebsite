@@ -9,7 +9,7 @@ import {
 import { createClient } from "@supabase/supabase-js";
 import { format } from "date-fns";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
-import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
+import { getPortalAssetPath } from "@/lib/portalTheme";
 import { loadMemberProfileByMembershipId } from "@/lib/candidateExamSchedule";
 import { getStoredMembershipId } from "@/lib/memberSession";
 
@@ -34,8 +34,6 @@ interface HtmlTest {
 export default function MockTestsPage() {
   const auth = useAuth() as any;
   const router = useRouter();
-  const { isPremium } = usePortalMode();
-
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedHtmlTest, setSelectedHtmlTest] = useState<HtmlTest | null>(null);
@@ -68,7 +66,7 @@ export default function MockTestsPage() {
   ];
   const resolvedHtmlTests = htmlTests.map((test) => ({
     ...test,
-    src: getPortalAssetPath(test.src, isPremium),
+    src: getPortalAssetPath(test.src, true),
   }));
 
   const startFullscreenTest = (test: HtmlTest) => {

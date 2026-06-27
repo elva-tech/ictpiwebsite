@@ -6,7 +6,6 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import complaince from "../../../../assets/complaiance.webp";
 import "../../../globals.css";
-import { usePortalMode } from "@/lib/portalTheme";
 import { CoursePdfExplorer } from "@/components/CoursePdfExplorer";
 
 interface AuthContextType {
@@ -17,7 +16,6 @@ interface AuthContextType {
 export default function BusinessRegulatoryPage() {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
-  const { isPremium } = usePortalMode();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -70,7 +68,7 @@ export default function BusinessRegulatoryPage() {
           </div>
         </div>
 
-        <CoursePdfExplorer courseId="business" isPremium={isPremium} />
+        <CoursePdfExplorer courseId="business" isPremium />
       </div>
     </div>
   );

@@ -11,11 +11,14 @@ const VALID_COURSES = new Set<CourseId>([
   "indirecttax",
 ]);
 
-/** GET /api/course-resources?course=appliedfinance */
+/** GET /api/course-resources?course=appliedfinance&premium=1 */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const course = searchParams.get("course") as CourseId | null;
+    const isPremium =
+      searchParams.get("premium") === "1" ||
+      searchParams.get("premium") === "true";
 
     if (!course || !VALID_COURSES.has(course)) {
       return NextResponse.json(
@@ -27,8 +30,8 @@ export async function GET(req: Request) {
       );
     }
 
-    const sections = await buildCourseResourceSections(course);
-    return NextResponse.json({ course, sections });
+    const sections = await buildCourseResourceSections(course, { isPremium });
+    return NextResponse.json({ course, isPremium, sections });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Server error";
     console.error("course-resources GET:", err);

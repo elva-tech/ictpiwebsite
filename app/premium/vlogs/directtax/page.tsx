@@ -6,7 +6,7 @@ import { X, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import directtaxImg from "../../../../assets/directtax.webp";
 import "../../../globals.css";
-import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
+import { getPortalAssetPath } from "@/lib/portalTheme";
 import { getDirectTaxVlogPdfs } from "@/lib/directTaxMaterials";
 
 interface AuthContextType {
@@ -24,8 +24,6 @@ interface PDFCard {
 export default function DirectTaxPage() {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
-  const { isPremium } = usePortalMode();
-
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedPDF, setSelectedPDF] = useState<PDFCard | null>(null);
@@ -59,7 +57,7 @@ export default function DirectTaxPage() {
   const allPDFs: PDFCard[] = getDirectTaxVlogPdfs();
   const resolvedPDFs = allPDFs.map((pdf) => ({
     ...pdf,
-    src: getPortalAssetPath(pdf.src, isPremium),
+    src: getPortalAssetPath(pdf.src, true),
   }));
 
   // Extract unique mentors

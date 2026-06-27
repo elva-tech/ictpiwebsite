@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import { supabase } from "@/lib/Supabase";
-import { Loader2, RefreshCw, Save, Search } from "lucide-react";
+import { Loader2, RefreshCw, Save, Search, ExternalLink } from "lucide-react";
 
 /**
  * Admin → Certificate Approvals
@@ -31,6 +31,18 @@ interface MemberLite {
   membership_id: string | number;
   name: string | null;
   email: string | null;
+}
+
+interface StoredCertLink {
+  title: string;
+  storagePath: string;
+  url: string;
+  folder?: string;
+}
+
+interface MemberStoredCerts {
+  common: StoredCertLink[];
+  icpa: StoredCertLink[];
 }
 
 const NAVY = "#1e2659";
@@ -69,6 +81,10 @@ export default function CertificateApprovalsPage() {
     { type: "ok" | "err"; text: string } | null
   >(null);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [storedCerts, setStoredCerts] = useState<
+    Record<string, MemberStoredCerts>
+  >({});
+  const [storedCertsLoading, setStoredCertsLoading] = useState(false);
 
   /** Local edits keyed by membership_id (only approval columns are draftable). */
   const [drafts, setDrafts] = useState<
@@ -77,6 +93,41 @@ export default function CertificateApprovalsPage() {
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const startIdx = useMemo(() => (page - 1) * pageSize, [page, pageSize]);
+  const tableColSpan = 4 + APPROVAL_COLS.length + 3;
+
+  const loadStoredCerts = useCallback(async (ids: string[]) => {
+    if (!ids.length) {
+      setStoredCerts({});
+      return;
+    }
+    setStoredCertsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/member-stored-certificates?membershipIds=${encodeURIComponent(ids.join(","))}`,
+        { cache: "no-store" }
+      );
+      const body = (await res.json().catch(() => ({}))) as {
+        common?: Record<string, StoredCertLink[]>;
+        icpa?: Record<string, StoredCertLink[]>;
+      };
+      if (!res.ok) {
+        setStoredCerts({});
+        return;
+      }
+      const map: Record<string, MemberStoredCerts> = {};
+      for (const id of ids) {
+        map[id] = {
+          common: body.common?.[id] ?? [],
+          icpa: body.icpa?.[id] ?? [],
+        };
+      }
+      setStoredCerts(map);
+    } catch {
+      setStoredCerts({});
+    } finally {
+      setStoredCertsLoading(false);
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -143,8 +194,10 @@ export default function CertificateApprovalsPage() {
           });
         });
         setMemberMap(map);
+        await loadStoredCerts(ids);
       } else {
         setMemberMap({});
+        setStoredCerts({});
       }
     } catch (e) {
       console.error(e);
@@ -152,7 +205,7 @@ export default function CertificateApprovalsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, search]);
+  }, [page, pageSize, search, loadStoredCerts]);
 
   useEffect(() => {
     load();
@@ -281,6 +334,10 @@ export default function CertificateApprovalsPage() {
         type: "ok",
         text: `Reset generation flags for ${id}. Deleted ${deletedCount} stored certificate file(s).`,
       });
+      const pageIds = rows
+        .map((r) => (r.membership_id ?? "").trim())
+        .filter(Boolean);
+      if (pageIds.length) await loadStoredCerts(pageIds);
     } catch (e: unknown) {
       console.error(e);
       const msg = e instanceof Error ? e.message : "Failed to reset.";
@@ -358,6 +415,9 @@ export default function CertificateApprovalsPage() {
                 <th className="px-3 py-3 text-center font-semibold">
                   Already generated
                 </th>
+                <th className="px-3 py-3 text-left font-semibold min-w-[200px]">
+                  Stored PDFs
+                </th>
                 <th className="px-3 py-3 text-left font-semibold">Actions</th>
               </tr>
             </thead>
@@ -365,7 +425,7 @@ export default function CertificateApprovalsPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={4 + APPROVAL_COLS.length + 2}
+                    colSpan={tableColSpan}
                     className="py-10 text-center text-slate-500"
                   >
                     <span className="inline-flex items-center gap-2">
@@ -377,7 +437,7 @@ export default function CertificateApprovalsPage() {
               ) : rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4 + APPROVAL_COLS.length + 2}
+                    colSpan={tableColSpan}
                     className="py-10 text-center text-slate-500"
                   >
                     No certification rows found.
@@ -430,6 +490,16 @@ export default function CertificateApprovalsPage() {
                             );
                           })}
                         </div>
+                      </td>
+                      <td className="px-3 py-3 align-top">
+                        {storedCertsLoading ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            Loading…
+                          </span>
+                        ) : (
+                          <StoredCertsCell stored={storedCerts[id]} />
+                        )}
                       </td>
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2">
@@ -501,6 +571,51 @@ export default function CertificateApprovalsPage() {
 }
 
 void NAVY;
+
+function StoredCertsCell({ stored }: { stored?: MemberStoredCerts }) {
+  const common = stored?.common ?? [];
+  const icpa = stored?.icpa ?? [];
+  if (!common.length && !icpa.length) {
+    return <span className="text-xs text-slate-400">—</span>;
+  }
+
+  const renderGroup = (label: string, items: StoredCertLink[]) => {
+    if (!items.length) return null;
+    return (
+      <div className="mb-2 last:mb-0">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+          {label}
+        </p>
+        <ul className="space-y-1">
+          {items.map((c) => (
+            <li key={c.storagePath}>
+              <a
+                href={c.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-blue-700 hover:underline"
+                title={c.storagePath}
+              >
+                <ExternalLink className="h-3 w-3 shrink-0" />
+                <span className="truncate max-w-[160px]">
+                  {c.folder ? `${c.folder}/` : ""}
+                  {c.title}
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {renderGroup("Common", common)}
+      {renderGroup("ICPA", icpa)}
+    </div>
+  );
+}
 
 function ToggleSwitch({
   checked,

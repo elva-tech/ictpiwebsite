@@ -21,8 +21,9 @@ export function useCourseResources(courseId: CourseId, isPremium: boolean) {
     setLoading(true);
     setError(null);
     try {
+      const premiumQuery = isPremium ? "&premium=1" : "";
       const res = await fetch(
-        `/api/course-resources?course=${encodeURIComponent(courseId)}`
+        `/api/course-resources?course=${encodeURIComponent(courseId)}${premiumQuery}`
       );
       const json = (await res.json().catch(() => ({}))) as {
         sections?: Record<

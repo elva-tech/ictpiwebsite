@@ -6,7 +6,6 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import appliedfinance from "../../../../assets/fourthimage.webp";
 import "../../../globals.css";
-import { usePortalMode } from "@/lib/portalTheme";
 import { CoursePdfExplorer } from "@/components/CoursePdfExplorer";
 
 interface AuthContextType {
@@ -17,7 +16,6 @@ interface AuthContextType {
 export default function AppliedFinancePage() {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
-  const { isPremium } = usePortalMode();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -70,7 +68,7 @@ export default function AppliedFinancePage() {
           </div>
         </div>
 
-        <CoursePdfExplorer courseId="appliedfinance" isPremium={isPremium} />
+        <CoursePdfExplorer courseId="appliedfinance" isPremium />
       </div>
     </div>
   );

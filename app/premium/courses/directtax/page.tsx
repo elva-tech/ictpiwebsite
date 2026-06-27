@@ -6,7 +6,6 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import directtaxImg from "../../../../assets/directtax.webp";
 import "../../../globals.css";
-import { usePortalMode } from "@/lib/portalTheme";
 import { CoursePdfExplorer } from "@/components/CoursePdfExplorer";
 
 interface AuthContextType {
@@ -17,7 +16,6 @@ interface AuthContextType {
 export default function DirectTaxPage() {
   const auth = useAuth() as AuthContextType | null;
   const router = useRouter();
-  const { isPremium } = usePortalMode();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -72,7 +70,7 @@ export default function DirectTaxPage() {
 
         <CoursePdfExplorer
           courseId="directtax"
-          isPremium={isPremium}
+          isPremium
           showModalDownload
         />
       </div>

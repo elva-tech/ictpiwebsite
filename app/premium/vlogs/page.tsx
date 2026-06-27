@@ -6,7 +6,7 @@ import {
   BlogMaterialsExplorer,
   IctpiCoreMaterialsSection,
 } from "@/components/BlogMaterialsExplorer";
-import { getPortalAssetPath, usePortalMode } from "@/lib/portalTheme";
+import { getPortalAssetPath } from "@/lib/portalTheme";
 
 const ICTPI_CORE_MATERIALS = [
   {
@@ -33,13 +33,12 @@ const ICTPI_CORE_MATERIALS = [
 
 export default function PremiumStudyMaterialsPage() {
   const auth = useAuth() as { user?: unknown; loading?: boolean };
-  const { isPremium } = usePortalMode();
 
   if (!auth?.user && !auth?.loading) return null;
 
   const coreMaterials = ICTPI_CORE_MATERIALS.map((item) => ({
     ...item,
-    src: getPortalAssetPath(item.src, isPremium),
+    src: getPortalAssetPath(item.src, true),
   }));
 
   return (
@@ -51,7 +50,7 @@ export default function PremiumStudyMaterialsPage() {
 
         <IctpiCoreMaterialsSection materials={coreMaterials} />
 
-        <BlogMaterialsExplorer isPremium={isPremium} />
+        <BlogMaterialsExplorer isPremium />
       </div>
     </AuthenticatedLayout>
   );

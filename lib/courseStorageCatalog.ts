@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { NOTES_BUCKET } from "@/lib/notesStorage";
+import { NOTES_BUCKET, getNotesBucketName } from "@/lib/notesStorage";
 
 export interface StorageFileEntry {
   name: string;
@@ -26,10 +26,11 @@ function getSupabaseForStorage() {
 
 export async function listStorageFolder(
   supabase: SupabaseClient,
-  prefix: string
+  prefix: string,
+  bucket: string = NOTES_BUCKET
 ): Promise<{ folders: StorageFolderEntry[]; files: StorageFileEntry[] }> {
   const { data, error } = await supabase.storage
-    .from(NOTES_BUCKET)
+    .from(bucket)
     .list(prefix, {
       limit: 1000,
       sortBy: { column: "name", order: "asc" },
@@ -56,7 +57,8 @@ export async function listStorageFolder(
 }
 
 export async function listAllFilesUnderPrefix(
-  prefix: string
+  prefix: string,
+  bucket: string = NOTES_BUCKET
 ): Promise<StorageFileEntry[]> {
   const supabase = getSupabaseForStorage();
   const queue = [prefix];
@@ -70,7 +72,8 @@ export async function listAllFilesUnderPrefix(
 
     const { folders, files: levelFiles } = await listStorageFolder(
       supabase,
-      current
+      current,
+      bucket
     );
     files.push(...levelFiles);
     for (const folder of folders) {
@@ -137,8 +140,10 @@ export interface CourseResourceFile {
 export type CourseResourceSections = Record<string, CourseResourceFile[]>;
 
 export async function buildCourseResourceSections(
-  courseId: CourseId
+  courseId: CourseId,
+  options?: { isPremium?: boolean }
 ): Promise<CourseResourceSections> {
+  const bucket = getNotesBucketName(options?.isPremium ?? false);
   const supabase = getSupabaseForStorage();
   const sections: CourseResourceSections = {};
 
@@ -155,12 +160,12 @@ export async function buildCourseResourceSections(
 
   switch (courseId) {
     case "appliedfinance": {
-      const { folders } = await listStorageFolder(supabase, "appliedfinance");
+      const { folders } = await listStorageFolder(supabase, "appliedfinance", bucket);
       const sorted = sortFolders(folders.map((f) => f.name));
       for (const folderName of sorted) {
         const folder = folders.find((f) => f.name === folderName);
         if (!folder) continue;
-        const { files } = await listStorageFolder(supabase, folder.path);
+        const { files } = await listStorageFolder(supabase, folder.path, bucket);
         const label =
           folderName.match(/^chapter\s*\d+/i) != null
             ? folderName.replace(/\bchapter\b/i, "Chapter").replace(/\s+/g, " ")
@@ -170,7 +175,7 @@ export async function buildCourseResourceSections(
       break;
     }
     case "business": {
-      const { folders } = await listStorageFolder(supabase, "bussiness");
+      const { folders } = await listStorageFolder(supabase, "bussiness", bucket);
       const order = [
         "advising",
         "bussinessmaintaince",
@@ -186,17 +191,18 @@ export async function buildCourseResourceSections(
         seen.add(folderName);
         const folder = folders.find((f) => f.name === folderName);
         if (!folder) continue;
-        const { files } = await listStorageFolder(supabase, folder.path);
+        const { files } = await listStorageFolder(supabase, folder.path, bucket);
         addFiles(BUSINESS_LABELS[folderName] ?? folderName, files);
       }
       break;
     }
     case "directtax": {
-      const domestic = await listStorageFolder(supabase, "directtax/domestic");
+      const domestic = await listStorageFolder(supabase, "directtax/domestic", bucket);
       addFiles("Domestic Taxation", domestic.files);
       const international = await listStorageFolder(
         supabase,
-        "directtax/international"
+        "directtax/international",
+        bucket
       );
       addFiles("International Taxation", international.files);
       break;
@@ -204,12 +210,14 @@ export async function buildCourseResourceSections(
     case "indirecttax": {
       const gst = await listStorageFolder(
         supabase,
-        "indirecttax/goodsandservices(GST)"
+        "indirecttax/goodsandservices(GST)",
+        bucket
       );
       addFiles("GST LAWS", gst.files);
       const customs = await listStorageFolder(
         supabase,
-        "indirecttax/customsact"
+        "indirecttax/customsact",
+        bucket
       );
       addFiles("Customs Act", customs.files);
       break;
@@ -239,11 +247,14 @@ export const BLOG_FACULTY_FOLDERS = [
 
 export type BlogResourceSections = CourseResourceSections;
 
-export async function buildBlogResourceSections(): Promise<BlogResourceSections> {
+export async function buildBlogResourceSections(options?: {
+  isPremium?: boolean;
+}): Promise<BlogResourceSections> {
+  const bucket = getNotesBucketName(options?.isPremium ?? false);
   const supabase = getSupabaseForStorage();
   const sections: BlogResourceSections = {};
 
-  const { folders } = await listStorageFolder(supabase, "blogs");
+  const { folders } = await listStorageFolder(supabase, "blogs", bucket);
   const folderByName = new Map(folders.map((f) => [f.name, f]));
 
   const orderedNames: string[] = [];
@@ -257,7 +268,7 @@ export async function buildBlogResourceSections(): Promise<BlogResourceSections>
   for (const folderName of orderedNames) {
     const folder = folderByName.get(folderName);
     const folderPath = folder?.path ?? `blogs/${folderName}`;
-    const { files } = await listStorageFolder(supabase, folderPath);
+    const { files } = await listStorageFolder(supabase, folderPath, bucket);
     const resourceFiles = files.filter((f) => isResourceFile(f.name));
     if (resourceFiles.length === 0) continue;
 

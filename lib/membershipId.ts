@@ -21,35 +21,43 @@ export function formatMembershipIdDisplay(id: string | number): string {
   return String(id);
 }
 
-/** Last 4 digit characters of membership ID, without leading zeros (e.g. 101799 → "1799", 467 → "467"). */
-export function membershipIdLastFourDigits(membershipId: number | string): string {
-  const id = normalizeMembershipId(String(membershipId)) ?? String(membershipId).replace(/\D/g, "");
+/** Last 3 digit characters of membership ID (e.g. 101799 → "799", 467 → "467"). */
+export function membershipIdLastThreeDigits(
+  membershipId: number | string
+): string {
+  const id =
+    normalizeMembershipId(String(membershipId)) ??
+    String(membershipId).replace(/\D/g, "");
   const digits = id.replace(/\D/g, "") || "0";
-  const last4 = digits.slice(-4);
-  return last4.replace(/^0+/, "") || "0";
+  return digits.slice(-3).padStart(3, "0");
+}
+
+/** @deprecated Use membershipIdLastThreeDigits — certificate no. prefix is last 3 digits. */
+export function membershipIdLastFourDigits(membershipId: number | string): string {
+  return membershipIdLastThreeDigits(membershipId);
 }
 
 export interface PracticingCertificateNoParts {
-  /** Last 4 digits of membership ID */
+  /** Last 3 digits of membership ID */
   prefix: string;
   year: string;
   /** Full membership ID (no leading zeros) */
   membershipId: string;
 }
 
-/** Certificate No. parts: <last4>/<year>/<membershipId> */
+/** Certificate No. parts: <last3>/<year>/<membershipId> */
 export function getPracticingCertificateNoParts(
   membershipId: number | string
 ): PracticingCertificateNoParts {
   const id = normalizeMembershipId(String(membershipId)) ?? String(membershipId);
   return {
-    prefix: membershipIdLastFourDigits(id),
+    prefix: membershipIdLastThreeDigits(id),
     year: String(new Date().getFullYear()),
     membershipId: formatMembershipIdDisplay(id),
   };
 }
 
-/** Practicing certificate number: <last4>/<year>/<membershipId> */
+/** Practicing certificate number: <last3>/<year>/<membershipId> */
 export function formatPracticingCertificateNo(membershipId: number | string): string {
   const { prefix, year, membershipId: id } =
     getPracticingCertificateNoParts(membershipId);

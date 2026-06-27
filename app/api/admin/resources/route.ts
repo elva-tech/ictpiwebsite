@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { NOTES_BUCKET } from "@/lib/notesStorage";
-import { publicUrlForStorageKey } from "@/lib/courseResourceFolders";
+import {
+  isAdminStorageBucket,
+  publicUrlForStorageKey,
+} from "@/lib/courseResourceFolders";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -19,6 +22,16 @@ function getSupabaseAdmin() {
   return createClient(url, serviceKey || anonKey!, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+}
+
+function resolveBucket(raw: string | null | undefined): string {
+  const bucket = (raw ?? NOTES_BUCKET).trim();
+  if (!isAdminStorageBucket(bucket)) {
+    throw new Error(
+      `Invalid bucket. Use one of: notes, prenotes, icpa_certificates.`
+    );
+  }
+  return bucket;
 }
 
 function sanitizePrefix(raw: string): string {
@@ -45,15 +58,16 @@ type ListedItem =
       updatedAt?: string;
     };
 
-/** GET ?prefix=directtax/domestic — list folders and files in the notes bucket. */
+/** GET ?prefix=...&bucket=notes|prenotes|icpa_certificates */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const prefix = sanitizePrefix(searchParams.get("prefix") ?? "");
+    const bucket = resolveBucket(searchParams.get("bucket"));
 
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase.storage
-      .from(NOTES_BUCKET)
+      .from(bucket)
       .list(prefix, {
         limit: 1000,
         sortBy: { column: "name", order: "asc" },
@@ -66,7 +80,6 @@ export async function GET(req: Request) {
     const items: ListedItem[] = (data ?? []).map((entry) => {
       const name = entry.name;
       const path = prefix ? `${prefix}/${name}` : name;
-      // Supabase: folder entries have null id; files have a uuid id.
       const isFolder = entry.id == null;
 
       if (isFolder) {
@@ -77,13 +90,13 @@ export async function GET(req: Request) {
         type: "file" as const,
         name,
         path,
-        publicUrl: publicUrlForStorageKey(path),
+        publicUrl: publicUrlForStorageKey(path, bucket),
         size: entry.metadata?.size as number | undefined,
         updatedAt: entry.updated_at ?? undefined,
       };
     });
 
-    return NextResponse.json({ prefix, items });
+    return NextResponse.json({ bucket, prefix, items });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Server error";
     console.error("admin/resources GET:", err);
@@ -91,10 +104,11 @@ export async function GET(req: Request) {
   }
 }
 
-/** POST multipart: folder prefix + file → upload to notes bucket. */
+/** POST multipart: bucket + folder prefix + file */
 export async function POST(req: Request) {
   try {
     const form = await req.formData();
+    const bucket = resolveBucket(String(form.get("bucket") ?? NOTES_BUCKET));
     const folder = sanitizePrefix(String(form.get("folder") ?? ""));
     const file = form.get("file");
 
@@ -118,7 +132,7 @@ export async function POST(req: Request) {
     const supabase = getSupabaseAdmin();
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error } = await supabase.storage
-      .from(NOTES_BUCKET)
+      .from(bucket)
       .upload(storageKey, buffer, {
         contentType,
         upsert: true,
@@ -131,8 +145,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
+      bucket,
       path: storageKey,
-      publicUrl: publicUrlForStorageKey(storageKey),
+      publicUrl: publicUrlForStorageKey(storageKey, bucket),
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Server error";
@@ -141,25 +156,27 @@ export async function POST(req: Request) {
   }
 }
 
-/** DELETE { "path": "directtax/domestic/foo.pdf" } */
+/** DELETE { "path": "...", "bucket": "prenotes" } */
 export async function DELETE(req: Request) {
   try {
     const body = (await req.json().catch(() => null)) as {
       path?: string;
+      bucket?: string;
     } | null;
     const path = sanitizePrefix(body?.path ?? "");
     if (!path) {
       return NextResponse.json({ error: "path is required" }, { status: 400 });
     }
+    const bucket = resolveBucket(body?.bucket);
 
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase.storage.from(NOTES_BUCKET).remove([path]);
+    const { error } = await supabase.storage.from(bucket).remove([path]);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ ok: true, path });
+    return NextResponse.json({ ok: true, bucket, path });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Server error";
     console.error("admin/resources DELETE:", err);

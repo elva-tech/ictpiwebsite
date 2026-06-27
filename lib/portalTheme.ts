@@ -20,9 +20,25 @@ export function setStoredPortalMode(mode: PortalMode) {
   window.dispatchEvent(new CustomEvent(PORTAL_THEME_EVENT, { detail: mode }));
 }
 
+/** Local static assets (public folder) — same URL for standard and premium. */
+function isStaticPublicAssetPath(path: string): boolean {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  const bare = p.startsWith("/premium/") ? p.slice("/premium".length) : p;
+  return (
+    bare.startsWith("/images/") ||
+    bare.startsWith("/cert/") ||
+    /\.(svg|jpe?g|png|webp|gif|ico)$/i.test(bare.split("?")[0] ?? "")
+  );
+}
+
 export function getPortalAssetPath(path: string, isPremium: boolean) {
   if (isNotesBucketPath(path)) {
-    return getNotesStorageUrl(path);
+    return getNotesStorageUrl(path, { isPremium });
+  }
+
+  // Premium portal uses the same image/static paths as standard members.
+  if (isStaticPublicAssetPath(path)) {
+    return path.startsWith("/premium/") ? path.slice("/premium".length) : path;
   }
 
   if (!isPremium || !path.startsWith("/") || path.startsWith("/premium/")) {
@@ -31,7 +47,7 @@ export function getPortalAssetPath(path: string, isPremium: boolean) {
 
   const premiumPath = `/premium${path}`;
   if (isNotesBucketPath(premiumPath)) {
-    return getNotesStorageUrl(premiumPath);
+    return getNotesStorageUrl(premiumPath, { isPremium });
   }
 
   return premiumPath;

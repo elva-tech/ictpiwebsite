@@ -1,7 +1,17 @@
 import { supabase } from "@/lib/Supabase";
 
-/** Supabase storage bucket for course PDFs, model papers, and HTML tests. */
+/** Supabase storage bucket for standard course PDFs, model papers, and HTML tests. */
 export const NOTES_BUCKET = "notes";
+
+/** Premium member course materials — same folder layout as `notes`. */
+export const PRENOTES_BUCKET = "prenotes";
+
+/** @deprecated Use PRENOTES_BUCKET — bucket id is `prenotes`. */
+export const PREMNOTES_BUCKET = PRENOTES_BUCKET;
+
+export function getNotesBucketName(isPremium = false): string {
+  return isPremium ? PRENOTES_BUCKET : NOTES_BUCKET;
+}
 
 /** True for legacy app paths that pointed at `public/pdf/` or `public/tests/`. */
 export function isNotesBucketPath(publicPath: string): boolean {
@@ -49,8 +59,12 @@ export function notesStorageKeyFromPublicPath(publicPath: string): string {
   return normalizeNotesBucketKey(key);
 }
 
-/** Public URL for a file in the `notes` bucket. */
-export function getNotesStorageUrl(publicPath: string): string {
+/** Public URL for a file in the `notes` or `prenotes` bucket. */
+export function getNotesStorageUrl(
+  publicPath: string,
+  options?: { isPremium?: boolean }
+): string {
+  const bucket = getNotesBucketName(options?.isPremium ?? false);
   const key = notesStorageKeyFromPublicPath(publicPath);
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -59,9 +73,9 @@ export function getNotesStorageUrl(publicPath: string): string {
       .split("/")
       .map((segment) => encodeURIComponent(segment))
       .join("/");
-    return `${baseUrl}/storage/v1/object/public/${NOTES_BUCKET}/${encodedKey}`;
+    return `${baseUrl}/storage/v1/object/public/${bucket}/${encodedKey}`;
   }
 
-  const { data } = supabase.storage.from(NOTES_BUCKET).getPublicUrl(key);
+  const { data } = supabase.storage.from(bucket).getPublicUrl(key);
   return data.publicUrl;
 }
