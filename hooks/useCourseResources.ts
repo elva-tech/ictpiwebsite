@@ -8,16 +8,23 @@ export interface PDFCard {
   title: string;
   src: string;
   download: string;
+  viewOnly?: boolean;
+  storagePath?: string;
 }
 
 export type ConceptPDFs = Record<string, PDFCard[]>;
 
-export function useCourseResources(courseId: CourseId, isPremium: boolean) {
+export function useCourseResources(
+  courseId: CourseId,
+  isPremium: boolean,
+  enabled = true
+) {
   const [sections, setSections] = useState<ConceptPDFs>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!enabled) return;
     setLoading(true);
     setError(null);
     try {
@@ -28,7 +35,13 @@ export function useCourseResources(courseId: CourseId, isPremium: boolean) {
       const json = (await res.json().catch(() => ({}))) as {
         sections?: Record<
           string,
-          { title: string; appPath: string; download: string }[]
+          {
+            title: string;
+            appPath: string;
+            download: string;
+            viewOnly?: boolean;
+            storagePath?: string;
+          }[]
         >;
         error?: string;
       };
@@ -42,6 +55,8 @@ export function useCourseResources(courseId: CourseId, isPremium: boolean) {
           title: f.title,
           download: f.download,
           src: getPortalAssetPath(f.appPath, isPremium),
+          viewOnly: f.viewOnly,
+          storagePath: f.storagePath,
         }));
       }
       setSections(resolved);
@@ -52,11 +67,15 @@ export function useCourseResources(courseId: CourseId, isPremium: boolean) {
     } finally {
       setLoading(false);
     }
-  }, [courseId, isPremium]);
+  }, [courseId, isPremium, enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     load();
-  }, [load]);
+  }, [load, enabled]);
 
   return { sections, loading, error, reload: load };
 }

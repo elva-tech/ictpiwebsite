@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useBlogResources, type PDFCard } from "@/hooks/useBlogResources";
+import { ConfidentialPdfModal } from "@/components/ConfidentialPdfModal";
 
 interface BlogMaterialsExplorerProps {
   isPremium: boolean;
@@ -124,14 +125,16 @@ export function BlogMaterialsExplorer({ isPremium }: BlogMaterialsExplorerProps)
                             <Eye className="w-5 h-5" />
                             View
                           </button>
-                          <a
-                            href={item.src}
-                            download={item.download}
-                            className="flex-1 flex items-center justify-center gap-2.5 py-3.5 px-5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition text-center"
-                          >
-                            <Download className="w-5 h-5" />
-                            Download
-                          </a>
+                          {!item.viewOnly && (
+                            <a
+                              href={item.src}
+                              download={item.download}
+                              className="flex-1 flex items-center justify-center gap-2.5 py-3.5 px-5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition text-center"
+                            >
+                              <Download className="w-5 h-5" />
+                              Download
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -143,7 +146,12 @@ export function BlogMaterialsExplorer({ isPremium }: BlogMaterialsExplorerProps)
         })}
       </div>
 
-      {selectedPdf && (
+      {selectedPdf && selectedPdf.viewOnly ? (
+        <ConfidentialPdfModal
+          pdf={selectedPdf}
+          onClose={() => setSelectedPdf(null)}
+        />
+      ) : selectedPdf ? (
         <div className="fixed inset-0 bg-black/95 z-50 flex flex-col">
           <div className="bg-gray-900 text-white p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="text-lg font-semibold truncate flex-1">
@@ -175,7 +183,7 @@ export function BlogMaterialsExplorer({ isPremium }: BlogMaterialsExplorerProps)
             allowFullScreen
           />
         </div>
-      )}
+      ) : null}
     </>
   );
 }

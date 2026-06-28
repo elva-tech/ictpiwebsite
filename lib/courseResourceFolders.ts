@@ -45,6 +45,8 @@ export interface ResourceArea {
   /** Storage prefix inside the `notes` bucket (no leading slash). */
   prefix: string;
   subfolders: string[];
+  /** Optional helper text for admin UIs. */
+  description?: string;
 }
 
 const APPLIED_FINANCE_CHAPTERS = Array.from(
@@ -100,7 +102,33 @@ export function getResourceAreasForBucket(bucket: string): ResourceArea[] {
   return RESOURCE_AREAS;
 }
 
+/** Confidential view-only ICPA materials (`prenotes` root + `prem/`). */
+export const ICPA_CONFIDENTIAL_AREAS: ResourceArea[] = [
+  {
+    id: "icpa-root",
+    label: "ICPA Study Materials",
+    prefix: "",
+    subfolders: [],
+    description:
+      "Upload Book A–F and course summaries here (bucket root). Members see these as view-only on Vlogs & Materials.",
+  },
+  {
+    id: "icpa-folder",
+    label: "ICPA Folder",
+    prefix: "prem",
+    subfolders: [],
+    description:
+      "Upload confidential PDFs inside prem/. Members see these under ICPA Folder — view only, no download or print.",
+  },
+];
+
 export const RESOURCE_AREAS: ResourceArea[] = [
+  {
+    id: "prem",
+    label: "ICPA folder (view only)",
+    prefix: "prem",
+    subfolders: [],
+  },
   {
     id: "appliedfinance",
     label: "Applied Finance",

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getPortalAssetPath } from "@/lib/portalTheme";
 import type { PDFCard, ConceptPDFs } from "@/hooks/useCourseResources";
 
-export function useBlogResources(isPremium: boolean) {
+export function usePremResources() {
   const [sections, setSections] = useState<ConceptPDFs>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,23 +13,16 @@ export function useBlogResources(isPremium: boolean) {
     setLoading(true);
     setError(null);
     try {
-      const premiumQuery = isPremium ? "?premium=1" : "";
-      const res = await fetch(`/api/blog-resources${premiumQuery}`);
+      const res = await fetch("/api/prem-resources");
       const json = (await res.json().catch(() => ({}))) as {
         sections?: Record<
           string,
-          {
-            title: string;
-            appPath: string;
-            download: string;
-            viewOnly?: boolean;
-            storagePath?: string;
-          }[]
+          { title: string; appPath: string; download: string; viewOnly?: boolean; storagePath?: string }[]
         >;
         error?: string;
       };
       if (!res.ok) {
-        throw new Error(json.error ?? `Failed to load blogs (${res.status})`);
+        throw new Error(json.error ?? `Failed to load prem notes (${res.status})`);
       }
 
       const resolved: ConceptPDFs = {};
@@ -37,8 +30,8 @@ export function useBlogResources(isPremium: boolean) {
         resolved[group] = files.map((f) => ({
           title: f.title,
           download: f.download,
-          src: getPortalAssetPath(f.appPath, isPremium),
-          viewOnly: f.viewOnly,
+          src: getPortalAssetPath(f.appPath, true),
+          viewOnly: f.viewOnly ?? true,
           storagePath: f.storagePath,
         }));
       }
@@ -46,11 +39,11 @@ export function useBlogResources(isPremium: boolean) {
     } catch (e) {
       console.error(e);
       setSections({});
-      setError(e instanceof Error ? e.message : "Could not load blog files.");
+      setError(e instanceof Error ? e.message : "Could not load ICPA study materials.");
     } finally {
       setLoading(false);
     }
-  }, [isPremium]);
+  }, []);
 
   useEffect(() => {
     load();
@@ -59,4 +52,4 @@ export function useBlogResources(isPremium: boolean) {
   return { sections, loading, error, reload: load };
 }
 
-export type { PDFCard, ConceptPDFs };
+export type { PDFCard };

@@ -6,6 +6,28 @@ export const NOTES_BUCKET = "notes";
 /** Premium member course materials — same folder layout as `notes`. */
 export const PRENOTES_BUCKET = "prenotes";
 
+/** View-only premium paths in `prenotes` (no download in the portal). */
+export const PREM_NOTES_PREFIX = "prem";
+
+/** Course/subsystem folders at the root of `prenotes` — not view-only root files. */
+export const PRENOTES_MANAGED_ROOT_FOLDERS = new Set([
+  "appliedfinance",
+  "bussiness",
+  "directtax",
+  "indirecttax",
+  PREM_NOTES_PREFIX,
+  "blogs",
+  "tests",
+]);
+
+export function isPremViewOnlyStoragePath(storagePath: string): boolean {
+  const normalized = storagePath.replace(/^\/+/, "");
+  return (
+    normalized === PREM_NOTES_PREFIX ||
+    normalized.startsWith(`${PREM_NOTES_PREFIX}/`)
+  );
+}
+
 /** @deprecated Use PRENOTES_BUCKET — bucket id is `prenotes`. */
 export const PREMNOTES_BUCKET = PRENOTES_BUCKET;
 

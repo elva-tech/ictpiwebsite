@@ -16,6 +16,7 @@ import {
   Share2,
   Crown,
   FolderOpen,
+  Shield,
 } from "lucide-react";
 import {
   isAdminAuthenticated,
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { href: "/admin/enquiries", label: "Enquiries", Icon: MessageSquare },
   { href: "/admin/news", label: "News", Icon: Newspaper },
   { href: "/admin/resources", label: "Resources", Icon: FolderOpen },
+  { href: "/admin/icpa-materials", label: "ICPA Materials", Icon: Shield },
   {
     href: "/admin/certificate-approvals",
     label: "Certificate Approvals",

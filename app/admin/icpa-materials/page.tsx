@@ -3,25 +3,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/AdminShell";
 import {
-  ADMIN_STORAGE_BUCKETS,
-  getResourceAreasForBucket,
+  ICPA_CONFIDENTIAL_AREAS,
   buildStoragePrefix,
   publicUrlForStorageKey,
-  type AdminStorageBucketId,
 } from "@/lib/courseResourceFolders";
-import { COMMON_CERTIFICATES_BUCKET } from "@/lib/commonCertificateStorage";
-import { ICPA_CERTIFICATES_BUCKET } from "@/lib/icpaCertificateStorage";
-import { NOTES_BUCKET, PRENOTES_BUCKET } from "@/lib/notesStorage";
+import { PRENOTES_BUCKET } from "@/lib/notesStorage";
 import {
   ChevronRight,
   ExternalLink,
   FolderOpen,
   Loader2,
+  Shield,
   Trash2,
   Upload,
 } from "lucide-react";
 
 const NAVY = "#1e2659";
+const BUCKET = PRENOTES_BUCKET;
 
 type ListedItem =
   | { type: "folder"; name: string; path: string }
@@ -41,10 +39,8 @@ function formatBytes(n?: number): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function AdminResourcesPage() {
-  const [bucket, setBucket] = useState<AdminStorageBucketId>(NOTES_BUCKET);
-  const [areaId, setAreaId] = useState(() => getResourceAreasForBucket(NOTES_BUCKET)[0].id);
-  const [subfolder, setSubfolder] = useState("");
+export default function AdminIcpaMaterialsPage() {
+  const [areaId, setAreaId] = useState(ICPA_CONFIDENTIAL_AREAS[0].id);
   const [browsePrefix, setBrowsePrefix] = useState("");
   const [items, setItems] = useState<ListedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,28 +51,23 @@ export default function AdminResourcesPage() {
   );
   const [file, setFile] = useState<File | null>(null);
 
-  const bucketMeta = useMemo(
-    () => ADMIN_STORAGE_BUCKETS.find((b) => b.id === bucket) ?? ADMIN_STORAGE_BUCKETS[0],
-    [bucket]
-  );
-
-  const areas = useMemo(() => getResourceAreasForBucket(bucket), [bucket]);
-
   const area = useMemo(
-    () => areas.find((a) => a.id === areaId) ?? areas[0],
-    [areaId, areas]
+    () =>
+      ICPA_CONFIDENTIAL_AREAS.find((a) => a.id === areaId) ??
+      ICPA_CONFIDENTIAL_AREAS[0],
+    [areaId]
   );
 
   const uploadPrefix = useMemo(() => {
     if (browsePrefix) return browsePrefix;
-    return buildStoragePrefix(areaId, subfolder || undefined, areas);
-  }, [areaId, subfolder, browsePrefix, areas]);
+    return buildStoragePrefix(areaId, undefined, ICPA_CONFIDENTIAL_AREAS);
+  }, [areaId, browsePrefix]);
 
-  const loadItems = useCallback(async (prefix: string, activeBucket: AdminStorageBucketId) => {
+  const loadItems = useCallback(async (prefix: string) => {
     setLoading(true);
     setToast(null);
     try {
-      const qs = new URLSearchParams({ bucket: activeBucket });
+      const qs = new URLSearchParams({ bucket: BUCKET });
       if (prefix) qs.set("prefix", prefix);
       const res = await fetch(`/api/admin/resources?${qs.toString()}`);
       const json = (await res.json().catch(() => ({}))) as {
@@ -100,36 +91,19 @@ export default function AdminResourcesPage() {
   }, []);
 
   useEffect(() => {
-    const firstArea = areas[0];
-    if (!areas.some((a) => a.id === areaId)) {
-      setAreaId(firstArea.id);
-      setSubfolder("");
+    if (!ICPA_CONFIDENTIAL_AREAS.some((a) => a.id === areaId)) {
+      setAreaId(ICPA_CONFIDENTIAL_AREAS[0].id);
       setBrowsePrefix("");
-      loadItems(buildStoragePrefix(firstArea.id, undefined, areas), bucket);
+      loadItems(buildStoragePrefix(ICPA_CONFIDENTIAL_AREAS[0].id, undefined, ICPA_CONFIDENTIAL_AREAS));
       return;
     }
-    const prefix = buildStoragePrefix(areaId, subfolder || undefined, areas);
     setBrowsePrefix("");
-    loadItems(prefix, bucket);
-  }, [bucket, areaId, subfolder, loadItems, areas]);
-
-  const switchBucket = (next: AdminStorageBucketId) => {
-    setBucket(next);
-    const nextAreas = getResourceAreasForBucket(next);
-    setAreaId(nextAreas[0].id);
-    setSubfolder("");
-    setBrowsePrefix("");
-  };
-
-  const isCertPdfBucket =
-    bucket === ICPA_CERTIFICATES_BUCKET || bucket === COMMON_CERTIFICATES_BUCKET;
-  const uploadAccept = isCertPdfBucket
-    ? ".pdf,application/pdf"
-    : ".pdf,.html,application/pdf,text/html";
+    loadItems(buildStoragePrefix(areaId, undefined, ICPA_CONFIDENTIAL_AREAS));
+  }, [areaId, loadItems]);
 
   const openFolder = (path: string) => {
     setBrowsePrefix(path);
-    loadItems(path, bucket);
+    loadItems(path);
   };
 
   const goUp = () => {
@@ -138,18 +112,17 @@ export default function AdminResourcesPage() {
     parts.pop();
     const parent = parts.join("/");
     setBrowsePrefix(parent);
-    loadItems(parent, bucket);
+    loadItems(parent);
   };
 
   const onUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      setToast({
-        type: "err",
-        text: isCertPdfBucket
-          ? "Choose a PDF file to upload."
-          : "Choose a PDF or HTML file to upload.",
-      });
+      setToast({ type: "err", text: "Choose a PDF file to upload." });
+      return;
+    }
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      setToast({ type: "err", text: "Only PDF files are allowed for ICPA materials." });
       return;
     }
 
@@ -157,19 +130,15 @@ export default function AdminResourcesPage() {
     setToast(null);
     try {
       const form = new FormData();
-      form.set("bucket", bucket);
+      form.set("bucket", BUCKET);
       form.set("folder", uploadPrefix);
       form.set("file", file);
       form.set("fileName", file.name);
 
-      const res = await fetch("/api/admin/resources", {
-        method: "POST",
-        body: form,
-      });
+      const res = await fetch("/api/admin/resources", { method: "POST", body: form });
       const json = (await res.json().catch(() => ({}))) as {
         ok?: boolean;
         error?: string;
-        publicUrl?: string;
       };
       if (!res.ok) {
         throw new Error(json.error ?? "Upload failed");
@@ -177,18 +146,15 @@ export default function AdminResourcesPage() {
 
       setFile(null);
       const input = document.getElementById(
-        "resource-file-input"
+        "icpa-material-file-input"
       ) as HTMLInputElement | null;
       if (input) input.value = "";
 
       setToast({
         type: "ok",
-        text: `Uploaded to ${uploadPrefix || "(root)"}/${file.name}`,
+        text: `Uploaded "${file.name}" to ICPA materials.`,
       });
-      await loadItems(
-        browsePrefix || buildStoragePrefix(areaId, subfolder || undefined),
-        bucket
-      );
+      await loadItems(uploadPrefix);
     } catch (err) {
       setToast({
         type: "err",
@@ -202,7 +168,7 @@ export default function AdminResourcesPage() {
   const deleteFile = async (path: string, name: string) => {
     if (
       !window.confirm(
-        `Delete "${name}" from storage? This cannot be undone.`
+        `Delete "${name}" from ICPA materials? This cannot be undone.`
       )
     ) {
       return;
@@ -214,19 +180,16 @@ export default function AdminResourcesPage() {
       const res = await fetch("/api/admin/resources", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ path, bucket }),
+        body: JSON.stringify({ path, bucket: BUCKET }),
       });
-      const json = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        error?: string;
-      };
+      const json = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
         throw new Error(json.error ?? "Delete failed");
       }
       setToast({ type: "ok", text: `Deleted ${name}` });
       await loadItems(
-        browsePrefix || buildStoragePrefix(areaId, subfolder || undefined, areas),
-        bucket
+        browsePrefix ||
+          buildStoragePrefix(areaId, undefined, ICPA_CONFIDENTIAL_AREAS)
       );
     } catch (err) {
       setToast({
@@ -239,74 +202,47 @@ export default function AdminResourcesPage() {
   };
 
   const currentPrefix =
-    browsePrefix || buildStoragePrefix(areaId, subfolder || undefined);
+    browsePrefix || buildStoragePrefix(areaId, undefined, ICPA_CONFIDENTIAL_AREAS);
 
   return (
-    <AdminShell title="Course Resources">
-      <div className="mb-6 flex flex-wrap gap-2">
-        {ADMIN_STORAGE_BUCKETS.map((b) => (
-          <button
-            key={b.id}
-            type="button"
-            onClick={() => switchBucket(b.id)}
-            className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
-              bucket === b.id
-                ? "bg-[#1e2659] text-white"
-                : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
-            }`}
-          >
-            {b.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <AdminShell title="ICPA Materials">
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <aside className="bg-white rounded-xl shadow-sm border border-slate-100 p-4 h-fit">
           <h2 className="text-sm font-semibold text-[#1e2659] mb-1 flex items-center gap-2">
-            <FolderOpen className="h-4 w-4" />
-            Folders
+            <Shield className="h-4 w-4" />
+            Confidential locations
           </h2>
-          <p className="text-xs text-slate-500 mb-3 font-mono">{bucket}</p>
-          <ul className="space-y-1">
-            {areas.map((a) => (
+          <p className="text-xs text-slate-500 mb-4">
+            Members can <strong>view only</strong> — no download or print.
+          </p>
+          <ul className="space-y-2">
+            {ICPA_CONFIDENTIAL_AREAS.map((a) => (
               <li key={a.id}>
                 <button
                   type="button"
                   onClick={() => {
                     setAreaId(a.id);
-                    setSubfolder("");
                     setBrowsePrefix("");
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     areaId === a.id && !browsePrefix
                       ? "bg-[#1e2659] text-white"
-                      : "text-slate-700 hover:bg-slate-100"
+                      : "text-slate-700 hover:bg-slate-100 border border-transparent"
                   }`}
                 >
-                  {a.label}
+                  <span className="font-semibold block">{a.label}</span>
+                  {a.description && (
+                    <span
+                      className={`text-xs mt-1 block leading-snug ${
+                        areaId === a.id && !browsePrefix
+                          ? "text-blue-100"
+                          : "text-slate-500"
+                      }`}
+                    >
+                      {a.description}
+                    </span>
+                  )}
                 </button>
-                {areaId === a.id && a.subfolders.length > 0 && (
-                  <ul className="mt-1 ml-2 border-l border-slate-200 pl-2 space-y-0.5">
-                    {a.subfolders.map((sf) => (
-                      <li key={sf}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSubfolder(sf);
-                            setBrowsePrefix("");
-                          }}
-                          className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
-                            subfolder === sf && !browsePrefix
-                              ? "bg-blue-100 text-blue-900 font-medium"
-                              : "text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          {sf}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </li>
             ))}
           </ul>
@@ -315,10 +251,11 @@ export default function AdminResourcesPage() {
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-5 md:p-7">
             <h2 className="text-2xl font-bold text-[#1e2659] mb-1">
-              Resources
+              {area.label}
             </h2>
             <p className="text-sm text-slate-500 mb-4">
-              {bucketMeta.description}
+              Upload confidential PDFs for the member ICPA Study Materials
+              section. Bucket: <code className="text-xs">prenotes</code>
             </p>
 
             {toast && (
@@ -334,9 +271,9 @@ export default function AdminResourcesPage() {
             )}
 
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600 mb-4">
-              <span className="font-medium">Current path:</span>
+              <span className="font-medium">Storage path:</span>
               <code className="bg-slate-100 px-2 py-1 rounded text-xs">
-                {bucket}/{currentPrefix || "(root)"}
+                {BUCKET}/{currentPrefix || "(root)"}
               </code>
               {browsePrefix && (
                 <button
@@ -351,19 +288,19 @@ export default function AdminResourcesPage() {
 
             <form
               onSubmit={onUpload}
-              className="flex flex-col sm:flex-row gap-3 items-start sm:items-end border border-dashed border-slate-200 rounded-lg p-4 mb-6 bg-slate-50/50"
+              className="flex flex-col sm:flex-row gap-3 items-start sm:items-end border border-dashed border-violet-200 rounded-lg p-4 mb-6 bg-violet-50/40"
             >
               <div className="flex-1 w-full">
                 <label
-                  htmlFor="resource-file-input"
+                  htmlFor="icpa-material-file-input"
                   className="block text-xs font-semibold text-slate-600 mb-1"
                 >
-                  Upload file {isCertPdfBucket ? "(PDF)" : "(PDF or HTML)"}
+                  Upload confidential PDF
                 </label>
                 <input
-                  id="resource-file-input"
+                  id="icpa-material-file-input"
                   type="file"
-                  accept={uploadAccept}
+                  accept=".pdf,application/pdf"
                   onChange={(ev) => setFile(ev.target.files?.[0] ?? null)}
                   className="block w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#1e2659] file:text-white hover:file:bg-[#2a3470]"
                 />
@@ -379,7 +316,7 @@ export default function AdminResourcesPage() {
                 ) : (
                   <Upload className="h-4 w-4" />
                 )}
-                Upload
+                Add to ICPA materials
               </button>
             </form>
 
@@ -390,7 +327,8 @@ export default function AdminResourcesPage() {
               </div>
             ) : items.length === 0 ? (
               <p className="text-center text-slate-500 py-8 text-sm">
-                No files or subfolders in this location.
+                No PDFs here yet. Upload a file above to add it to ICPA
+                materials.
               </p>
             ) : (
               <ul className="divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden">
@@ -426,11 +364,14 @@ export default function AdminResourcesPage() {
                         </p>
                       </div>
                       <a
-                        href={item.publicUrl || publicUrlForStorageKey(item.path, bucket)}
+                        href={
+                          item.publicUrl ||
+                          publicUrlForStorageKey(item.path, BUCKET)
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                        title="Open"
+                        title="Open in storage (admin)"
                       >
                         <ExternalLink className="h-4 w-4" />
                       </a>
@@ -454,66 +395,23 @@ export default function AdminResourcesPage() {
             )}
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-900">
-            <p className="font-semibold mb-1">Filename tips</p>
-            <ul className="list-disc ml-4 space-y-1 text-amber-800">
+          <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 text-sm text-violet-950">
+            <p className="font-semibold mb-1">How members see these files</p>
+            <ul className="list-disc ml-4 space-y-1 text-violet-900">
               <li>
-                Files are shown to members using the <strong>file name</strong>{" "}
-                (without .pdf) as the title.
+                <strong>ICPA Study Materials</strong> — PDFs at the{" "}
+                <code>prenotes</code> bucket root (e.g. Book A–F).
               </li>
-              {bucket === ICPA_CERTIFICATES_BUCKET ? (
-                <li>
-                  Name files with the member&apos;s <strong>membership ID</strong>{" "}
-                  (e.g. <code>100202.pdf</code> or{" "}
-                  <code>100202/certificate.pdf</code>) so they appear on the
-                  premium Certificates page.
-                </li>
-              ) : bucket === COMMON_CERTIFICATES_BUCKET ? (
-                <li>
-                  Name files with the member&apos;s <strong>membership ID</strong>{" "}
-                  (e.g. <code>practicing/2026/100202.pdf</code> or{" "}
-                  <code>100202.pdf</code>) so they appear on the standard
-                  Certificates page.
-                </li>
-              ) : bucket === PRENOTES_BUCKET ? (
-                <>
-                  <li>
-                    PDFs at the <strong>bucket root</strong> (e.g. Book A–F,
-                    course summaries) appear on premium{" "}
-                    <strong>Vlogs &amp; Materials</strong> as{" "}
-                    <strong>view only</strong> — no download.
-                  </li>
-                  <li>
-                    Course folders (<code>appliedfinance</code>,{" "}
-                    <code>bussiness</code>, etc.) allow members to view and
-                    download chapter PDFs.
-                  </li>
-                  <li>
-                    The <code>prem/</code> folder is also view-only on the
-                    premium portal.
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li>
-                    Applied Finance chapters use folders{" "}
-                    <code>chapter 1</code> … <code>chapter 12</code> (with a
-                    space).
-                  </li>
-                  <li>
-                    Faculty blogs / vlogs use{" "}
-                    <code>blogs/CTPr Sreedhara Parthasarathy</code>, etc.
-                  </li>
-                  <li>
-                    Use <strong>Premium members</strong> tab for the{" "}
-                    <code>prenotes</code> bucket — same folder layout as
-                    standard.
-                  </li>
-                </>
-              )}
               <li>
-                Set <code>SUPABASE_SERVICE_ROLE_KEY</code> in{" "}
-                <code>.env.local</code> for uploads to work.
+                <strong>ICPA Folder</strong> — PDFs inside <code>prem/</code>.
+              </li>
+              <li>
+                Titles use the <strong>file name</strong> without{" "}
+                <code>.pdf</code>.
+              </li>
+              <li>
+                Members open them in a secure viewer — download and print are
+                disabled.
               </li>
             </ul>
           </div>

@@ -2,44 +2,13 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
-import {
-  BlogMaterialsExplorer,
-  IctpiCoreMaterialsSection,
-} from "@/components/BlogMaterialsExplorer";
-import { getPortalAssetPath } from "@/lib/portalTheme";
-
-const ICTPI_CORE_MATERIALS = [
-  {
-    title: "Applied Financial Accounting and Ethics",
-    src: "/pdf/Applied Financial Accounting and Ethics.pdf",
-    download: "Applied Financial Accounting and Ethics.pdf",
-  },
-  {
-    title: "Business Regulatory Laws and Compliances",
-    src: "/pdf/Business Regulatory Laws and compliances.pdf",
-    download: "Business Regulatory Laws and Compliances.pdf",
-  },
-  {
-    title: "Direct Tax Law Compliances",
-    src: "/pdf/Direct Tax Law Compliances.pdf",
-    download: "Direct Tax Law Compliances.pdf",
-  },
-  {
-    title: "Indirect Tax Law Compliances",
-    src: "/pdf/Indirect Tax Law Compliances.pdf",
-    download: "Indirect Tax Law Compliances.pdf",
-  },
-];
+import { BlogMaterialsExplorer } from "@/components/BlogMaterialsExplorer";
+import { PremNotesExplorer } from "@/components/PremNotesExplorer";
 
 export default function PremiumStudyMaterialsPage() {
   const auth = useAuth() as { user?: unknown; loading?: boolean };
 
   if (!auth?.user && !auth?.loading) return null;
-
-  const coreMaterials = ICTPI_CORE_MATERIALS.map((item) => ({
-    ...item,
-    src: getPortalAssetPath(item.src, true),
-  }));
 
   return (
     <AuthenticatedLayout title="Vlogs & Materials" maxWidth="lg">
@@ -48,7 +17,7 @@ export default function PremiumStudyMaterialsPage() {
           Faculty Study Materials
         </h1>
 
-        <IctpiCoreMaterialsSection materials={coreMaterials} />
+        <PremNotesExplorer />
 
         <BlogMaterialsExplorer isPremium />
       </div>

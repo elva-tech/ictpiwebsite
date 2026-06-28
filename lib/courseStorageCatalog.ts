@@ -1,5 +1,10 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { NOTES_BUCKET, getNotesBucketName } from "@/lib/notesStorage";
+import {
+  NOTES_BUCKET,
+  PRENOTES_BUCKET,
+  getNotesBucketName,
+  isPremViewOnlyStoragePath,
+} from "@/lib/notesStorage";
 
 export interface StorageFileEntry {
   name: string;
@@ -135,6 +140,63 @@ export interface CourseResourceFile {
   storagePath: string;
   download: string;
   appPath: string;
+  /** When true, members can open the file but not download it. */
+  viewOnly?: boolean;
+}
+
+const PREM_COURSE_PREFIX: Record<CourseId, string> = {
+  appliedfinance: "prem/appliedfinance",
+  business: "prem/bussiness",
+  directtax: "prem/directtax",
+  indirecttax: "prem/indirecttax",
+};
+
+function mapResourceFile(
+  f: StorageFileEntry,
+  viewOnly = false
+): CourseResourceFile {
+  return {
+    title: fileNameToTitle(f.name),
+    storagePath: f.path,
+    download: f.name,
+    appPath: storagePathToAppPdfPath(f.path),
+    viewOnly: viewOnly || isPremViewOnlyStoragePath(f.path),
+  };
+}
+
+async function mergePremViewOnlySections(
+  courseId: CourseId,
+  sections: CourseResourceSections,
+  supabase: SupabaseClient,
+  bucket: string
+) {
+  const prefix = PREM_COURSE_PREFIX[courseId];
+  let allFiles: StorageFileEntry[] = [];
+  try {
+    allFiles = await listAllFilesUnderPrefix(prefix, bucket);
+  } catch {
+    return;
+  }
+  if (!allFiles.length) return;
+
+  const byGroup = new Map<string, StorageFileEntry[]>();
+  for (const file of allFiles) {
+    if (!isResourceFile(file.name)) continue;
+    const relative = file.path.startsWith(`${prefix}/`)
+      ? file.path.slice(prefix.length + 1)
+      : file.path;
+    const slash = relative.indexOf("/");
+    const group =
+      slash === -1 ? "ICPA Materials" : relative.slice(0, slash);
+    const arr = byGroup.get(group) ?? [];
+    arr.push(file);
+    byGroup.set(group, arr);
+  }
+
+  for (const [label, files] of byGroup) {
+    const mapped = files.map((f) => mapResourceFile(f, true));
+    sections[label] = [...(sections[label] ?? []), ...mapped];
+  }
 }
 
 export type CourseResourceSections = Record<string, CourseResourceFile[]>;
@@ -150,12 +212,7 @@ export async function buildCourseResourceSections(
   const addFiles = (label: string, files: StorageFileEntry[]) => {
     const resourceFiles = files.filter((f) => isResourceFile(f.name));
     if (resourceFiles.length === 0) return;
-    sections[label] = resourceFiles.map((f) => ({
-      title: fileNameToTitle(f.name),
-      storagePath: f.path,
-      download: f.name,
-      appPath: storagePathToAppPdfPath(f.path),
-    }));
+    sections[label] = resourceFiles.map((f) => mapResourceFile(f));
   };
 
   switch (courseId) {
@@ -226,6 +283,72 @@ export async function buildCourseResourceSections(
       break;
   }
 
+  if (options?.isPremium) {
+    await mergePremViewOnlySections(courseId, sections, supabase, bucket);
+  }
+
+  return sections;
+}
+
+/** Root-level PDFs in `prenotes` (Book A–F, course summaries, etc.) — view only. */
+export async function buildPrenotesRootViewOnlySections(): Promise<CourseResourceSections> {
+  const bucket = PRENOTES_BUCKET;
+  const supabase = getSupabaseForStorage();
+
+  let listing: Awaited<ReturnType<typeof listStorageFolder>>;
+  try {
+    listing = await listStorageFolder(supabase, "", bucket);
+  } catch {
+    return {};
+  }
+
+  const rootFiles = listing.files
+    .filter((f) => isResourceFile(f.name))
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
+  if (!rootFiles.length) return {};
+
+  return {
+    "ICPA Study Materials": rootFiles.map((f) => mapResourceFile(f, true)),
+  };
+}
+
+/** View-only premium materials: root `prenotes` PDFs + everything under `prenotes/prem/`. */
+export async function buildPremResourceSections(): Promise<CourseResourceSections> {
+  const bucket = PRENOTES_BUCKET;
+  const supabase = getSupabaseForStorage();
+  const sections: CourseResourceSections = {
+    ...(await buildPrenotesRootViewOnlySections()),
+  };
+
+  const addViewOnlyGroup = (label: string, files: StorageFileEntry[]) => {
+    const resourceFiles = files.filter((f) => isResourceFile(f.name));
+    if (!resourceFiles.length) return;
+    const mapped = resourceFiles.map((f) => mapResourceFile(f, true));
+    sections[label] = [...(sections[label] ?? []), ...mapped];
+  };
+
+  let premListing: Awaited<ReturnType<typeof listStorageFolder>>;
+  try {
+    premListing = await listStorageFolder(supabase, "prem", bucket);
+  } catch {
+    return sections;
+  }
+
+  addViewOnlyGroup("ICPA Folder", premListing.files);
+
+  const sortedFolders = sortFolders(premListing.folders.map((f) => f.name));
+  for (const folderName of sortedFolders) {
+    const folder = premListing.folders.find((f) => f.name === folderName);
+    if (!folder) continue;
+    const files = await listAllFilesUnderPrefix(folder.path, bucket);
+    const label =
+      folderName.match(/^chapter\s*\d+/i) != null
+        ? folderName.replace(/\bchapter\b/i, "Chapter").replace(/\s+/g, " ")
+        : folderName;
+    addViewOnlyGroup(label, files);
+  }
+
   return sections;
 }
 
@@ -275,12 +398,7 @@ export async function buildBlogResourceSections(options?: {
     const label =
       BLOG_FACULTY_FOLDERS.find((b) => b.folder === folderName)?.label ??
       folderName;
-    sections[label] = resourceFiles.map((f) => ({
-      title: fileNameToTitle(f.name),
-      storagePath: f.path,
-      download: f.name,
-      appPath: storagePathToAppPdfPath(f.path),
-    }));
+    sections[label] = resourceFiles.map((f) => mapResourceFile(f));
   }
 
   return sections;
