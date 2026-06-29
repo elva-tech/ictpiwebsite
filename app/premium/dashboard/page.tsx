@@ -20,6 +20,7 @@ import { createClient } from "@supabase/supabase-js";
 import { AppLogo } from "@/components/AppLogo";
 import { PremiumModeButton } from "@/components/PremiumModeButton";
 import { EnquiryRemarksNotices } from "@/components/EnquiryRemarksNotices";
+import { IcpaMaterialsNotice } from "@/components/IcpaMaterialsNotice";
 import {
   loadMemberProfileByMembershipId,
   membershipIdLookupValues,
@@ -393,6 +394,8 @@ export default function Dashboard() {
               className="px-4 md:px-8 pt-4"
             />
           )}
+
+          <IcpaMaterialsNotice className="px-4 md:px-8 pt-3" />
 
           {/* Course Cards */}
           <main className="flex-1 p-4 sm:p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pb-24 md:pb-8 bg-gray-100">

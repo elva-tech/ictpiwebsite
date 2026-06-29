@@ -1,6 +1,7 @@
 ﻿"use client";
 import { AuthenticatedLayout } from "@/components/AuthenticatedLayout";
 import { EnquiryRemarksNotices } from "@/components/EnquiryRemarksNotices";
+import { IcpaMaterialsNotice } from "@/components/IcpaMaterialsNotice";
 import Link from "next/link";
 import Image from "next/image";
 import accountancy from "../../assets/Accountancy.webp";
@@ -38,6 +39,8 @@ const PremiumPage = () => {
       <div className="space-y-8">
         <EnquiryRemarksNotices />
 
+        <IcpaMaterialsNotice />
+
         <section className="rounded-3xl bg-gradient-to-r from-purple-700 via-violet-700 to-fuchsia-700 text-white p-8 md:p-10 shadow-xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">ICPA LMS Access</h2>
           
@@ -59,27 +62,7 @@ const PremiumPage = () => {
           </div>
         </section>
 
-        <section>
-          <h3 className="text-2xl font-bold text-slate-900 mb-5">ICPA LMS Courses</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {courses.map((course) => (
-              <Link
-                key={course.route}
-                href={course.route}
-                className="bg-white shadow-md rounded-xl p-5 hover:shadow-xl transition transform hover:-translate-y-1"
-              >
-                <Image
-                  src={course.image}
-                  alt={course.title}
-                  className="w-full h-44 object-cover rounded-lg mb-4"
-                />
-                <h4 className="text-lg font-semibold text-gray-800 text-center">
-                  {course.title}
-                </h4>
-              </Link>
-            ))}
-          </div>
-        </section>
+        
       </div>
     </AuthenticatedLayout>
   );

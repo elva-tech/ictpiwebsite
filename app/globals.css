@@ -109,3 +109,43 @@ a:focus, button:focus { outline: 3px solid Highlight; outline-offset: 2px; }
   color: #0f172a;
   text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18);
 }
+
+@keyframes icpa-notice-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+.icpa-notice-waves {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  overflow: visible;
+  margin: 10px;
+}
+
+.icpa-notice-waves::before,
+.icpa-notice-waves::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid rgba(37, 99, 235, 0.45);
+  pointer-events: none;
+  animation: icpa-notice-wave 2.4s ease-out infinite;
+}
+
+.icpa-notice-waves::after {
+  animation-delay: 1.2s;
+}
+
+.icpa-notice-pill {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
